@@ -47,7 +47,7 @@
 
 /** Start address of application space in flash */
 #define APP_ADDRESS (uint32_t)0x08008000
-//#define APP_ADDRESS (uint32_t)0x08020000  // first available for EXFAT
+
 /** End address of application space (address of last byte) */
 #define END_ADDRESS (uint32_t)0x080FFFFB
 
@@ -61,7 +61,9 @@
 
 /* Includes ------------------------------------------------------------------*/
 /* Include the appropriate header file */
-#if defined(STM32F4)
+#if defined(STM32L4)
+  #include "stm32l4xx.h"
+#elif defined(STM32F4)
   #include "stm32f4xx.h"
 #else
   #error "Target MCU header file is not defined or unsupported."
@@ -72,16 +74,15 @@
 #define APP_SIZE (uint32_t)(((END_ADDRESS - APP_ADDRESS) + 3) / 4)
 
 /** Number of sectors per bank in flash */
-uint32_t APP_first_sector;  // first FLASH sector an application can be loaded into
-uint32_t APP_first_addr;    // beginning address of first FLASH sector an application can be loaded into
+uint32_t APP_first_sector;  // first FLASH for application
 uint32_t APP_sector_mask;   // mask used to determine if any application sectors are write protected
 #define APP_OFFSET (APP_ADDRESS - FLASH_BASE)  // how far from start of FLASH the APP starts
+#define FLASH_SIZE            ((uint32_t)0x100000)  // 1024K bytes
 //#define FLASH_SIZE            ((uint32_t)0x100000)  // 1024K bytes
-//#define FLASH_SIZE            ((uint32_t)0x100000)  // 1024K bytes
-#define FLASH_SIZE            ((uint32_t)0x80000)  // 512K bytes
+//#define FLASH_SIZE            ((uint32_t)0x80000)  // 512K bytes
 //#define FLASH_SIZE            ((uint32_t)0x40000)  // 256K bytes
-//#define LAST_SECTOR           11  // 1024K bytes STM32F407 has FLASH sectors 0-11
-#define LAST_SECTOR            7  // 512K bytes STM32F407VE has FLASH sectors 0-7
+#define LAST_SECTOR           11  // 1024K bytes STM32F407 has FLASH sectors 0-11
+//#define LAST_SECTOR            7  // 512K bytes STM32F407 has FLASH sectors 0-7
 #define FLASH_SECTOR_NBPERBANK  (1)
 #define FLASH_SECTOR_SIZE       ((uint32_t)0x4000)  // 16K bytes
 //#define FLASH_BASE            ((uint32_t)0x08000000) // FLASH(up to 1 MB) base address in the alias region

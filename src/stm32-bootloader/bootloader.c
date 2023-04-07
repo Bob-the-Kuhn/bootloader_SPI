@@ -16,10 +16,9 @@
 /* Includes ------------------------------------------------------------------*/
 #include "bootloader.h"
 #include "../Core/Inc/main.h"
-#include "stm32f4xx_hal_crc.h"
 #include <string.h>  // debug
 #include <stdio.h>   // debug
-#include <inttypes.h>  // debug
+#include <inttypes.h>  // debu
 void print(const char* str);   // debug
 
 /* Private defines -----------------------------------------------------------*/
@@ -42,53 +41,30 @@ static uint32_t flash_ptr = APP_ADDRESS;
  */
 uint8_t Bootloader_Init(void)
 {
-    extern uint32_t _siccmram[];
-    // Read and use the `_siccmram` linkerscript variable
-    uint32_t siccmram = (uint32_t)_siccmram;
-    #define BOOT_LOADER_END siccmram
-
     /* Clear flash flags */
     HAL_FLASH_Unlock();
     __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_ALL_ERRORS);
     HAL_FLASH_Lock();
 
     APP_first_sector = 0;
-    APP_first_addr = 0;
    
     // STM32F407 has different length FLASH sectors.
     //   Sector 0 to Sector 3 being 16 KB each
     //   Sector 4 is 64 KB
     //   Sector 5–11 are 128 KB each
-    
-    if (BOOT_LOADER_END <= 0xE0000 + FLASH_BASE) {APP_first_sector = FLASH_SECTOR_11;  APP_first_addr = 0xE0000 + FLASH_BASE;}
-    if (BOOT_LOADER_END <= 0xC0000 + FLASH_BASE) {APP_first_sector = FLASH_SECTOR_10;  APP_first_addr = 0xC0000 + FLASH_BASE;}
-    if (BOOT_LOADER_END <= 0xA0000 + FLASH_BASE) {APP_first_sector = FLASH_SECTOR_9;   APP_first_addr = 0xA0000 + FLASH_BASE;}
-    if (BOOT_LOADER_END <= 0x80000 + FLASH_BASE) {APP_first_sector = FLASH_SECTOR_8;   APP_first_addr = 0x80000 + FLASH_BASE;}
-    if (BOOT_LOADER_END <= 0x60000 + FLASH_BASE) {APP_first_sector = FLASH_SECTOR_7;   APP_first_addr = 0x60000 + FLASH_BASE;}
-    if (BOOT_LOADER_END <= 0x40000 + FLASH_BASE) {APP_first_sector = FLASH_SECTOR_6;   APP_first_addr = 0x40000 + FLASH_BASE;}
-    if (BOOT_LOADER_END <= 0x20000 + FLASH_BASE) {APP_first_sector = FLASH_SECTOR_5;   APP_first_addr = 0x20000 + FLASH_BASE;}
-    if (BOOT_LOADER_END <= 0x10000 + FLASH_BASE) {APP_first_sector = FLASH_SECTOR_4;   APP_first_addr = 0x10000 + FLASH_BASE;}
-    if (BOOT_LOADER_END <= 0x0C000 + FLASH_BASE) {APP_first_sector = FLASH_SECTOR_3;   APP_first_addr = 0x0C000 + FLASH_BASE;}
-    if (BOOT_LOADER_END <= 0x08000 + FLASH_BASE) {APP_first_sector = FLASH_SECTOR_2;   APP_first_addr = 0x08000 + FLASH_BASE;}
-    if (BOOT_LOADER_END <= 0x04000 + FLASH_BASE) {APP_first_sector = FLASH_SECTOR_1;   APP_first_addr = 0x04000 + FLASH_BASE;}
-    
-    char msg[64];
-    sprintf(msg, "\nBOOT_LOADER_END %08lX\n", BOOT_LOADER_END);
-    print(msg);
-    sprintf(msg, "Lowest possible APP_ADDRESS is %08lX\n", APP_first_addr);
-    print(msg);
-    /* check APP_ADDRESS */
-    if (APP_ADDRESS & 0x1ff) {
-      print("ERROR - application address not on 512 byte boundary\n");
-      Error_Handler();
-    }
-    if (APP_ADDRESS < APP_first_addr) {
-      print("ERROR - application address within same sector as boot loader\n");
-      Error_Handler();
-    } 
-    
     if (APP_OFFSET == 0) return BL_ERASE_ERROR;   // start of boot program
-    if (APP_first_sector == 0) return BL_ERASE_ERROR;   // application is within same sector as bootloader
+    if (APP_OFFSET == 0x04000) APP_first_sector = FLASH_SECTOR_1;
+    if (APP_OFFSET == 0x08000) APP_first_sector = FLASH_SECTOR_2;
+    if (APP_OFFSET == 0x0C000) APP_first_sector = FLASH_SECTOR_3;
+    if (APP_OFFSET == 0x10000) APP_first_sector = FLASH_SECTOR_4;
+    if (APP_OFFSET == 0x20000) APP_first_sector = FLASH_SECTOR_5;
+    if (APP_OFFSET == 0x40000) APP_first_sector = FLASH_SECTOR_6;
+    if (APP_OFFSET == 0x60000) APP_first_sector = FLASH_SECTOR_7;
+    if (APP_OFFSET == 0x80000) APP_first_sector = FLASH_SECTOR_8;
+    if (APP_OFFSET == 0xA0000) APP_first_sector = FLASH_SECTOR_9;
+    if (APP_OFFSET == 0xC0000) APP_first_sector = FLASH_SECTOR_10;
+    if (APP_OFFSET == 0xE0000) APP_first_sector = FLASH_SECTOR_11;
+    if (APP_first_sector == 0) return BL_ERASE_ERROR;   // not on sector boundary
 
     APP_sector_mask = 0;
     for (uint8_t i = APP_first_sector; i <= LAST_SECTOR; i++) {  // generate mask of sectors we do NOT want write protected
@@ -109,18 +85,25 @@ uint8_t Bootloader_Erase(void)
     HAL_StatusTypeDef status = HAL_OK;
 
     char msg[64];
+    //sprintf(msg, "APP_first_sector: %lu", APP_first_sector);
+    //print(msg);
+    //sprintf(msg, "  FLASH_BASE: %lX", FLASH_BASE);
+    //print(msg);
+    //sprintf(msg, "  APP_ADDRESS: %lX\n", APP_ADDRESS);
+    //print(msg);
     
     __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_EOP | FLASH_FLAG_OPERR | FLASH_FLAG_WRPERR | FLASH_FLAG_PGAERR | FLASH_FLAG_PGSERR );
-    HAL_FLASH_Unlock();  
+      
     for (uint32_t i =  APP_first_sector; i <= LAST_SECTOR; i++) {
-      sprintf(msg, "Erasing sector: %lu\n",i);
-      print(msg);                             
+      sprintf(msg, "Erasing sector: %lu\n",i);  // ?? gets lost without this print
+      print(msg);                               //    also seems to erase faster
+      HAL_FLASH_Unlock();
       FLASH_Erase_Sector(i, VOLTAGE_RANGE_3);
+      HAL_FLASH_Lock();
       /* Toggle green LED during erasing */
       LED_G1_TG();
     }
     
-    HAL_FLASH_Lock();                 
     return (status == HAL_OK) ? BL_OK : BL_ERASE_ERROR;
 }
 
@@ -163,24 +146,22 @@ uint8_t Bootloader_FlashNext(uint64_t data)
         return BL_WRITE_ERROR;
     }
 
-    char msg[64]; //debug
-    uint64_t read_data;
+ //   if(HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, flash_ptr, data) == HAL_OK)
+ //   status = HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, flash_ptr, data);
     status = HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, flash_ptr, data);
     if(status == HAL_OK)
     {
         /* Check the written value */
-        read_data = *(uint64_t*)flash_ptr; 
-        if(read_data != data)            
+        if(*(uint64_t*)flash_ptr != data)
         {
             /* Flash content doesn't match source content */
-                HAL_FLASH_Lock();
-                print("Programming error\n");
-                sprintf(msg, "expected data (64 bit): %08lX %08lX\n", (uint32_t) (data >> 32) ,(uint32_t) data);
-                print(msg);   
-                sprintf(msg, "actual data (64 bit)  : %08lX %08lX\n", (uint32_t) (read_data >> 32) ,(uint32_t) read_data);
-                print(msg);   
-                sprintf(msg, "absolute address (byte): %08lX\n", flash_ptr);
-                print(msg);
+                //print(" FLASH verify error");
+                //sprintf(msg, "flash_ptr: %lX\n", flash_ptr);
+                //print(msg);
+                //sprintf(msg, "INTENDED: %llX\n", data);
+                //print(msg);
+                //sprintf(msg, "ACTUAL:   %llX\n", *(uint64_t*)flash_ptr);
+                //print(msg);
             
             HAL_FLASH_Lock();
             return BL_WRITE_ERROR;
@@ -192,6 +173,16 @@ uint8_t Bootloader_FlashNext(uint64_t data)
     else
     {
         /* Error occurred while writing data into Flash */ 
+
+                //sprintf(msg, "FLASH programming error - status: %u\n", status);
+                //print(msg);
+                //sprintf(msg, "flash_ptr: %lX\n", flash_ptr);
+                //print(msg);
+                //sprintf(msg, "INTENDED: %#018"PRIx64"\n", data);
+                //print(msg);
+                //sprintf(msg, "ACTUAL:   %#018"PRIx64"\n", *(uint64_t*)flash_ptr);
+                //print(msg);
+        
         HAL_FLASH_Lock();
         return BL_WRITE_ERROR;
     }
@@ -225,8 +216,80 @@ uint32_t Bootloader_GetProtectionStatus(void)
 
     HAL_FLASH_Unlock();
 
+#if defined(STM32L4)
+    /* Bank 1 */
+    OBStruct.WRPArea     = OB_WRPAREA_BANK1_AREAA;
+    HAL_FLASHEx_OBGetConfig(&OBStruct);
+    /* PCROP */
+    if(OBStruct.PCROPEndAddr > OBStruct.PCROPStartAddr)
+    {
+        if(OBStruct.PCROPStartAddr >= APP_ADDRESS)
+        {
+            protection |= BL_PROTECTION_PCROP;
+        }
+    }
+    /* WRP Area_A */
+    if(OBStruct.WRPEndOffset > OBStruct.WRPStartOffset)
+    {
+        if((OBStruct.WRPStartOffset * FLASH_PAGE_SIZE + FLASH_BASE) >=
+           APP_ADDRESS)
+        {
+            protection |= BL_PROTECTION_WRP;
+        }
+    }
+
+    OBStruct.WRPArea = OB_WRPAREA_BANK1_AREAB;
+    HAL_FLASHEx_OBGetConfig(&OBStruct);
+    /* WRP Area_B */
+    if(OBStruct.WRPEndOffset > OBStruct.WRPStartOffset)
+    {
+        if((OBStruct.WRPStartOffset * FLASH_PAGE_SIZE + FLASH_BASE) >=
+           APP_ADDRESS)
+        {
+            protection |= BL_PROTECTION_WRP;
+        }
+    }
+
+    /* Bank 2 */
+    OBStruct.PCROPConfig = FLASH_BANK_2;
+    OBStruct.WRPArea     = OB_WRPAREA_BANK2_AREAA;
+    HAL_FLASHEx_OBGetConfig(&OBStruct);
+    /* PCROP */
+    if(OBStruct.PCROPEndAddr > OBStruct.PCROPStartAddr)
+    {
+        if(OBStruct.PCROPStartAddr >= APP_ADDRESS)
+        {
+            protection |= BL_PROTECTION_PCROP;
+        }
+    }
+    /* WRP Area_A */
+    if(OBStruct.WRPEndOffset > OBStruct.WRPStartOffset)
+    {
+        if((OBStruct.WRPStartOffset * FLASH_PAGE_SIZE + FLASH_BASE +
+            FLASH_PAGE_SIZE * FLASH_PAGE_NBPERBANK) >= APP_ADDRESS)
+        {
+            protection |= BL_PROTECTION_WRP;
+        }
+    }
+
+    OBStruct.WRPArea = OB_WRPAREA_BANK2_AREAB;
+    HAL_FLASHEx_OBGetConfig(&OBStruct);
+    /* WRP Area_B */
+    if(OBStruct.WRPEndOffset > OBStruct.WRPStartOffset)
+    {
+        if((OBStruct.WRPStartOffset * FLASH_PAGE_SIZE + FLASH_BASE +
+            FLASH_PAGE_SIZE * FLASH_PAGE_NBPERBANK) >= APP_ADDRESS)
+        {
+            protection |= BL_PROTECTION_WRP;
+        }
+    }
+    
+#elif defined(STM32F4)
+
     HAL_FLASHEx_OBGetConfig(&OBStruct);
     return OBStruct.WRPSector;
+
+#endif
 
     /* RDP */
     if(OBStruct.RDPLevel != OB_RDP_LEVEL_0)
@@ -237,6 +300,47 @@ uint32_t Bootloader_GetProtectionStatus(void)
     HAL_FLASH_Lock();
     return protection;
 }
+
+
+// typedef struct
+// {
+//   uint32_t OptionType;   /*!< Option byte to be configured.
+//                               This parameter can be a value of @ref FLASHEx_Option_Type */
+// 
+//   uint32_t WRPState;     /*!< Write protection activation or deactivation.
+//                               This parameter can be a value of @ref FLASHEx_WRP_State */
+// 
+//   uint32_t WRPSector;         /*!< Specifies the sector(s) to be write protected.
+//                               The value of this parameter depend on device used within the same series */
+// 
+//   uint32_t Banks;        /*!< Select banks for WRP activation/deactivation of all sectors.
+//                               This parameter must be a value of @ref FLASHEx_Banks */        
+// 
+//   uint32_t RDPLevel;     /*!< Set the read protection level.
+//                               This parameter can be a value of @ref FLASHEx_Option_Bytes_Read_Protection */
+// 
+//   uint32_t BORLevel;     /*!< Set the BOR Level.
+//                               This parameter can be a value of @ref FLASHEx_BOR_Reset_Level */
+// 
+//   uint8_t  USERConfig;   /*!< Program the FLASH User Option Byte: IWDG_SW / RST_STOP / RST_STDBY. */
+// 
+// } FLASH_OBProgramInitTypeDef;
+// 
+// typedef struct
+// {
+//   uint32_t OptionType;     /*!< Option byte to be configured for extension.
+//                                 This parameter can be a value of @ref FLASHEx_Advanced_Option_Type */
+// 
+//   uint32_t PCROPState;     /*!< PCROP activation or deactivation.
+//                                 This parameter can be a value of @ref FLASHEx_PCROP_State */
+// 
+//   uint16_t Sectors;        /*!< specifies the sector(s) set for PCROP.
+//                                 This parameter can be a value of @ref FLASHEx_Option_Bytes_PC_ReadWrite_Protection */
+// 
+// }FLASH_AdvOBProgramInitTypeDef;
+// 
+
+
 
 // debug helper routine
 const char *byte_to_binary (uint32_t x)
@@ -269,11 +373,150 @@ uint8_t Bootloader_ConfigProtection(uint32_t protection)
     status = HAL_FLASH_Unlock();
     status |= HAL_FLASH_OB_Unlock();
     
+#if defined(STM32L4)    
+
+    /* Bank 1 */
+    OBStruct.WRPArea     = OB_WRPAREA_BANK1_AREAA;
+    HAL_FLASHEx_OBGetConfig(&OBStruct);
+    /* PCROP */
+    if(OBStruct.PCROPEndAddr > OBStruct.PCROPStartAddr)
+    {
+        if(OBStruct.PCROPStartAddr >= APP_ADDRESS)
+        {
+            protection |= BL_PROTECTION_PCROP;
+        }
+    }
+    /* WRP Area_A */
+    if(OBStruct.WRPEndOffset > OBStruct.WRPStartOffset)
+    {
+        if((OBStruct.WRPStartOffset * FLASH_PAGE_SIZE + FLASH_BASE) >=
+           APP_ADDRESS)
+        {
+            protection |= BL_PROTECTION_WRP;
+        }
+    }
+
+    OBStruct.WRPArea = OB_WRPAREA_BANK1_AREAB;
+    HAL_FLASHEx_OBGetConfig(&OBStruct);
+    /* WRP Area_B */
+    if(OBStruct.WRPEndOffset > OBStruct.WRPStartOffset)
+    {
+        if((OBStruct.WRPStartOffset * FLASH_PAGE_SIZE + FLASH_BASE) >=
+           APP_ADDRESS)
+        {
+            protection |= BL_PROTECTION_WRP;
+        }
+    }
+
+    /* Bank 2 */
+    OBStruct.PCROPConfig = FLASH_BANK_2;
+    OBStruct.WRPArea     = OB_WRPAREA_BANK2_AREAA;
+    HAL_FLASHEx_OBGetConfig(&OBStruct);
+    /* PCROP */
+    if(OBStruct.PCROPEndAddr > OBStruct.PCROPStartAddr)
+    {
+        if(OBStruct.PCROPStartAddr >= APP_ADDRESS)
+        {
+            protection |= BL_PROTECTION_PCROP;
+        }
+    }
+    /* WRP Area_A */
+    if(OBStruct.WRPEndOffset > OBStruct.WRPStartOffset)
+    {
+        if((OBStruct.WRPStartOffset * FLASH_PAGE_SIZE + FLASH_BASE +
+            FLASH_PAGE_SIZE * FLASH_PAGE_NBPERBANK) >= APP_ADDRESS)
+        {
+            protection |= BL_PROTECTION_WRP;
+        }
+    }
+
+    OBStruct.WRPArea = OB_WRPAREA_BANK2_AREAB;
+    HAL_FLASHEx_OBGetConfig(&OBStruct);
+    /* WRP Area_B */
+    if(OBStruct.WRPEndOffset > OBStruct.WRPStartOffset)
+    {
+        if((OBStruct.WRPStartOffset * FLASH_PAGE_SIZE + FLASH_BASE +
+            FLASH_PAGE_SIZE * FLASH_PAGE_NBPERBANK) >= APP_ADDRESS)
+        {
+            protection |= BL_PROTECTION_WRP;
+        }
+    }
+
+#elif defined(STM32F4)
+
+    /* Bank 1 */
+    
     HAL_FLASHEx_OBGetConfig(&OBStruct);  // get current FLASH config
+    
+//    char msg[64];
+//    print("initial state write protection\n");
+//    sprintf(msg, "Write protected sectors: %s\n", byte_to_binary(OBStruct.WRPSector));
+//    print(msg);
+//    sprintf(msg, "WRPState:                %lX\n", OBStruct.WRPState);
+//    print(msg);
+//
+    
+//    protection = 1<<4 | 1<< 9;  // write protect sectors 4 & 9
+//    OBStruct.WRPSector = protection;  // select affected sectors
+//    OBStruct.WRPState = OB_WRPSTATE_ENABLE;  //  enable write protection
+//    
+//    status = HAL_FLASHEx_OBProgram(&OBStruct);  // write 
+//    HAL_FLASHEx_OBGetConfig(&OBStruct);  // get current FLASH config
+//    
+//    print("after setting write protection\n");
+//    sprintf(msg, "status:                  %X\n", status);
+//    print(msg);
+//    sprintf(msg, "Write protected sectors: %s\n", byte_to_binary(OBStruct.WRPSector));
+//    print(msg);
+//    sprintf(msg, "WRPState:                %lX\n", OBStruct.WRPState);
+//    print(msg);
+//    
+//    protection = 1<< 9;  // remove write protect sectors  9
+//    OBStruct.WRPSector = protection;  // select affected sectors
+//    OBStruct.WRPState = OB_WRPSTATE_DISABLE;  //  disable write protection
+//    status = HAL_FLASHEx_OBProgram(&OBStruct);  // write 
+//    HAL_FLASHEx_OBGetConfig(&OBStruct);  // get current FLASH config
+//    
+//    print("after clearing write protection sector 9\n");
+//    sprintf(msg, "status:                  %X\n", status);
+//    print(msg);
+//    sprintf(msg, "Write protected sectors: %s\n", byte_to_binary(OBStruct.WRPSector));
+//    print(msg);
+//    sprintf(msg, "WRPState:                %lX\n", OBStruct.WRPState);
+//    print(msg);
+//    
+//        protection = 1<< 4;  // remove write protect sectors  4
+//    OBStruct.WRPSector = protection;  // select affected sectors
+//    OBStruct.WRPState = OB_WRPSTATE_DISABLE;  //  disable write protection
+//    status = HAL_FLASHEx_OBProgram(&OBStruct);  // write 
+//    HAL_FLASHEx_OBGetConfig(&OBStruct);  // get current FLASH config
+//    
+//    print("after clearing write protection sector 4\n");
+//    sprintf(msg, "status:                  %X\n", status);
+//    print(msg);
+//    sprintf(msg, "Write protected sectors: %s\n", byte_to_binary(OBStruct.WRPSector));
+//    print(msg);
+//    sprintf(msg, "WRPState:                %lX\n", OBStruct.WRPState);
+//    print(msg);
+    
+    
+//    sprintf(msg, "protection:              %s\n", byte_to_binary(protection));
+//    print(msg);
     
     OBStruct.WRPSector = protection;            // select affected sectors
     OBStruct.WRPState = OB_WRPSTATE_DISABLE;    //  disable write protection
     status = HAL_FLASHEx_OBProgram(&OBStruct);  // write 
+    
+//    print("after clearing write protection \n");
+//    sprintf(msg, "status:                  %X\n", status);
+//    print(msg);
+//    sprintf(msg, "Write protected sectors: %s\n", byte_to_binary(OBStruct.WRPSector));
+//    print(msg);
+//    sprintf(msg, "WRPState:                %lX\n", OBStruct.WRPState);
+//    print(msg);
+    
+#endif
+
     if(status == HAL_OK)
     {
         /* Loading Flash Option Bytes - this generates a system reset. */    // apparently not on a STM32F407
@@ -285,6 +528,62 @@ uint8_t Bootloader_ConfigProtection(uint32_t protection)
 
     return (status == HAL_OK) ? BL_OK : BL_OBP_ERROR;
 }
+
+// test
+//uint8_t set_write_protect(void)
+//{
+//    FLASH_OBProgramInitTypeDef OBStruct = {0};
+//    HAL_StatusTypeDef status            = HAL_ERROR;
+//
+//    status = HAL_FLASH_Unlock();
+//    status |= HAL_FLASH_OB_Unlock();
+//
+//#if defined(STM32F4)
+//
+//    /* Bank 1 */
+//    
+//    HAL_FLASHEx_OBGetConfig(&OBStruct);  // get current FLASH config
+//    
+//    char msg[64];
+//    print("test - initial state write protection\n");
+//    sprintf(msg, "Write protected sectors: %s\n", byte_to_binary(OBStruct.WRPSector));
+//    print(msg);
+//    sprintf(msg, "WRPState:                %lX\n", OBStruct.WRPState);
+//    print(msg);
+//
+//    
+//    uint32_t protection = 1<<4 | 1<< 9;  // write protect sectors 4 & 9
+//    OBStruct.WRPSector = protection;  // select affected sectors
+//    OBStruct.WRPState = OB_WRPSTATE_ENABLE;  //  enable write protection
+//    
+//    status = HAL_FLASHEx_OBProgram(&OBStruct);  // write 
+//    HAL_FLASHEx_OBGetConfig(&OBStruct);  // get current FLASH config
+//    
+//    print("after setting write protection\n");
+//    sprintf(msg, "status:                  %X\n", status);
+//    print(msg);
+//    sprintf(msg, "Write protected sectors: %s\n", byte_to_binary(OBStruct.WRPSector));
+//    print(msg);
+//    sprintf(msg, "WRPState:                %lX\n", OBStruct.WRPState);
+//    print(msg);
+//
+//
+//    
+//
+//    
+//#endif
+//
+//    if(status == HAL_OK)
+//    {
+//        /* Loading Flash Option Bytes - this generates a system reset. */
+//        status |= HAL_FLASH_OB_Launch();
+//    }
+//
+//    status |= HAL_FLASH_OB_Lock();
+//    status |= HAL_FLASH_Lock();
+//
+//    return (status == HAL_OK) ? BL_OK : BL_OBP_ERROR;
+//}
 
 /**
  * @brief  This function checks whether the new application fits into flash.
@@ -352,6 +651,16 @@ uint8_t Bootloader_VerifyChecksum(void)
  */
 uint8_t Bootloader_CheckForApplication(void)
 {
+    //char msg[64];
+    //sprintf(msg, "CheckForApplication\n stack pointer: %lX\n", *(uint32_t*)APP_ADDRESS);
+    //print(msg);
+    //sprintf(msg, "RAM_BASE: %lX\n", RAM_BASE);
+    //print(msg);
+    //sprintf(msg, "RAM_SIZE: %lX\n", RAM_SIZE);
+    //print(msg);
+    //sprintf(msg, "Present? %d\n", (((*(uint32_t*)APP_ADDRESS) - RAM_BASE) <= RAM_SIZE));
+    //print(msg);
+    
     return (((*(uint32_t*)APP_ADDRESS) - RAM_BASE) <= RAM_SIZE) ? BL_OK
                                                                 : BL_NO_APP;
 }
@@ -370,6 +679,20 @@ void Bootloader_JumpToApplication(void)
     uint32_t JumpAddress = *(__IO uint32_t*)(APP_ADDRESS + 4);
     pFunction Jump       = (pFunction)JumpAddress;
     
+    // doesn't reliably start up application without these prints
+    // ??? shouldn't need these so there's more to the story
+    char msg[64];
+    print("JumpToApplication\n");
+    sprintf(msg, "PC  : %lX\n", *(__IO uint32_t*)(APP_ADDRESS + 4));
+    print(msg);
+    sprintf(msg, "SP  : %lX\n", *(__IO uint32_t*)APP_ADDRESS);
+    print(msg);
+    sprintf(msg, "VTOR: %lX\n", APP_ADDRESS);
+    print(msg);
+    HAL_Delay(500);
+    
+//  set_write_protect();  //test
+
     HAL_RCC_DeInit();
     HAL_DeInit();
 

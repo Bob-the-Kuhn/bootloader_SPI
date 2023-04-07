@@ -28,6 +28,17 @@ extern Disk_drvTypeDef  disk;
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
 
+DSTATUS USER_initialize (BYTE pdrv);
+DSTATUS USER_status (BYTE pdrv);
+DRESULT USER_read (BYTE pdrv, BYTE *buff, DWORD sector, UINT count);
+#if _USE_WRITE == 1
+  DRESULT USER_write (BYTE pdrv, const BYTE *buff, DWORD sector, UINT count);
+#endif /* _USE_WRITE == 1 */
+#if _USE_IOCTL == 1
+  DRESULT USER_ioctl (BYTE pdrv, BYTE cmd, void *buff);
+#endif /* _USE_IOCTL == 1 */
+
+
 /**
   * @brief  Gets Disk Status
   * @param  pdrv: Physical drive number (0..)
@@ -39,7 +50,8 @@ DSTATUS disk_status (
 {
   DSTATUS stat;
 
-  stat = disk.drv[pdrv]->disk_status(disk.lun[pdrv]);
+  //stat = disk.drv[pdrv]->disk_status(disk.lun[pdrv]);
+  stat = USER_status(disk.lun[pdrv]);
   return stat;
 }
 
@@ -57,7 +69,8 @@ DSTATUS disk_initialize (
   if(disk.is_initialized[pdrv] == 0)
   {
     disk.is_initialized[pdrv] = 1;
-    stat = disk.drv[pdrv]->disk_initialize(disk.lun[pdrv]);
+    //stat = disk.drv[pdrv]->disk_initialize(disk.lun[pdrv]);
+    stat = USER_initialize(disk.lun[pdrv]);
   }
   return stat;
 }
@@ -79,7 +92,8 @@ DRESULT disk_read (
 {
   DRESULT res;
 
-  res = disk.drv[pdrv]->disk_read(disk.lun[pdrv], buff, sector, count);
+//  res = disk.drv[pdrv]->disk_read(disk.lun[pdrv], buff, sector, count);
+  res = USER_read(disk.lun[pdrv], buff, sector, count);
   return res;
 }
 
@@ -101,7 +115,8 @@ DRESULT disk_write (
 {
   DRESULT res;
 
-  res = disk.drv[pdrv]->disk_write(disk.lun[pdrv], buff, sector, count);
+//  res = disk.drv[pdrv]->disk_write(disk.lun[pdrv], buff, sector, count);
+  res = USER_write (disk.lun[pdrv], buff, sector, count);
   return res;
 }
 #endif /* _USE_WRITE == 1 */
@@ -122,7 +137,8 @@ DRESULT disk_ioctl (
 {
   DRESULT res;
 
-  res = disk.drv[pdrv]->disk_ioctl(disk.lun[pdrv], cmd, buff);
+  //res = disk.drv[pdrv]->disk_ioctl(disk.lun[pdrv], cmd, buff);
+  res = USER_ioctl(disk.lun[pdrv], cmd, buff);
   return res;
 }
 #endif /* _USE_IOCTL == 1 */

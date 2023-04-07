@@ -47,7 +47,6 @@ extern "C" {
 /* Exported macro ------------------------------------------------------------*/
 /* USER CODE BEGIN EM */
 
-
 /*** Application-Specific Configuration ***************************************/
 /* File name of application located on SD card */
 #define CONF_FILENAME "firmware.bin"
@@ -59,16 +58,16 @@ extern "C" {
 /* Hardware Defines ----------------------------------------------------------*/
                           
 
-//#define WORK_LED_Pin GPIO_PIN_2
-//#define WORK_LED_GPIO_Port GPIOB
+#define WORK_LED_Pin GPIO_PIN_7
+#define WORK_LED_GPIO_Port GPIOA
 
 /* LD2 */
-#define LED_G1_Port GPIOA
-#define LED_G1_Pin  GPIO_PIN_6
+#define LED_G1_Port WORK_LED_GPIO_Port
+#define LED_G1_Pin  WORK_LED_Pin
 
 /* LD3 */
-#define LED_G2_Port GPIOA
-#define LED_G2_Pin  GPIO_PIN_7
+#define LED_G2_Port WORK_LED_GPIO_Port
+#define LED_G2_Pin  WORK_LED_Pin
 
 /* Enumerations --------------------------------------------------------------*/
 /* Error codes */
@@ -86,11 +85,11 @@ enum eApplicationErrorCodes
 };
 
 /* Hardware Macros -----------------------------------------------------------*/
-#define LED_G1_ON()  HAL_GPIO_WritePin(LED_G1_Port, LED_G1_Pin, GPIO_PIN_RESET)
-#define LED_G1_OFF() HAL_GPIO_WritePin(LED_G1_Port, LED_G1_Pin, GPIO_PIN_SET)
+#define LED_G1_ON()  HAL_GPIO_WritePin(LED_G1_Port, LED_G1_Pin, GPIO_PIN_SET)
+#define LED_G1_OFF() HAL_GPIO_WritePin(LED_G1_Port, LED_G1_Pin, GPIO_PIN_RESET)
 #define LED_G1_TG()  HAL_GPIO_TogglePin(LED_G1_Port, LED_G1_Pin)
-#define LED_G2_ON()  HAL_GPIO_WritePin(LED_G2_Port, LED_G2_Pin, GPIO_PIN_RESET)
-#define LED_G2_OFF() HAL_GPIO_WritePin(LED_G2_Port, LED_G2_Pin, GPIO_PIN_SET)
+#define LED_G2_ON()  HAL_GPIO_WritePin(LED_G2_Port, LED_G2_Pin, GPIO_PIN_SET)
+#define LED_G2_OFF() HAL_GPIO_WritePin(LED_G2_Port, LED_G2_Pin, GPIO_PIN_RESET)
 #define LED_G2_TG()  HAL_GPIO_TogglePin(LED_G2_Port, LED_G2_Pin)
 
 #define LED_ALL_ON() \
@@ -112,6 +111,7 @@ enum eApplicationErrorCodes
         LED_G2_TG(); \
     } while(0)
 
+
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/
@@ -122,14 +122,10 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define LED_D2_Pin GPIO_PIN_6
-#define LED_D2_GPIO_Port GPIOA
-#define LED_D3_Pin GPIO_PIN_7
-#define LED_D3_GPIO_Port GPIOA
-#define Detect_SDIO_Pin GPIO_PIN_9
-#define Detect_SDIO_GPIO_Port GPIOD
 
 /* USER CODE BEGIN Private defines */
+
+#define SD_SPI_HANDLE hspi1
 
 /* USER CODE END Private defines */
 
