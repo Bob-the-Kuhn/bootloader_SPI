@@ -67,7 +67,7 @@ static void MX_USART3_UART_Init(void);
 
 static void main_boot(void);
 uint8_t Enter_Bootloader(void);
-void SD_Eject(void) {}
+void SD_Eject(void) {};
 void UART3_Init(void);
 void UART3_DeInit(void);
 void Error_Handler(void);
@@ -115,7 +115,7 @@ int main(void)
   MX_USART3_UART_Init();
   MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
-  
+
   main_boot();
   /* USER CODE END 2 */
 
@@ -153,6 +153,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
+    print("HAL_RCC_OscConfig\n");
     Error_Handler();
   }
 
@@ -167,8 +168,10 @@ void SystemClock_Config(void)
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
   {
+    print("HAL_RCC_ClockConfig\n");
     Error_Handler();
   }
+  HAL_Delay(1);  // some devices take time to powerup/init after clocks are applied
 }
 
 /**
@@ -201,6 +204,7 @@ static void MX_SPI1_Init(void)
   hspi1.Init.CRCPolynomial = 10;
   if (HAL_SPI_Init(&hspi1) != HAL_OK)
   {
+    print("HAL_SPI_Init\n");
     Error_Handler();
   }
   /* USER CODE BEGIN SPI1_Init 2 */
@@ -234,6 +238,7 @@ static void MX_USART3_UART_Init(void)
   huart3.Init.OverSampling = UART_OVERSAMPLING_16;
   if (HAL_UART_Init(&huart3) != HAL_OK)
   {
+    print("huart3.Init\n");
     Error_Handler();
   }
   /* USER CODE BEGIN USART3_Init 2 */
@@ -298,7 +303,7 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 
 /*
- * @brief  This is the main program. Does some setup, calls the 
+ * @brief  This is the main program. Does some setup, calls the
  *         bootloader and then jumps to the application.
  * @param  None
  * @retval None
@@ -306,10 +311,6 @@ static void MX_GPIO_Init(void)
  */
 static void main_boot(void)
 {
-
-#if(USE_VCP)
-    UART3_Init();
-#endif /* USE_VCP */
 
     print("\nPower up, Boot started.\n");
 
@@ -325,8 +326,9 @@ static void main_boot(void)
     }
 
     print("Entering Bootloader...\n");
-    Enter_Bootloader();
-
+    Bootloader_Init();
+    uint8_t temp_stat = Enter_Bootloader();
+    if((temp_stat == ERR_FLASH) || (temp_stat == ERR_VERIFY)) Error_Handler();
 
     /* Check if there is application in user flash area */
     if(Bootloader_CheckForApplication() == BL_OK)
@@ -437,8 +439,7 @@ uint8_t Enter_Bootloader(void)
     print("App size OK.\n");
 
     /* Step 1: Init Bootloader and Flash */
-    Bootloader_Init();
-    
+
    /* Check for flash write protection of application area*/
    if(~Bootloader_GetProtectionStatus() & APP_sector_mask) {
         print("Application space in flash is write protected.\n");
@@ -525,7 +526,7 @@ uint8_t Enter_Bootloader(void)
     f_close(&USERFile);
     LED_ALL_OFF();
     print("Programming finished.\n");
-    sprintf(msg, "Flashed: %lu bytes.\n", (cntr * 8));
+    sprintf(msg, "Flashed: %lu bytes.\n", (cntr * 4));
     print(msg);
 
     /* Open file for verification */
@@ -543,6 +544,7 @@ uint8_t Enter_Bootloader(void)
     }
 
     /* Step 5: Verify Flash Content */
+    print("Verifying ...\n");
     addr = APP_ADDRESS;
     cntr = 0;
     do
@@ -578,18 +580,17 @@ uint8_t Enter_Bootloader(void)
 f_close(&USERFile);
     print("Verification passed.\n");
     LED_G1_OFF();
-    
+
 #if defined(FILE_EXT_CHANGE) && (_LFN_UNICODE == 0)   // rename file if using ANSI/OEM strings
     TCHAR new_filename[strlen(CONF_FILENAME) + 1];
+    new_filename[strlen(CONF_FILENAME)] = '\0';  // terminate the string
     strncpy(new_filename, PGM_READ_WORD(&(CONF_FILENAME)), strlen(CONF_FILENAME) );  // copy FLASH into ram
     for (int x = 0; x < strlen(CONF_FILENAME); x++)  // convert to upper case
       new_filename[x] = toupper(new_filename[x]);
     char * pos = strrchr(new_filename, '.') + 1;  // find start of extension
     strncpy(pos, PGM_READ_WORD(&(FILE_EXT_CHANGE)), strlen(FILE_EXT_CHANGE) );  // copy FLASH into ram
-    *(pos + strlen(FILE_EXT_CHANGE)) = '\0';  // terminate the string
-    
     fr = f_unlink (new_filename); // if file already exists - delete it
-    
+
     fr = f_rename(CONF_FILENAME, new_filename);  // rename file to .CUR
     if(fr != FR_OK)
     {
@@ -598,9 +599,9 @@ f_close(&USERFile);
         sprintf(msg, "FatFs error code: %u\n", fr);
         print(msg);
 
-        SD_Eject();
-        print("SD ejected.\n");
-        return ERR_SD_FILE;
+      //SD_Eject();               // allow loading application even if can't rename
+      //print("SD ejected.\n");
+      //return ERR_SD_FILE;
     }
 #endif
 
@@ -610,7 +611,7 @@ f_close(&USERFile);
 
     /* Enable flash write protection */
 #if(USE_WRITE_PROTECTION)
-    print("Enablig flash write protection and generating system reset...\n");
+    print("Enabling flash write protection and generating system reset...\n");
     if(Bootloader_ConfigProtection(BL_PROTECTION_WRP) != BL_OK)
     {
         print("Failed to enable write protection.\n");
@@ -629,7 +630,7 @@ f_close(&USERFile);
  * @param  None
  * @retval None
  */
-void UART3_Init(void) 
+void UART3_Init(void)
 {
   //MX_USART3_UART_Init();
 }
@@ -674,7 +675,7 @@ void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
-  __disable_irq();
+  //__disable_irq();   //  HAL_Delay doesn't work if IRQs are disabled
   while (1)
   {
     LED_G1_ON();
