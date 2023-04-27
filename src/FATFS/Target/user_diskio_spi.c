@@ -26,22 +26,23 @@
 
 //#include "stm32f3xx_hal.h" /* Provide the low-level HAL functions */
 #include "user_diskio_spi.h"
+#include "main_boot.h"
 
 //Make sure you set #define SD_SPI_HANDLE as some hspix in main.h
 //Make sure you set #define SD_CS_GPIO_Port as some GPIO port in main.h
 //Make sure you set #define SD_CS_Pin as some GPIO pin in main.h
-extern SPI_HandleTypeDef SD_SPI_HANDLE;
+//extern SPI_HandleTypeDef SD_SPI_HANDLE;
 
 /* Function prototypes */
 
 //(Note that the _256 is used as a mask to clear the prescalar bits as it provides binary 111 in the correct position)
-#define FCLK_SLOW() { MODIFY_REG(SD_SPI_HANDLE.Instance->CR1, SPI_BAUDRATEPRESCALER_256, SPI_BAUDRATEPRESCALER_128); }	/* Set SCLK = slow, approx 280 KBits/s*/
-#define FCLK_FAST() { MODIFY_REG(SD_SPI_HANDLE.Instance->CR1, SPI_BAUDRATEPRESCALER_256, SPI_BAUDRATEPRESCALER_8); }	/* Set SCLK = fast, approx 4.5 MBits/s */
+//#define FCLK_SLOW() { MODIFY_REG(SD_SPI_HANDLE.Instance->CR1, SPI_BAUDRATEPRESCALER_256, SPI_BAUDRATEPRESCALER_128); }	/* Set SCLK = slow, approx 280 KBits/s*/
+//#define FCLK_FAST() { MODIFY_REG(SD_SPI_HANDLE.Instance->CR1, SPI_BAUDRATEPRESCALER_256, SPI_BAUDRATEPRESCALER_8); }	/* Set SCLK = fast, approx 4.5 MBits/s */
 
 //#define CS_HIGH()	{HAL_GPIO_WritePin(SD_CS_GPIO_Port, SD_CS_Pin, GPIO_PIN_SET);}
 //#define CS_LOW()	{HAL_GPIO_WritePin(SD_CS_GPIO_Port, SD_CS_Pin, GPIO_PIN_RESET);}
-#define CS_HIGH()	{}  // using hardware controlled SD_CS pin
-#define CS_LOW()	{}  // using hardware controlled SD_CS pin
+//#define CS_HIGH()	{}  // using hardware controlled SD_CS pin
+//#define CS_LOW()	{}  // using hardware controlled SD_CS pin
 
 
 /*--------------------------------------------------------------------------
@@ -108,9 +109,7 @@ BYTE xchg_spi (
 	BYTE dat	/* Data to send */
 )
 {
-	BYTE rxDat;
-    HAL_SPI_TransmitReceive(&SD_SPI_HANDLE, &dat, &rxDat, 1, 50);
-    return rxDat;
+	return SOFT_SPI_STM32_SpiTransfer_Mode_3(dat);
 }
 
 

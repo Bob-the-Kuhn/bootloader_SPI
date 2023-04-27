@@ -73,7 +73,7 @@ void Error_Handler(void);
 #define D4_LED_G2_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
-                      
+
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

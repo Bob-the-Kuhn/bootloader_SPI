@@ -31,6 +31,10 @@ extern "C" {
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "main.h"
+
+extern UART_HandleTypeDef huart1;
+extern TIM_HandleTypeDef htim1;
+
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -109,6 +113,50 @@ enum eApplicationErrorCodes
         LED_G1_TG(); \
         LED_G2_TG(); \
     } while(0)
+    
+// Soft SPI
+
+void spiBegin(void);
+void spiInit(uint8_t spiRate);
+uint8_t SOFT_SPI_STM32_SpiTransfer_Mode_3(uint8_t b);
+
+//#define WRITE(PIN, DATA)  {HAL_GPIO_WritePin(PIN, DATA);}
+//#define READ(PIN)         {HAL_GPIO_ReadPin(PIN);}
+//#define SD_MOSI_PIN (SD_MOSI_GPIO_Port, SD_MOSI_Pin)
+//#define SD_SCK_PIN (GPIOC, SD_SCK_Pin)
+//#define SD_SS_PIN (GPIOC, SDSS_Pin)
+//#define SD_MISO_PIN (GPIOC, SD_MISO_Pin)
+
+#define WRITE_SD_MOSI_PIN(DATA)  HAL_GPIO_WritePin(SD_MOSI_GPIO_Port, SD_MOSI_Pin, (DATA))
+#define WRITE_SD_SCK_PIN(DATA)   HAL_GPIO_WritePin(GPIOC, SD_SCK_Pin, (DATA))
+#define WRITE_SD_SS_PIN(DATA)    HAL_GPIO_WritePin(GPIOC, SDSS_Pin, (DATA))
+#define READ_SD_MISO_PIN()       HAL_GPIO_ReadPin(GPIOC, SD_MISO_Pin)
+
+
+#define WRITE_SD_SCK_PIN_RESET  GPIOC->BSRR = 0x10000000 // PC12
+#define WRITE_SD_SCK_PIN_SET    GPIOC->BSRR = 0x00001000 // PC12 
+
+#define WRITE_SD_MOSI_PIN_RESET GPIOD->BSRR = 0x00040000 // PD2
+#define WRITE_SD_MOSI_PIN_SET   GPIOD->BSRR = 0x00000004 // PD2
+ 
+#define SD_MISO_PIN_READ     ((GPIOC->IDR & 0x00000100) ? 1:0) // PC8
+
+#define CS_HIGH()	{WRITE_SD_SS_PIN(GPIO_PIN_SET);}
+#define CS_LOW()	{WRITE_SD_SS_PIN(GPIO_PIN_RESET);}
+
+enum Spi_Speed
+{
+  SPI_FULL_SPEED = 0,   
+  SPI_HALF_SPEED,   
+  SPI_QUARTER_SPEED,
+  SPI_EIGHTH_SPEED, 
+  SPI_SPEED_5,      
+  SPI_SPEED_6,      
+};
+
+
+#define FCLK_SLOW() { spiInit(SPI_QUARTER_SPEED); }	/* Set SCLK = slow, approx 280 KBits/s*/
+#define FCLK_FAST() { spiInit(SPI_FULL_SPEED); }	/* Set SCLK = fast, approx 1 MBits/s */
 
 /* USER CODE END EM */
 
@@ -122,8 +170,6 @@ void Error_Handler_Boot(void);
 /* Private defines -----------------------------------------------------------*/
 
 /* USER CODE BEGIN Private defines */
-
-#define SD_SPI_HANDLE hspi1     
 
 /* USER CODE END Private defines */
 
