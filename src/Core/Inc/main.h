@@ -27,7 +27,7 @@ extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32f4xx_hal.h"
+#include "stm32f1xx_hal.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -47,71 +47,6 @@ extern "C" {
 /* Exported macro ------------------------------------------------------------*/
 /* USER CODE BEGIN EM */
 
-/*** Application-Specific Configuration ***************************************/
-/* File name of application located on SD card */
-#define CONF_FILENAME "firmware.bin"
-#define FILE_EXT_CHANGE "CUR"
-/* For development/debugging: print messages to ST-LINK VCP */
-#define USE_VCP 1
-/******************************************************************************/
-
-/* Hardware Defines ----------------------------------------------------------*/
-                          
-
-#define WORK_LED_Pin GPIO_PIN_7
-#define WORK_LED_GPIO_Port GPIOA
-
-/* LD2 */
-#define LED_G1_Port WORK_LED_GPIO_Port
-#define LED_G1_Pin  WORK_LED_Pin
-
-/* LD3 */
-#define LED_G2_Port WORK_LED_GPIO_Port
-#define LED_G2_Pin  WORK_LED_Pin
-
-/* Enumerations --------------------------------------------------------------*/
-/* Error codes */
-enum eApplicationErrorCodes
-{
-    ERR_OK = 0,
-    ERR_WRP_ACTIVE,
-    ERR_SD_INIT,
-    ERR_SD_MOUNT,
-    ERR_SD_FILE,
-    ERR_APP_LARGE,
-    ERR_FLASH,
-    ERR_VERIFY,
-    ERR_OBP,
-};
-
-/* Hardware Macros -----------------------------------------------------------*/
-#define LED_G1_ON()  HAL_GPIO_WritePin(LED_G1_Port, LED_G1_Pin, GPIO_PIN_SET)
-#define LED_G1_OFF() HAL_GPIO_WritePin(LED_G1_Port, LED_G1_Pin, GPIO_PIN_RESET)
-#define LED_G1_TG()  HAL_GPIO_TogglePin(LED_G1_Port, LED_G1_Pin)
-#define LED_G2_ON()  HAL_GPIO_WritePin(LED_G2_Port, LED_G2_Pin, GPIO_PIN_SET)
-#define LED_G2_OFF() HAL_GPIO_WritePin(LED_G2_Port, LED_G2_Pin, GPIO_PIN_RESET)
-#define LED_G2_TG()  HAL_GPIO_TogglePin(LED_G2_Port, LED_G2_Pin)
-
-#define LED_ALL_ON() \
-    do               \
-    {                \
-        LED_G1_ON(); \
-        LED_G2_ON(); \
-    } while(0)
-#define LED_ALL_OFF() \
-    do                \
-    {                 \
-        LED_G1_OFF(); \
-        LED_G2_OFF(); \
-    } while(0)
-#define LED_ALL_TG() \
-    do               \
-    {                \
-        LED_G1_TG(); \
-        LED_G2_TG(); \
-    } while(0)
-
-
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/
@@ -122,11 +57,23 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define D2_LED_G2_Pin GPIO_PIN_5
+#define D2_LED_G2_GPIO_Port GPIOE
+#define Detect_SDIO_Pin GPIO_PIN_1
+#define Detect_SDIO_GPIO_Port GPIOC
+#define SD_MISO_Pin GPIO_PIN_8
+#define SD_MISO_GPIO_Port GPIOC
+#define SDSS_Pin GPIO_PIN_11
+#define SDSS_GPIO_Port GPIOC
+#define SD_SCK_Pin GPIO_PIN_12
+#define SD_SCK_GPIO_Port GPIOC
+#define SD_MOSI_Pin GPIO_PIN_2
+#define SD_MOSI_GPIO_Port GPIOD
+#define D4_LED_G2_Pin GPIO_PIN_5
+#define D4_LED_G2_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
-
-#define SD_SPI_HANDLE hspi1
-
+                      
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
