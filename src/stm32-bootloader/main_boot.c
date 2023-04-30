@@ -131,10 +131,6 @@ HAL_Delay(1000);
 */
 static void main_boot(void)
 {
-  
-
-  sprintf(msg1, "\n\nWRITE_Prot_Old_Flag 1 : %08lX  old: %08lX\n", WRITE_Prot_Old_Flag, Write_Prot_Old);
-  print(msg1);
   print("\nPower up, Boot started.\n");
 
   /* Check system reset flags */
@@ -195,9 +191,6 @@ static void main_boot(void)
 */
 uint8_t Enter_Bootloader(void)
 {
-  sprintf(msg1, "write protect bits : %08lX\n", ~Bootloader_GetProtectionStatus());
-  print(msg1);
-  
   FRESULT fr;
   UINT num;
   //    uint8_t i;
@@ -250,8 +243,6 @@ uint8_t Enter_Bootloader(void)
   /* Step 1: Init Bootloader and Flash */
 
   /* Check for flash write protection of application area*/
-  sprintf(msg1, "WRITE_Prot_Old_Flag 2 : %08lX  old: %08lX\n", WRITE_Prot_Old_Flag, Write_Prot_Old);
-  print(msg1);
   if (~Bootloader_GetProtectionStatus() & WRITE_protection) {
     print("Application space in flash is write protected.\n");
     if (IGNORE_WRITE_PROTECTION) {
@@ -291,10 +282,6 @@ uint8_t Enter_Bootloader(void)
       }
     }
   }
-  
-  sprintf(msg1, "WRITE_Prot_Old_Flag 3 : %08lX  old: %08lX\n", WRITE_Prot_Old_Flag, Write_Prot_Old);
-  print(msg1);
-
 
   /* Step 2: Erase Flash */
   print("Erasing flash...\n");
@@ -451,12 +438,10 @@ uint8_t Enter_Bootloader(void)
   
   /* Restore flash write protection */
   #if(!USE_WRITE_PROTECTION && RESTORE_WRITE_PROTECTION && IGNORE_WRITE_PROTECTION)
-  sprintf(msg1, "WRITE_Prot_Old_Flag 4 : %08lX  old: %08lX\n", WRITE_Prot_Old_Flag, Write_Prot_Old);
-  print(msg1);
     if (WRITE_Prot_Old_Flag == WRITE_Prot_Original_flag) {
       WRITE_Prot_Old_Flag = WRITE_Prot_Old_Flag_Restored_flag;  // indicate we've restored the protection
       print("Restoring flash write protection and generating system reset...\n");
-      
+      print("  May require power cycle to recover.\n");
       if (Bootloader_ConfigProtection(Write_Prot_Old, WP_SET) != BL_OK)  // sends system though reset - no more code executed unless there's an error
       {
         print("Failed to restore write protection.\n");

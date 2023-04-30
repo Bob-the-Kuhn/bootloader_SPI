@@ -99,8 +99,6 @@ uint8_t Bootloader_Init(void)
     print(msg);
     sprintf(msg, "Lowest possible APP_ADDRESS is %08lX\n", APP_first_addr);
     print(msg);
-    sprintf(msg, "WRITE_protection mask: %08lX\n", WRITE_protection);
-    print(msg);
     /* check APP_ADDRESS */
     if (APP_ADDRESS & 0x1ff) {
       print("ERROR - application address not on 512 byte boundary\n");
@@ -184,7 +182,7 @@ uint8_t Bootloader_FlashBegin(void)
 uint8_t Bootloader_FlashNext(uint64_t data)
 {
     HAL_StatusTypeDef status = HAL_OK; //debug
-    if(!(flash_ptr <= (FLASH_BASE + FLASH_SIZE - 8)) ||
+    if (!(flash_ptr <= (FLASH_BASE + FLASH_SIZE - 8)) ||
        (flash_ptr < APP_ADDRESS))
     {
         HAL_FLASH_Lock();
@@ -194,11 +192,11 @@ uint8_t Bootloader_FlashNext(uint64_t data)
     char msg[64]; //debug
     uint64_t read_data;
     status = HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, flash_ptr, data);
-    if(status == HAL_OK)
+    if (status == HAL_OK)
     {
         /* Check the written value */
         read_data = *(uint64_t*)flash_ptr;
-        if(read_data != data)
+        if (read_data != data)
         {
             /* Flash content doesn't match source content */
                 HAL_FLASH_Lock();
@@ -280,10 +278,8 @@ const char *byte_to_binary (uint32_t x)
  */
 uint8_t Bootloader_ConfigProtection(uint32_t protection, uint8_t set)
 {
-char msg[64];
     FLASH_OBProgramInitTypeDef OBStruct = {0};
     HAL_StatusTypeDef status            = HAL_ERROR;
-print("\ninside Bootloader_ConfigProtection\n");  
     status = HAL_FLASH_Unlock();
     status |= HAL_FLASH_OB_Unlock();
 
@@ -295,15 +291,12 @@ print("\ninside Bootloader_ConfigProtection\n");
     OBStruct.WRPPage = protection;            // select affected sectors
     OBStruct.WRPState = set ? OB_WRPSTATE_ENABLE : OB_WRPSTATE_DISABLE;    //  set/clear write protection
     status = HAL_FLASHEx_OBProgram(&OBStruct);  // write
-    if(status == HAL_OK)
+    if (status == HAL_OK)
     {
-print("status == HAL_OK\n");        
       if (!set) {
         print("write protection removed\n");
         WRITE_Prot_Old_Flag = WRITE_Prot_Original_flag;  // flag that protection was removed so can 
       }                                             // restore write protection after next reset)
-      sprintf(msg, "WRITE_Prot_Old_Flag 5 : %08lX, flag: %08lX\n", WRITE_Prot_Old_Flag, (uint32_t)WRITE_Prot_Original_flag);
-      print(msg);
       Magic_Location = Magic_BootLoader;  // flag that we should load the bootloader 
                                           // after the next reset
       /* Flash Option Bytes are only changed/updated during a system reset. */                                     
@@ -351,7 +344,7 @@ uint8_t Bootloader_VerifyChecksum(void)
     CrcHandle.Init.InputDataInversionMode  = CRC_INPUTDATA_INVERSION_NONE;
     CrcHandle.Init.OutputDataInversionMode = CRC_OUTPUTDATA_INVERSION_DISABLE;
     CrcHandle.InputDataFormat              = CRC_INPUTDATA_FORMAT_WORDS;
-    if(HAL_CRC_Init(&CrcHandle) != HAL_OK)
+    if (HAL_CRC_Init(&CrcHandle) != HAL_OK)
     {
         return BL_CHKS_ERROR;
     }
@@ -362,7 +355,7 @@ uint8_t Bootloader_VerifyChecksum(void)
     __HAL_RCC_CRC_FORCE_RESET();
     __HAL_RCC_CRC_RELEASE_RESET();
 
-    if((*(uint32_t*)CRC_ADDRESS) == calculatedCrc)
+    if ((*(uint32_t*)CRC_ADDRESS) == calculatedCrc)
     {
         return BL_OK;
     }
