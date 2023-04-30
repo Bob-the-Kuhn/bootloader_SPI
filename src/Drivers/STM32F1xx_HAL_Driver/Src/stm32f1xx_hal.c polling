@@ -303,9 +303,17 @@ __weak void HAL_IncTick(void)
   */
 __weak uint32_t HAL_GetTick(void)
 {
+  if (SysTick->VAL < 100) { 
+    SysTick->VAL = 0;
+    HAL_IncTick(); 
+  }
   return uwTick;
 }
 
+__weak uint32_t HAL_GetTick_2(void)
+{
+  return uwTick;
+}                                   
 /**
   * @brief This function returns a tick priority.
   * @retval tick priority
@@ -378,8 +386,11 @@ __weak void HAL_Delay(uint32_t Delay)
     wait += (uint32_t)(uwTickFreq);
   }
 
-  while ((HAL_GetTick() - tickstart) < wait)
+  while ((HAL_GetTick_2() - tickstart) < wait)
   {
+    while (SysTick->VAL > 100) {}  // wait for SysTick counter to be close to reloading
+    SysTick->VAL = 0;
+    HAL_IncTick();
   }
 }
 

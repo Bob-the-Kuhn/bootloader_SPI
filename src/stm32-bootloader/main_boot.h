@@ -59,7 +59,7 @@ extern TIM_HandleTypeDef htim1;
 /******************************************************************************/
 
 /* Hardware Defines ----------------------------------------------------------*/
-                          
+
 
 //#define WORK_LED_Pin GPIO_PIN_2
 //#define WORK_LED_GPIO_Port GPIOB
@@ -113,7 +113,7 @@ enum eApplicationErrorCodes
         LED_G1_TG(); \
         LED_G2_TG(); \
     } while(0)
-    
+
 // Soft SPI
 
 void spiBegin(void);
@@ -134,11 +134,11 @@ uint8_t SOFT_SPI_STM32_SpiTransfer_Mode_3(uint8_t b);
 
 
 #define WRITE_SD_SCK_PIN_RESET  GPIOC->BSRR = 0x10000000 // PC12
-#define WRITE_SD_SCK_PIN_SET    GPIOC->BSRR = 0x00001000 // PC12 
+#define WRITE_SD_SCK_PIN_SET    GPIOC->BSRR = 0x00001000 // PC12
 
 #define WRITE_SD_MOSI_PIN_RESET GPIOD->BSRR = 0x00040000 // PD2
 #define WRITE_SD_MOSI_PIN_SET   GPIOD->BSRR = 0x00000004 // PD2
- 
+
 #define SD_MISO_PIN_READ     ((GPIOC->IDR & 0x00000100) ? 1:0) // PC8
 
 #define CS_HIGH()	{WRITE_SD_SS_PIN(GPIO_PIN_SET);}
@@ -146,17 +146,19 @@ uint8_t SOFT_SPI_STM32_SpiTransfer_Mode_3(uint8_t b);
 
 enum Spi_Speed
 {
-  SPI_FULL_SPEED = 0,   
-  SPI_HALF_SPEED,   
+  SPI_FULL_SPEED = 0,
+  SPI_HALF_SPEED,
   SPI_QUARTER_SPEED,
-  SPI_EIGHTH_SPEED, 
-  SPI_SPEED_5,      
-  SPI_SPEED_6,      
+  SPI_EIGHTH_SPEED,
+  SPI_SPEED_5,
+  SPI_SPEED_6,
 };
 
 
-#define FCLK_SLOW() { spiInit(SPI_QUARTER_SPEED); }	/* Set SCLK = slow, approx 280 KBits/s*/
-#define FCLK_FAST() { spiInit(SPI_FULL_SPEED); }	/* Set SCLK = fast, approx 1 MBits/s */
+//#define FCLK_SLOW() { spiInit(SPI_QUARTER_SPEED); }	/* Set SCLK = slow, approx 280 KBits/s*/
+//#define FCLK_FAST() { spiInit(SPI_FULL_SPEED); }	/* Set SCLK = fast, approx 1 MBits/s */
+#define FCLK_SLOW() {}  // STM32F103 is so slow can only run at the slow speed
+#define FCLK_FAST() {}	// STM32F103 is so slow can only run at the slow speed
 
 /* USER CODE END EM */
 

@@ -38,7 +38,19 @@ typedef void (*pFunction)(void); /*!< Function pointer definition */
 static uint32_t flash_ptr = APP_ADDRESS;
 uint16_t APP_first_sector = 0;
 uint32_t APP_first_addr = 0;
-uint32_t WRITE_protection = 0xFFFFFFFF;  // default to removing write protection from all pages 
+uint32_t WRITE_protection = 0xFFFFFFFF;  // default to removing write protection from all pages
+
+// force the following unintialized variables into a seperate section so they don't get overwritten
+// when the reset routine zeroes out the bss section       
+uint32_t __attribute__((section("no_init"))) WRITE_Prot_Old_Flag;             // flag if protection was removed (in case need to restore write protection)
+uint32_t __attribute__((section("no_init"))) FILE_renamed;                   // flag if file was renamed (in case need to restore write protection)
+uint32_t __attribute__((section("no_init"))) Write_Prot_Old;
+// back to normal
+uint32_t Magic_Location = Magic_BootLoader;  // flag to tell if to boot into bootloader or the application
+// provide method for assembly file to access #define values
+uint32_t MagicBootLoader = Magic_BootLoader;
+uint32_t MagicApplication = Magic_Application;
+uint32_t APP_ADDR = APP_ADDRESS;
 
 /**
  * @brief  This function initializes bootloader and flash.
@@ -51,8 +63,8 @@ uint8_t Bootloader_Init(void)
     extern uint32_t _sdata[];   // start of RAM area for data
     extern uint32_t _edata[];   // end of RAM area for data
     // Read and use the linkerscript variables to determine end of bootloader in FLASH
-    uint32_t boot_loader_end = (uint32_t)_sidata + (uint32_t)_edata - (uint32_t)_sdata ; 
-    #define BOOT_LOADER_END boot_loader_end 
+    uint32_t boot_loader_end = (uint32_t)_sidata + (uint32_t)_edata - (uint32_t)_sdata ;
+    #define BOOT_LOADER_END boot_loader_end
 
     /* Clear flash flags */
     HAL_FLASH_Unlock();
@@ -62,33 +74,33 @@ uint8_t Bootloader_Init(void)
     // STM32F103ZE has 256 pages of 2K bytes each
     // pages 0-61 are write protected as pairs
     // pages 62-251 are protected as a block
-    
+
     // The protection is not affected if a page pair/block only has the bootloader in it.
     // The protection is cleared if a page pair/block has only the application space in it
     // The protection is cleared if a paige pair/block has both the bootloader the application space in it
- 
-    
+
+
     uint32_t mask = 1;  // mask for clearing write protect bits
-    for (uint16_t counter = 1; counter < FLASH_SIZE/FLASH_SECTOR_SIZE; counter++) {   // find 
+    for (uint16_t counter = 1; counter < FLASH_SIZE/FLASH_SECTOR_SIZE; counter++) {   // find
       if (!(counter % 2) && (counter <= 62)) mask = mask << 1; // move mask to left every 2 pages until past 62
       APP_first_addr = ((counter * FLASH_SECTOR_SIZE) + FLASH_BASE);
       if (BOOT_LOADER_END <= APP_first_addr) {
-        APP_first_sector = counter; 
-        WRITE_protection |= mask;   // remove write protection on this page pair 
+        APP_first_sector = counter;
+        WRITE_protection |= mask;   // remove write protection on this page pair
         break;
       }
       else {
         WRITE_protection &= ~mask;  // don't touch write protection on pages with bootloader in it
       }
     }
-     
+
     char msg[64];
     sprintf(msg, "\nBOOT_LOADER_END %08lX\n", BOOT_LOADER_END);
     print(msg);
     sprintf(msg, "Lowest possible APP_ADDRESS is %08lX\n", APP_first_addr);
     print(msg);
     sprintf(msg, "WRITE_protection mask: %08lX\n", WRITE_protection);
-    print(msg);   
+    print(msg);
     /* check APP_ADDRESS */
     if (APP_ADDRESS & 0x1ff) {
       print("ERROR - application address not on 512 byte boundary\n");
@@ -97,8 +109,8 @@ uint8_t Bootloader_Init(void)
     if (APP_ADDRESS < APP_first_addr) {
       print("ERROR - application address within same sector as boot loader\n");
       Error_Handler_Boot();
-    } 
-    
+    }
+
     if (APP_OFFSET == 0) return BL_ERASE_ERROR;   // start of boot program
     if (APP_first_sector == 0) return BL_ERASE_ERROR;   // application is within same sector as bootloader
 
@@ -117,14 +129,14 @@ uint8_t Bootloader_Erase(void)
     uint32_t PageError;
     FLASH_EraseInitTypeDef pEraseInit;
     pEraseInit.TypeErase = FLASH_TYPEERASE_PAGES;  // erase pages mode
-    pEraseInit.Banks = 0;                          // don't care in erase pages mode    
+    pEraseInit.Banks = 0;                          // don't care in erase pages mode
 //    pEraseInit.PageAddress = APP_first_addr;       // address within first page to erase
 //    pEraseInit.NbPages =  FLASH_SIZE/FLASH_SECTOR_SIZE - APP_first_sector + 1;
 ;
     __disable_irq();
-    HAL_FLASH_Unlock();  
-    
-    LED_G1_ON(); 
+    HAL_FLASH_Unlock();
+
+    LED_G1_ON();
     LED_G2_OFF();
     #define NBPAGES (FLASH_SIZE/FLASH_SECTOR_SIZE - APP_first_sector)
     #define FLASH_INCR 25  // number of pages to erase before reporting status
@@ -136,8 +148,8 @@ uint8_t Bootloader_Erase(void)
       print(msg);
       HAL_FLASHEx_Erase(&pEraseInit, &PageError);
     }
-    
-    HAL_FLASH_Lock();                 
+
+    HAL_FLASH_Lock();
     return (PageError == 0xFFFFFFFF) ? BL_OK : BL_ERASE_ERROR;
 }
 
@@ -185,19 +197,19 @@ uint8_t Bootloader_FlashNext(uint64_t data)
     if(status == HAL_OK)
     {
         /* Check the written value */
-        read_data = *(uint64_t*)flash_ptr; 
-        if(read_data != data)            
+        read_data = *(uint64_t*)flash_ptr;
+        if(read_data != data)
         {
             /* Flash content doesn't match source content */
                 HAL_FLASH_Lock();
                 print("Programming error\n");
                 sprintf(msg, "expected data (64 bit): %08lX %08lX\n", (uint32_t) (data >> 32) ,(uint32_t) data);
-                print(msg);   
+                print(msg);
                 sprintf(msg, "actual data (64 bit)  : %08lX %08lX\n", (uint32_t) (read_data >> 32) ,(uint32_t) read_data);
-                print(msg);   
+                print(msg);
                 sprintf(msg, "absolute address (byte): %08lX\n", flash_ptr);
                 print(msg);
-            
+
             HAL_FLASH_Lock();
             return BL_WRITE_ERROR;
         }
@@ -206,7 +218,7 @@ uint8_t Bootloader_FlashNext(uint64_t data)
     }
     else
     {
-        /* Error occurred while writing data into Flash */ 
+        /* Error occurred while writing data into Flash */
         HAL_FLASH_Lock();
         return BL_WRITE_ERROR;
     }
@@ -268,22 +280,34 @@ const char *byte_to_binary (uint32_t x)
  */
 uint8_t Bootloader_ConfigProtection(uint32_t protection, uint8_t set)
 {
+char msg[64];
     FLASH_OBProgramInitTypeDef OBStruct = {0};
     HAL_StatusTypeDef status            = HAL_ERROR;
-
+print("\ninside Bootloader_ConfigProtection\n");  
     status = HAL_FLASH_Unlock();
     status |= HAL_FLASH_OB_Unlock();
-    
+
     HAL_FLASHEx_OBGetConfig(&OBStruct);  // get current FLASH config
     
+    if (!set) Write_Prot_Old = OBStruct.WRPPage;   // save current FLASH protect incase we do a restore later
+
     OBStruct.OptionType = OPTIONBYTE_WRP;       // program write protection mode
     OBStruct.WRPPage = protection;            // select affected sectors
     OBStruct.WRPState = set ? OB_WRPSTATE_ENABLE : OB_WRPSTATE_DISABLE;    //  set/clear write protection
-    status = HAL_FLASHEx_OBProgram(&OBStruct);  // write 
+    status = HAL_FLASHEx_OBProgram(&OBStruct);  // write
     if(status == HAL_OK)
     {
-        /* Loading Flash Option Bytes - this generates a system reset. */    // apparently not on a STM32f107
-        HAL_FLASH_OB_Launch();
+print("status == HAL_OK\n");        
+      if (!set) {
+        print("write protection removed\n");
+        WRITE_Prot_Old_Flag = WRITE_Prot_Original_flag;  // flag that protection was removed so can 
+      }                                             // restore write protection after next reset)
+      sprintf(msg, "WRITE_Prot_Old_Flag 5 : %08lX, flag: %08lX\n", WRITE_Prot_Old_Flag, (uint32_t)WRITE_Prot_Original_flag);
+      print(msg);
+      Magic_Location = Magic_BootLoader;  // flag that we should load the bootloader 
+                                          // after the next reset
+      /* Flash Option Bytes are only changed/updated during a system reset. */                                     
+      NVIC_SystemReset();  // send system through reset
     }
 
     status |= HAL_FLASH_OB_Lock();
@@ -361,34 +385,61 @@ uint8_t Bootloader_CheckForApplication(void)
   return ((((*(uint32_t*)APP_ADDRESS) - RAM_BASE) <= RAM_SIZE) ? BL_OK : BL_NO_APP);
 }
 
+
+
+/**
+  * @brief System Clock Configuration
+  * @retval None
+  */
+void SystemClock_Config_reset(void)
+{
+  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+
+  /** Initializes the RCC Oscillators according to the specified parameters
+  * in the RCC_OscInitTypeDef structure.
+  */
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Initializes the CPU, AHB and APB buses clocks
+  */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
+  {
+    Error_Handler();
+  }
+}
+
 /**
  * @brief  This function performs the jump to the user application in flash.
  * @details The function carries out the following operations:
- *  - De-initialize the clock and peripheral configuration
- *  - Stop the systick
- *  - Set the vector table location (if ::SET_VECTOR_TABLE is enabled)
- *  - Sets the stack pointer location
- *  - Perform the jump
+ *  - Sets the flag that we should load application after the next reset
+ *  - Sends the card through reset
+ *  
+ *  The reset handler checks this flag and will either continue to start the
+ *  bootloader or it will start the application.
  */
-void Bootloader_JumpToApplication(void)
-{
-    uint32_t JumpAddress = *(__IO uint32_t*)(APP_ADDRESS + 4);
-    pFunction Jump       = (pFunction)JumpAddress;
-    
-    HAL_RCC_DeInit();
-    HAL_DeInit();
 
-    SysTick->CTRL = 0;
-    SysTick->LOAD = 0;
-    SysTick->VAL  = 0;
-
-#if(SET_VECTOR_TABLE)
-    SCB->VTOR = APP_ADDRESS;
-#endif
-
-    __set_MSP(*(__IO uint32_t*)APP_ADDRESS);
-    Jump();
+void Bootloader_JumpToApplication(void) {
+  
+  Magic_Location = Magic_Application;  // flag that we should load application 
+                                       // after the next reset
+  NVIC_SystemReset();                  // send the system through reset
 }
+
 
 /**
  * @brief  This function performs the jump to the MCU System Memory (ST

@@ -32,8 +32,14 @@
 /** Check application checksum on startup */
 #define USE_CHECKSUM 0
 
-/** Enable write protection after performing in-app-programming */
+/** Always write protect application area after performing in-app-programming */
 #define USE_WRITE_PROTECTION 0
+
+/** Ignore write protection of application area (clear protection and write to FLASH) */
+#define IGNORE_WRITE_PROTECTION 1
+
+/** Restore write protection after performing in-app-programming */
+#define RESTORE_WRITE_PROTECTION 1
 
 /** Automatically set vector table location before launching application */
 #define SET_VECTOR_TABLE 1
@@ -90,9 +96,9 @@
 #define SRAM1_BASE            ((uint32_t)0x20000000)  // SRAM1 base address in the alias region
 //#define SRAM1_SIZE_MAX        ((uint32_t)0x1BFFF)     // SRAM1 length (112 KB)
 #define SRAM1_SIZE_MAX        ((uint32_t)0xFFFF)     // SRAM1 length (64 KB)
-//#define SRAM2_BASE            ((uint32_t)0x2001C000) // SRAM2(16 KB) base address in the alias region  
+//#define SRAM2_BASE            ((uint32_t)0x2001C000) // SRAM2(16 KB) base address in the alias region
 //#define SRAM2_SIZE_MAX        ((uint32_t)0x03FFF)
-//#define PERIPH_BASE           ((uint32_t)0x40000000) // Peripheral base address in the alias region    
+//#define PERIPH_BASE           ((uint32_t)0x40000000) // Peripheral base address in the alias region
 
 
 #if defined(FLASH_BANK2_END)
@@ -103,10 +109,10 @@
                                    FLASH_FLAG_BSY_BANK2    | FLASH_FLAG_PGERR_BANK2 | \
                                    FLASH_FLAG_WRPERR_BANK2 | FLASH_FLAG_EOP_BANK2   | \
                                    FLASH_FLAG_OPTVERR)
-#else  
+#else
   #define FLASH_FLAG_ALL_ERRORS   (FLASH_FLAG_BSY          | FLASH_FLAG_PGERR       | \
                                    FLASH_FLAG_WRPERR       | FLASH_FLAG_EOP         | \
-                                   FLASH_FLAG_OPTVERR)       
+                                   FLASH_FLAG_OPTVERR)
 #endif
 
 /* MCU RAM information (to check whether flash contains valid application) */
@@ -148,9 +154,24 @@ void Bootloader_JumpToApplication(void);
 void Bootloader_JumpToSysMem(void);
 
 uint32_t Bootloader_GetVersion(void);
-extern uint32_t WRITE_protection;
 
-#define SET 1
-#define CLEAR 0
+extern uint32_t Magic_Location;
+#define Magic_BootLoader 0xB00720AD   //  semi random pattern to flag that next
+                                      //  reset should load the bootloader code
+#define Magic_Application 0xB0B1B0B2  //  semi random pattern to flag that next
+                                      //  reset should load the APPLICATION code
+
+extern uint32_t WRITE_protection;
+extern uint32_t WRITE_Prot_Old_Flag;             // flag if protection was removed (in case need to restore write protection)
+#define WRITE_Prot_Original_flag 0xB0B3B0B4
+#define WRITE_Prot_Old_Flag_Restored_flag 0xB0B5B0B6   // flag if protection was restored (to break an endless loop))
+extern uint32_t FILE_renamed;                   // flag if file was renamed (in case need to restore write protection)
+#define FILE_renamed_flag 0xB0B7B0B8
+extern uint32_t Write_Prot_Old;
+
+
+#define WP_CLEAR 0
+#define WP_SET 1
+
 
 #endif /* __BOOTLOADER_H */
