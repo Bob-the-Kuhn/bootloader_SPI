@@ -69,6 +69,8 @@ void print(const char* str);   // debug
 
 #define PGM_READ_WORD(x) *(x)
 
+char msg[64];
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -83,6 +85,11 @@ void print(const char* str);   // debug
 int main_boot_init(void)
 {
   /* USER CODE BEGIN 1 */
+
+    //sprintf(msg1, "SYSCLK_Frequency %08lu\n", HAL_RCC_GetSysClockFreq());
+    //print(msg1);
+    //sprintf(msg1, "HCLK_Frequency   %08lu\n", HAL_RCC_GetHCLKFreq());
+    //print(msg1);
 
   /* USER CODE END 1 */
 
@@ -190,14 +197,12 @@ static void main_boot(void)
 uint8_t Enter_Bootloader(void)
 {
   FRESULT fr;
-  UINT num;
   //    uint8_t i;
   uint8_t status;
-  uint64_t data;
+  //uint64_t data;
   uint32_t cntr;
-  uint32_t addr;
+ // uint32_t addr;
   //char USERPath[4] = {0x00};   /* SD logical drive path */
-  char msg[64] = {0x00};
 
   /* Mount SD card */
   fr = f_mount(&USERFatFS, (TCHAR const*)USERPath, 1);
@@ -262,7 +267,10 @@ uint8_t Enter_Bootloader(void)
       if (!(WRITE_Prot_Old_Flag == WRITE_Prot_Old_Flag_Restored_flag)) {   // already restored original protection so don't initiate the process again
         print("Disabling write protection and generating system reset...\n");
         print("  May require power cycle to recover.\n");
-        Magic_Location = Magic_BootLoader;  // flag that we should load the bootloader 
+
+        /* Eject SD card */
+        SD_Eject();
+        Magic_Location = Magic_BootLoader;  // flag that we should load the bootloader
                                             // after the next reset
         if (Bootloader_ConfigProtection(WRITE_protection, WP_CLEAR) != BL_OK)  // sends system though reset - no more code executed unless there's an error
           {
@@ -272,11 +280,11 @@ uint8_t Enter_Bootloader(void)
           }
 
         print("write protection removed\n");
-        
-        WRITE_Prot_Old_Flag = WRITE_Prot_Original_flag;  // flag that protection was removed so can 
+
+        WRITE_Prot_Old_Flag = WRITE_Prot_Original_flag;  // flag that protection was removed so can
                                                        // restore write protection after next reset)
-        
-        Magic_Location = Magic_BootLoader;  // flag that we should load the bootloader 
+
+        Magic_Location = Magic_BootLoader;  // flag that we should load the bootloader
                                             // after the next reset
         NVIC_SystemReset();  // send system through reset
       }
@@ -305,23 +313,20 @@ uint8_t Enter_Bootloader(void)
   print("Starting programming...\n");
   LED_G2_ON();
   cntr = 0;
+  UINT num;         
   Bootloader_FlashBegin();
   do
   {
-    data = 0xFFFFFFFFFFFFFFFF;
-    fr   = f_read(&USERFile, &data, 8, &num);
-    if (num)
+ uint8_t buffer[512];
+        
+    fr   = f_read(&USERFile, buffer, 512, &num);  
+    if(num)
     {
-      status = Bootloader_FlashNext(data);
-      if (status == BL_OK)
-      {
-        cntr++;
-      }
-      else
-      {
-        sprintf(msg, "Programming error at: %lu byte (%08lX)\n", (cntr * 8), (cntr * 8));
-        print(msg);
+      cntr += num;
+      status = Bootloader_FlashNext_Buf(buffer, num);
+      if(status != BL_OK)
 
+      {
         f_close(&USERFile);
         SD_Eject();
         print("SD ejected.\n");
@@ -330,11 +335,11 @@ uint8_t Enter_Bootloader(void)
         return ERR_FLASH;
       }
     }
-    if (cntr % 256 == 0)
-    {
-      /* Toggle green LED during programming */
-      LED_G1_TG();
-    }
+                        
+     
+    /* Toggle green LED during programming */
+    LED_G1_TG();
+     
   } while((fr == FR_OK) && (num > 0));
 
   /* Step 4: Finalize Programming */
@@ -342,7 +347,7 @@ uint8_t Enter_Bootloader(void)
   f_close(&USERFile);
   LED_ALL_OFF();
   print("Programming finished.\n");
-  sprintf(msg, "Flashed: %lu bytes.\n", (cntr * 8));
+  sprintf(msg, "Flashed: %lu bytes.\n", cntr);
   print(msg);
 
   /* Open file for verification */
@@ -360,6 +365,7 @@ uint8_t Enter_Bootloader(void)
   }
 
   /* Step 5: Verify Flash Content */
+#if 0  // adds 25-26 seconds but doesn't add any value (verify during programming only costs 60mS)
   print("Verifying ...\n");
   addr = APP_ADDRESS;
   cntr = 0;
@@ -393,8 +399,13 @@ uint8_t Enter_Bootloader(void)
       LED_G2_TG();
     }
   } while((fr == FR_OK) && (num > 0));
-  f_close(&USERFile);
+
   print("Verification passed.\n");
+
+ #endif
+
+  f_close(&USERFile);
+
   LED_G1_OFF();
 
   #if defined(FILE_EXT_CHANGE) && (_LFN_UNICODE == 0)   // rename file if using ANSI/OEM strings
@@ -407,21 +418,35 @@ uint8_t Enter_Bootloader(void)
     strncpy(pos, PGM_READ_WORD(&(FILE_EXT_CHANGE)), strlen(FILE_EXT_CHANGE) );  // copy FLASH into ram
 
     fr = f_unlink (new_filename); // if file already exists - delete it
-    
-    fr = f_rename(CONF_FILENAME, new_filename);  // rename file to .CUR
-    if (fr != FR_OK)
-    {
-      /* f_open failed */
-      print("File cannot be renamed.\n");
-      sprintf(msg, "FatFs error code: %u\n", fr);
-      print(msg);
-    
-      // allow loading application even if can't rename
-      Magic_Location = Magic_Application;  // flag that we should load application 
-                                           // after the next reset
+
+    if ((fr == FR_OK) || (fr == FR_NO_FILE)) {
+
+      fr = f_rename(CONF_FILENAME, new_filename);  // rename file to .CUR
+      if (fr != FR_OK)
+      {
+        /* f_open failed */
+        print("File cannot be renamed.\n");
+        sprintf(msg, "FatFs error code: %u\n", fr);
+        print(msg);
+
+        // allow loading application even if can't rename
+        Magic_Location = Magic_Application;  // flag that we should load application
+                                             // after the next reset
+      }
     }
+    else {
+          /* f_open failed */
+            print("removing .CUR failed.\n");
+            sprintf(msg, "FatFs error code: %u\n", fr);
+            print(msg);
+
+            // allow loading application even if can't rename
+            Magic_Location = Magic_Application;  // flag that we should load application
+                                                 // after the next reset
+    }
+
   #endif
- 
+
   /* Eject SD card */
   SD_Eject();
   print("SD ejected.\n");
@@ -429,18 +454,20 @@ uint8_t Enter_Bootloader(void)
   /* Enable flash write protection on application area */
   #if(USE_WRITE_PROTECTION && !RESTORE_WRITE_PROTECTION)
     print("Enabling flash write protection and generating system reset...\n");
+
     if (Bootloader_ConfigProtection(WRITE_protection, WP_SET) != BL_OK)  // sends system though reset - no more code executed unless there's an error
     {
       print("Failed to enable write protection.\n");
     }
   #endif
-  
+
   /* Restore flash write protection */
   #if(!USE_WRITE_PROTECTION && RESTORE_WRITE_PROTECTION && IGNORE_WRITE_PROTECTION)
     if (WRITE_Prot_Old_Flag == WRITE_Prot_Original_flag) {
       WRITE_Prot_Old_Flag = WRITE_Prot_Old_Flag_Restored_flag;  // indicate we've restored the protection
       print("Restoring flash write protection and generating system reset...\n");
       print("  May require power cycle to recover.\n");
+
       if (Bootloader_ConfigProtection(Write_Prot_Old, WP_SET) != BL_OK)  // sends system though reset - no more code executed unless there's an error
       {
         print("Failed to restore write protection.\n");
@@ -475,6 +502,7 @@ void Error_Handler_Boot(void)
   /* USER CODE BEGIN Error_Handler_Boot_Debug */
   /* User can add his own implementation to report the HAL error return state */
   //__disable_irq();   //  HAL_Delay doesn't work if IRQs are disabled
+
   while (1)
   {
     LED_G1_ON();

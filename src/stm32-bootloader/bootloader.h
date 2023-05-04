@@ -15,7 +15,7 @@
 
 #ifndef __BOOTLOADER_H
 #define __BOOTLOADER_H
-#include <stdint.h>
+#include "ff.h"
 
 /** Bootloader Configuration
  * @defgroup Bootloader_Configuration Bootloader Configuration
@@ -32,7 +32,7 @@
 /** Check application checksum on startup */
 #define USE_CHECKSUM 0
 
-/** Always write protect application area after performing in-app-programming */
+/** Enable write protection after performing in-app-programming */
 #define USE_WRITE_PROTECTION 0
 
 /** Ignore write protection of application area (clear protection and write to FLASH) */
@@ -40,7 +40,6 @@
 
 /** Restore write protection after performing in-app-programming */
 #define RESTORE_WRITE_PROTECTION 1
-
 /** Automatically set vector table location before launching application */
 #define SET_VECTOR_TABLE 1
 
@@ -141,6 +140,7 @@ uint8_t Bootloader_Init(void);
 uint8_t Bootloader_Erase(void);
 
 uint8_t Bootloader_FlashBegin(void);
+uint8_t Bootloader_FlashNext_Buf(uint8_t *data, UINT count);
 uint8_t Bootloader_FlashNext(uint64_t data);
 uint8_t Bootloader_FlashEnd(void);
 
@@ -165,8 +165,6 @@ extern uint32_t WRITE_protection;
 extern uint32_t WRITE_Prot_Old_Flag;             // flag if protection was removed (in case need to restore write protection)
 #define WRITE_Prot_Original_flag 0xB0B3B0B4
 #define WRITE_Prot_Old_Flag_Restored_flag 0xB0B5B0B6   // flag if protection was restored (to break an endless loop))
-extern uint32_t FILE_renamed;                   // flag if file was renamed (in case need to restore write protection)
-#define FILE_renamed_flag 0xB0B7B0B8
 extern uint32_t Write_Prot_Old;
 
 

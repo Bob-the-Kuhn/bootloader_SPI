@@ -33,7 +33,8 @@ extern "C" {
 #include "main.h"
 
 extern UART_HandleTypeDef huart1;
-extern TIM_HandleTypeDef htim1;
+
+extern char msg[64];
 
 /* USER CODE END Includes */
 
