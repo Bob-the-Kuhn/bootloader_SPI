@@ -297,8 +297,7 @@ uint8_t Bootloader_ConfigProtection(uint32_t protection, uint8_t set)
         print("write protection removed\n");
         WRITE_Prot_Old_Flag = WRITE_Prot_Original_flag;  // flag that protection was removed so can 
       }                                             // restore write protection after next reset)
-      Magic_Location = Magic_BootLoader;  // flag that we should load the bootloader 
-                                          // after the next reset
+
       /* Flash Option Bytes are only changed/updated during a system reset. */                                     
       NVIC_SystemReset();  // send system through reset
     }

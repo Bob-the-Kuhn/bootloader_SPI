@@ -15,7 +15,6 @@
   *
   ******************************************************************************
   */
-char msg1[64];
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main_boot.h"
@@ -27,7 +26,6 @@ char msg1[64];
 
 #include <string.h>
 #include <stdio.h>
-#include "bootloader.h"
 #include "ffconf.h"
 #include <ctype.h>
 #include <stdint.h>
@@ -85,7 +83,7 @@ void print(const char* str);   // debug
 int main_boot_init(void)
 {
   /* USER CODE BEGIN 1 */
-HAL_Delay(1000);
+
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -264,6 +262,8 @@ uint8_t Enter_Bootloader(void)
       if (!(WRITE_Prot_Old_Flag == WRITE_Prot_Old_Flag_Restored_flag)) {   // already restored original protection so don't initiate the process again
         print("Disabling write protection and generating system reset...\n");
         print("  May require power cycle to recover.\n");
+        Magic_Location = Magic_BootLoader;  // flag that we should load the bootloader 
+                                            // after the next reset
         if (Bootloader_ConfigProtection(WRITE_protection, WP_CLEAR) != BL_OK)  // sends system though reset - no more code executed unless there's an error
           {
             print("Failed to clear write protection.\n");
@@ -416,13 +416,12 @@ uint8_t Enter_Bootloader(void)
       sprintf(msg, "FatFs error code: %u\n", fr);
       print(msg);
     
-      //SD_Eject();               // allow loading application even if can't rename
-      //print("SD ejected.\n");
-      //return ERR_SD_FILE;
+      // allow loading application even if can't rename
+      Magic_Location = Magic_Application;  // flag that we should load application 
+                                           // after the next reset
     }
   #endif
-  FILE_renamed = FILE_renamed_flag; // flag that file was renamed (in case need to restore write protection)
-
+ 
   /* Eject SD card */
   SD_Eject();
   print("SD ejected.\n");
