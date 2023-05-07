@@ -18,7 +18,6 @@
 /* USER CODE END Header */
 #include "fatfs.h"
 
-
 uint8_t retUSER;    /* Return value for USER */
 char USERPath[4];   /* USER logical drive path */
 FATFS USERFatFS;    /* File system object for USER logical drive */
@@ -51,7 +50,5 @@ DWORD get_fattime(void)
 }
 
 /* USER CODE BEGIN Application */
-
-uint8_t FATFS_Init(void) {MX_FATFS_Init(); return 0;}
 
 /* USER CODE END Application */

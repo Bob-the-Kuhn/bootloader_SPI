@@ -40,8 +40,6 @@ void MX_FATFS_Init(void);
 
 /* USER CODE BEGIN Prototypes */
 
-uint8_t FATFS_Init(void);
-
 /* USER CODE END Prototypes */
 #ifdef __cplusplus
 }
