@@ -15,7 +15,7 @@
 
 #ifndef __BOOTLOADER_H
 #define __BOOTLOADER_H
-#include "ff.h"
+#include "ff.h"            
 
 /** Bootloader Configuration
  * @defgroup Bootloader_Configuration Bootloader Configuration
@@ -25,9 +25,9 @@
 /** Select target MCU family: please define the target MCU family type below.
  * Currently supported MCU families:
  *  - STM32L4
- *  - STM32F1
+ *  - STM32F4
  */
-//#define STM32F1
+//#define STM32F4
 
 /** Check application checksum on startup */
 #define USE_CHECKSUM 0
@@ -39,7 +39,7 @@
 #define IGNORE_WRITE_PROTECTION 1
 
 /** Restore write protection after performing in-app-programming */
-#define RESTORE_WRITE_PROTECTION 1
+#define RESTORE_WRITE_PROTECTION 1                  
 /** Automatically set vector table location before launching application */
 #define SET_VECTOR_TABLE 1
 
@@ -53,7 +53,6 @@
 
 /** Start address of application space in flash */
 #define APP_ADDRESS (uint32_t)0x08008000
-//#define APP_ADDRESS (uint32_t)0x0800A000
 //#define APP_ADDRESS (uint32_t)0x08020000  // first available for EXFAT
 /** End address of application space (address of last byte) */
 #define END_ADDRESS (uint32_t)0x080FFFFB
@@ -68,51 +67,39 @@
 
 /* Includes ------------------------------------------------------------------*/
 /* Include the appropriate header file */
-//#if defined(STM32F1)
-  #include "stm32f1xx.h"
-//#else
-//  #error "Target MCU header file is not defined or unsupported."
-//#endif
+#if defined(STM32F4)
+  #include "stm32f4xx.h"
+#else
+  #error "Target MCU header file is not defined or unsupported."
+#endif
 
 /* Defines -------------------------------------------------------------------*/
 /** Size of application in DWORD (32bits or 4bytes) */
 #define APP_SIZE (uint32_t)(((END_ADDRESS - APP_ADDRESS) + 3) / 4)
 
 /** Number of sectors per bank in flash */
-//uint32_t APP_first_sector;  // first FLASH sector an application can be loaded into
-//uint32_t APP_first_addr;    // beginning address of first FLASH sector an application can be loaded into
-//uint32_t APP_sector_mask;   // mask used to determine if any application sectors are write protected
+extern uint32_t APP_first_sector;  // first FLASH sector an application can be loaded into
+extern uint32_t APP_first_addr;    // beginning address of first FLASH sector an application can be loaded into
+extern uint32_t APP_sector_mask;   // mask used to determine if any application sectors are write protected
 #define APP_OFFSET (APP_ADDRESS - FLASH_BASE)  // how far from start of FLASH the APP starts
+//#define FLASH_SIZE            ((uint32_t)0x100000)  // 1024K bytes
 //#define FLASH_SIZE            ((uint32_t)0x100000)  // 1024K bytes
 #define FLASH_SIZE            ((uint32_t)0x80000)  // 512K bytes
 //#define FLASH_SIZE            ((uint32_t)0x40000)  // 256K bytes
 //#define LAST_SECTOR           11  // 1024K bytes STM32F407 has FLASH sectors 0-11
 #define LAST_SECTOR            7  // 512K bytes STM32F407VE has FLASH sectors 0-7
 #define FLASH_SECTOR_NBPERBANK  (1)
-#define FLASH_SECTOR_SIZE       ((uint32_t)0x800)  // 2K bytes
-//#define FLASH_SECTOR_SIZE       ((uint32_t)0x4000)  // 16K bytes
+#define FLASH_SECTOR_SIZE       ((uint32_t)0x4000)  // 16K bytes
 //#define FLASH_BASE            ((uint32_t)0x08000000) // FLASH(up to 1 MB) base address in the alias region
-#define SRAM1_BASE            ((uint32_t)0x20000000)  // SRAM1 base address in the alias region
-//#define SRAM1_SIZE_MAX        ((uint32_t)0x1BFFF)     // SRAM1 length (112 KB)
-#define SRAM1_SIZE_MAX        ((uint32_t)0xFFFF)     // SRAM1 length (64 KB)
+//#define SRAM1_BASE            ((uint32_t)0x20000000) // SRAM1(112 KB) base address in the alias region
+#define SRAM1_SIZE_MAX        ((uint32_t)0x1BFFF)
 //#define SRAM2_BASE            ((uint32_t)0x2001C000) // SRAM2(16 KB) base address in the alias region  
-//#define SRAM2_SIZE_MAX        ((uint32_t)0x03FFF)
+#define SRAM2_SIZE_MAX        ((uint32_t)0x03FFF)
 //#define PERIPH_BASE           ((uint32_t)0x40000000) // Peripheral base address in the alias region    
 
-
-#if defined(FLASH_BANK2_END)
-  #define FLASH_FLAG_ALL_ERRORS   (FLASH_FLAG_BSY          | FLASH_FLAG_PGERR       | \
-                                   FLASH_FLAG_WRPERR       | FLASH_FLAG_EOP         | \
-                                   FLASH_FLAG_BSY_BANK1    | FLASH_FLAG_PGERR_BANK1 | \
-                                   FLASH_FLAG_WRPERR_BANK1 | FLASH_FLAG_EOP_BANK1   | \
-                                   FLASH_FLAG_BSY_BANK2    | FLASH_FLAG_PGERR_BANK2 | \
-                                   FLASH_FLAG_WRPERR_BANK2 | FLASH_FLAG_EOP_BANK2   | \
-                                   FLASH_FLAG_OPTVERR)
-#else  
-  #define FLASH_FLAG_ALL_ERRORS   (FLASH_FLAG_BSY          | FLASH_FLAG_PGERR       | \
-                                   FLASH_FLAG_WRPERR       | FLASH_FLAG_EOP         | \
-                                   FLASH_FLAG_OPTVERR)       
-#endif
+#define FLASH_FLAG_ALL_ERRORS     (FLASH_FLAG_OPERR   | FLASH_FLAG_WRPERR | \
+                                   FLASH_FLAG_PGAERR  | FLASH_FLAG_PGSERR | \
+                                   FLASH_FLAG_PGPERR )
 
 /* MCU RAM information (to check whether flash contains valid application) */
 #define RAM_BASE SRAM1_BASE     /*!< Start address of RAM */
@@ -135,6 +122,15 @@ enum eBootloaderErrorCodes
     BL_OBP_ERROR    /*!< Flash option bytes programming error */
 };
 
+/** Flash Protection Types */
+enum eFlashProtectionTypes
+{
+    BL_PROTECTION_NONE  = 0,   /*!< No flash protection */
+    BL_PROTECTION_WRP   = 0x1, /*!< Flash write protection */
+    BL_PROTECTION_RDP   = 0x2, /*!< Flash read protection */
+    BL_PROTECTION_PCROP = 0x4, /*!< Flash propietary code readout protection */
+};
+
 /* Functions -----------------------------------------------------------------*/
 uint8_t Bootloader_Init(void);
 uint8_t Bootloader_Erase(void);
@@ -146,7 +142,6 @@ uint8_t Bootloader_FlashEnd(void);
 
 uint32_t Bootloader_GetProtectionStatus(void);
 uint8_t Bootloader_ConfigProtection(uint32_t protection, uint8_t set);
-
 uint8_t Bootloader_CheckSize(uint32_t appsize);
 uint8_t Bootloader_VerifyChecksum(void);
 uint8_t Bootloader_CheckForApplication(void);
@@ -170,6 +165,4 @@ extern uint32_t Write_Prot_Old;
 
 #define WP_CLEAR 0
 #define WP_SET 1
-
-
 #endif /* __BOOTLOADER_H */

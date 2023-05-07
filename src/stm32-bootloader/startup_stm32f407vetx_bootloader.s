@@ -80,6 +80,8 @@
   .fpu softvfp
   .thumb
 
+.global  g_pfnVectors
+.global  Default_Handler                        
 
 /* start address for the initialization values of the .data section. 
 defined in linker script */
@@ -103,10 +105,10 @@ defined in linker script */
  * @retval : None
 */
 
-  .section .text.isr_reset
-  .global isr_reset
-  .type isr_reset, %function
-isr_reset:
+  .section .text.Reset_Handler
+  .global Reset_Handler
+  .type Reset_Handler, %function
+Reset_Handler:
 
 /* start code adopted from the post by Piranha */
 
@@ -173,10 +175,10 @@ LoopFillZerobss:
       LDR R0, =0x08000000   // point at bootloader vector table
       LDR SP, [R0, #0]      // set SP from bootloader vector table
       DSB                   // Ensure the SP operation is complete
-      LDR R0, = init        // point this boot at bootloader
+      LDR R0, = main        // point this boot at bootloader
       BX   R0               // Start the bootloader code
   
-.size  isr_reset, .-isr_reset
+.size  Reset_Handler, .-Reset_Handler
 
 
 /* end code copied from the startup_stm32f407vetx.s file */

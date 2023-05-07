@@ -20,7 +20,7 @@
 #include "main_boot.h"
 #include "bootloader.h"
 #include "fatfs.h"
-
+//#include "ff.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -29,7 +29,7 @@
 #include "ffconf.h"
 #include <ctype.h>
 #include <stdint.h>
-
+//#include "gpio.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -60,13 +60,17 @@
 
 /* USER CODE BEGIN PFP */
 
-static void main_boot(void);
+void main_boot(void);
 uint8_t Enter_Bootloader(void);
 void SD_Eject(void) {};
 void UART1_Init(void);
 void UART1_DeInit(void);
 void Error_Handler_Boot(void);
+void GPIO_Init(void);
 void print(const char* str);   // debug
+
+
+void NVIC_System_Reset(void);
 
 #define PGM_READ_WORD(x) *(x)
 
@@ -76,6 +80,19 @@ char msg[64];
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+// couldn't get past "undefined reference to `HAL_GPIO_WritePin'" compile
+// errors so went with hard coded defines
+
+
+/* LD2 */
+//#define LED_G1_Port GPIOA
+//#define LED_G1_Pin  GPIO_PIN_6
+
+/* LD3 */
+//#define LED_G2_Port GPIOA
+//#define LED_G2_Pin  GPIO_PIN_7
+
 
 /* USER CODE END 0 */
 
@@ -87,10 +104,10 @@ int main_boot_init(void)
 {
   /* USER CODE BEGIN 1 */
 
-    //sprintf(msg1, "SYSCLK_Frequency %08lu\n", HAL_RCC_GetSysClockFreq());
-    //print(msg1);
-    //sprintf(msg1, "HCLK_Frequency   %08lu\n", HAL_RCC_GetHCLKFreq());
-    //print(msg1);
+    //sprintf(msg, "SYSCLK_Frequency %08lu\n", HAL_RCC_GetSysClockFreq());
+    //print(msg);
+    //sprintf(msg, "HCLK_Frequency   %08lu\n", HAL_RCC_GetHCLKFreq());
+    //print(msg);
 
   /* USER CODE END 1 */
 
@@ -105,11 +122,18 @@ int main_boot_init(void)
   HAL_NVIC_EnableIRQ(SysTick_IRQn);  // enable Systick irq
   /* USER CODE END Init */
 
-  /* USER CODE BEGIN 2 */
+  GPIO_Init();
+  LED_G1_OFF();
+  LED_G2_OFF();             
+
+  //print("debug test\n");  
+
+  LED_G1_ON();
+  LED_G2_OFF();    /* USER CODE BEGIN 2 */
 
   main_boot();
 
-  /* USER CODE END 2 */
+/* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
@@ -123,6 +147,53 @@ int main_boot_init(void)
 }
 
 
+/**
+  * @brief GPIO Initialization Function
+  * @param None
+  * @retval None
+*/
+void GPIO_Init(void)
+{
+
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+  /* USER CODE BEGIN MX_GPIO_Init_1 */
+  /* USER CODE END MX_GPIO_Init_1 */
+  
+  /*Configure GPIO pin Output Level */
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(D2_LED_G2_GPIO_Port, D2_LED_G2_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(D4_LED_G2_GPIO_Port, D4_LED_G2_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : D2_LED_G2_Pin */
+  GPIO_InitStruct.Pin = D2_LED_G2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(D2_LED_G2_GPIO_Port, &GPIO_InitStruct);
+
+
+  /*Configure GPIO pin : D4_LED_G2_Pin */
+  GPIO_InitStruct.Pin = D4_LED_G2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(D4_LED_G2_GPIO_Port, &GPIO_InitStruct);  
+ 
+  
+  /*Configure GPIO pin : Detect_SDIO_Pin */
+  #ifdef HAS_SD_DETECT
+  /*Configure GPIO pin : Detect_SDIO_Pin */
+  GPIO_InitStruct.Pin = Detect_SDIO_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(Detect_SDIO_GPIO_Port, &GPIO_InitStruct);
+  #endif  
+  
+}
 
 /* USER CODE BEGIN 4 */
 
@@ -133,7 +204,7 @@ int main_boot_init(void)
   * @retval None
   *
 */
-static void main_boot(void)
+void main_boot(void)
 {
 
   print("\nPower up, Boot started.\n");
@@ -199,13 +270,19 @@ static void main_boot(void)
 uint8_t Enter_Bootloader(void)
 {
   FRESULT fr;
+  
+  FATFS SDFatFS;  // create file system object
+  
+  FIL SDFile;     //  file name handle
+  
+  UINT num;
 
   //    uint8_t i;
   uint8_t status;
-  //uint64_t data;
+  uint64_t data;
   uint32_t cntr;
 //  uint32_t addr;
-  //char SDPath[4] = {0x00};   /* SD logical drive path */
+  char SDPath[4] = {0x00};   /* SD logical drive path */
 
   /* Mount SD card */
   fr = f_mount(&SDFatFS, (TCHAR const*)SDPath, 1);
@@ -275,7 +352,7 @@ uint8_t Enter_Bootloader(void)
         SD_Eject();
         Magic_Location = Magic_BootLoader;  // flag that we should load the bootloader
                                             // after the next reset
-        if (Bootloader_ConfigProtection(WRITE_protection, WP_CLEAR) != BL_OK)   // sends system though reset - no more code executed unless there's an error
+        if (Bootloader_ConfigProtection(WRITE_protection, WP_CLEAR) != BL_OK)   // sends system though reset - no more code executed unless there's an error  // apparently not on a STM32F107
           {
             print("Failed to clear write protection.\n");
             print("Exiting Bootloader.\n");
@@ -289,7 +366,7 @@ uint8_t Enter_Bootloader(void)
 
         Magic_Location = Magic_BootLoader;  // flag that we should load the bootloader
                                             // after the next reset
-        NVIC_SystemReset();  // send system through reset
+        // NVIC_System_Reset();  // send system through reset
       }
     }
   }
@@ -316,6 +393,45 @@ uint8_t Enter_Bootloader(void)
   print("Starting programming...\n");
   LED_G2_ON();
   cntr = 0;
+  
+#if 1  // F407 code - may be slow  
+    Bootloader_FlashBegin();
+  do
+  {
+    data = 0xFFFFFFFFFFFFFFFF;
+    //      fr   = f_read(&SDFile, &data, 8, &num);
+    fr   = f_read(&SDFile, &data, 4, &num);
+    if(num)
+    {
+      status = Bootloader_FlashNext(data);
+      if(status == BL_OK)
+      {
+        cntr++;
+      }
+      else
+      {
+        //                sprintf(msg, "Programming error at: %lu byte\n", (cntr * 8));
+        sprintf(msg, "  offset in file (byte):   %08lX\n", (cntr * 4));
+        print(msg);
+        
+        f_close(&SDFile);
+        SD_Eject();
+        print("SD ejected.\n");
+        
+        LED_ALL_OFF();
+        return ERR_FLASH;
+      }
+    }
+    if(cntr % 256 == 0)
+    {
+      /* Toggle green LED during programming */
+      LED_G1_TG();
+    }
+  } while((fr == FR_OK) && (num > 0));
+#endif  // F407 code  
+ 
+  
+#if 0  // F103 code so needs to be tested  
   UINT num;
   
   Bootloader_FlashBegin();
@@ -342,6 +458,8 @@ uint8_t Enter_Bootloader(void)
     /* Toggle green LED during programming */
     LED_G1_TG();
   } while((fr == FR_OK) && (num > 0));
+#endif // F103 code    
+  
 
   /* Step 4: Finalize Programming */
   Bootloader_FlashEnd();
@@ -415,7 +533,7 @@ uint8_t Enter_Bootloader(void)
       new_filename[x] = toupper(new_filename[x]);
     char * pos = strrchr(new_filename, '.') + 1;  // find start of extension
     strncpy(pos, PGM_READ_WORD(&(FILE_EXT_CHANGE)), strlen(FILE_EXT_CHANGE) );  // copy FLASH into ram
-
+    
     fr = f_unlink (new_filename); // if file already exists - delete it
 
     if ((fr == FR_OK) || (fr == FR_NO_FILE)) {
@@ -513,5 +631,3 @@ void Error_Handler_Boot(void)
   }
   /* USER CODE END Error_Handler_Boot_Debug */
 }
-
-

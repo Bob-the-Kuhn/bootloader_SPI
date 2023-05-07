@@ -58,6 +58,9 @@ static void MX_SPI1_Init(void);
 static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
 
+void main_boot_init(void);
+void Error_Handler_Boot(void);
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -105,6 +108,9 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    
+    main_boot_init();
+    
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -139,7 +145,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLQ = 4;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
-    Error_Handler();
+    Error_Handler_Boot();
   }
 
   /** Initializes the CPU, AHB and APB buses clocks
@@ -153,7 +159,7 @@ void SystemClock_Config(void)
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK)
   {
-    Error_Handler();
+    Error_Handler_Boot();
   }
 }
 
@@ -187,7 +193,7 @@ static void MX_SPI1_Init(void)
   hspi1.Init.CRCPolynomial = 10;
   if (HAL_SPI_Init(&hspi1) != HAL_OK)
   {
-    Error_Handler();
+    Error_Handler_Boot();
   }
   /* USER CODE BEGIN SPI1_Init 2 */
 
@@ -220,7 +226,7 @@ static void MX_USART1_UART_Init(void)
   huart1.Init.OverSampling = UART_OVERSAMPLING_16;
   if (HAL_UART_Init(&huart1) != HAL_OK)
   {
-    Error_Handler();
+    Error_Handler_Boot();
   }
   /* USER CODE BEGIN USART1_Init 2 */
 
@@ -253,7 +259,7 @@ static void MX_USART3_UART_Init(void)
   huart3.Init.OverSampling = UART_OVERSAMPLING_16;
   if (HAL_UART_Init(&huart3) != HAL_OK)
   {
-    Error_Handler();
+    Error_Handler_Boot();
   }
   /* USER CODE BEGIN USART3_Init 2 */
 

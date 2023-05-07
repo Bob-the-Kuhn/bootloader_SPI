@@ -63,13 +63,21 @@ extern char msg[64];
 //#define WORK_LED_Pin GPIO_PIN_2
 //#define WORK_LED_GPIO_Port GPIOB
 
-/* LD2 */
-#define LED_G1_Port D2_LED_G2_GPIO_Port
-#define LED_G1_Pin  D2_LED_G2_Pin
+/* D2 */
+#define LED_G1_Port GPIOA
+#define LED_G1_Pin  GPIO_PIN_6
 
-/* LD3 */
-#define LED_G2_Port D4_LED_G2_GPIO_Port
-#define LED_G2_Pin  D4_LED_G2_Pin
+/* D4 */
+#define LED_G2_Port GPIOA
+#define LED_G2_Pin  GPIO_PIN_7
+
+/* D2 */
+#define D2_LED_G2_GPIO_Port LED_G1_Port 
+#define D2_LED_G2_Pin       LED_G1_Pin  
+
+/* D4 */
+#define D4_LED_G2_GPIO_Port LED_G2_Port 
+#define D4_LED_G2_Pin       LED_G2_Pin  
 
 /* Enumerations --------------------------------------------------------------*/
 /* Error codes */
