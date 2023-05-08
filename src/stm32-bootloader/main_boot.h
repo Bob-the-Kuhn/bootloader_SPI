@@ -32,7 +32,8 @@ extern "C" {
 /* USER CODE BEGIN Includes */
 #include "main.h"
 #include "ff.h"
-extern UART_HandleTypeDef huart1;    
+extern UART_HandleTypeDef huart1;
+extern UART_HandleTypeDef huart3;
 extern char msg[64];
 /* USER CODE END Includes */
 
@@ -120,6 +121,29 @@ enum eApplicationErrorCodes
         LED_G1_TG(); \
         LED_G2_TG(); \
     } while(0)
+    
+// SD card pins
+
+// SD_detect: PB11 
+#define SD_detect_Pin  GPIO_PIN_11
+#define SD_detect_Port GPIOB
+// SDSS: PA4
+#define SDSS_Pin  GPIO_PIN_4
+#define SDSS_Port GPIOA
+// SCK:  PA5
+#define SCK_Pin  GPIO_PIN_5
+#define SCK_Port GPIOA
+// MOSI: PB5
+#define MOSI_Pin  GPIO_PIN_5
+#define MOSI_Port GPIOB
+// MISO: PA6
+#define MISO_Pin  GPIO_PIN_6
+#define MISO_Port GPIOA
+
+// defines for use in user_diskio_spi.c
+#define SD_SPI_HANDLE hspi1
+#define SD_CS_GPIO_Port SDSS_Port
+#define SD_CS_Pin SDSS_Pin
 
 /* USER CODE END EM */
 

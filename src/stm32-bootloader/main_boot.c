@@ -68,7 +68,8 @@ void UART1_DeInit(void);
 void Error_Handler_Boot(void);
 void GPIO_Init(void);
 void print(const char* str);   // debug
-
+//void HAL_SPI_MspInit(SPI_HandleTypeDef* hspi);  // GPIO init of SPI pins
+extern SPI_HandleTypeDef hspi1;
 
 void NVIC_System_Reset(void);
 
@@ -81,19 +82,6 @@ char msg[64];
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-// couldn't get past "undefined reference to `HAL_GPIO_WritePin'" compile
-// errors so went with hard coded defines
-
-
-/* LD2 */
-//#define LED_G1_Port GPIOA
-//#define LED_G1_Pin  GPIO_PIN_6
-
-/* LD3 */
-//#define LED_G2_Port GPIOA
-//#define LED_G2_Pin  GPIO_PIN_7
-
-
 /* USER CODE END 0 */
 
 /**
@@ -104,10 +92,10 @@ int main_boot_init(void)
 {
   /* USER CODE BEGIN 1 */
 
-    //sprintf(msg, "SYSCLK_Frequency %08lu\n", HAL_RCC_GetSysClockFreq());
-    //print(msg);
-    //sprintf(msg, "HCLK_Frequency   %08lu\n", HAL_RCC_GetHCLKFreq());
-    //print(msg);
+    sprintf(msg, "SYSCLK_Frequency %08lu\n", HAL_RCC_GetSysClockFreq());
+    print(msg);
+    sprintf(msg, "HCLK_Frequency   %08lu\n", HAL_RCC_GetHCLKFreq());
+    print(msg);
 
   /* USER CODE END 1 */
 
@@ -123,6 +111,7 @@ int main_boot_init(void)
   /* USER CODE END Init */
 
   GPIO_Init();
+  HAL_SPI_MspInit(&hspi1);               // setup the SPI pins
   LED_G1_OFF();
   LED_G2_OFF();             
 
@@ -160,13 +149,11 @@ void GPIO_Init(void)
   /* USER CODE BEGIN MX_GPIO_Init_1 */
   /* USER CODE END MX_GPIO_Init_1 */
   
-  /*Configure GPIO pin Output Level */
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(D2_LED_G2_GPIO_Port, D2_LED_G2_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(D4_LED_G2_GPIO_Port, D4_LED_G2_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(SD_CS_GPIO_Port, SD_CS_Pin, GPIO_PIN_SET);  // default to SD card not selected
 
   /*Configure GPIO pin : D2_LED_G2_Pin */
   GPIO_InitStruct.Pin = D2_LED_G2_Pin;
@@ -181,7 +168,14 @@ void GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(D4_LED_G2_GPIO_Port, &GPIO_InitStruct);  
+  HAL_GPIO_Init(D4_LED_G2_GPIO_Port, &GPIO_InitStruct);
+  
+  /*Configure GPIO pin : SD_CS (also called SDSS and SPI1_NSS) */
+  GPIO_InitStruct.Pin = SD_CS_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(SD_CS_GPIO_Port, &GPIO_InitStruct);
  
   
   /*Configure GPIO pin : Detect_SDIO_Pin */
@@ -597,14 +591,14 @@ uint8_t Enter_Bootloader(void)
 
 
 /**
-  * @brief  Debug over UART1 -> ST-LINK -> USB Virtual Com Port
+  * @brief  Debug over UART3 -> ST-LINK -> USB Virtual Com Port
   * @param  str: string to be written to UART2
   * @retval None
 */
 void print(const char* str)
 {
   #if(USE_VCP)
-    HAL_UART_Transmit(&huart1, (uint8_t*)str, (uint16_t)strlen(str), 100);
+    HAL_UART_Transmit(&huart3, (uint8_t*)str, (uint16_t)strlen(str), 100);
   #endif /* USE_VCP */
 }
 
@@ -614,12 +608,12 @@ void print(const char* str)
   * @brief  This function is executed in case of error occurrence.
   * @retval None
   */
+
 void Error_Handler_Boot(void)
 {
   /* USER CODE BEGIN Error_Handler_Boot_Debug */
   /* User can add his own implementation to report the HAL error return state */
   //__disable_irq();   //  HAL_Delay doesn't work if IRQs are disabled
-  
   while (1)
   {
     LED_G1_ON();

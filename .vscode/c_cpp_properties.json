@@ -34,6 +34,8 @@
                 "C:/work/temp/bootloader_platformio/bootloader_SPI/src/Middlewares/Third_Party/FatFs",
                 "C:/work/temp/bootloader_platformio/bootloader_SPI/src/Middlewares/Third_Party/FatFs/src",
                 "C:/work/temp/bootloader_platformio/bootloader_SPI/src/Middlewares/Third_Party/FatFs/src/option",
+                "C:/work/temp/bootloader_platformio/bootloader_SPI/src/stm32-bootloader",
+                "C:/work/temp/bootloader_platformio/bootloader_SPI/src/SPI",
                 "C:/Users/bobku/.platformio/packages/framework-cmsis/CMSIS/Include",
                 "C:/Users/bobku/.platformio/packages/framework-cmsis-stm32f4/Include",
                 ""
@@ -67,6 +69,8 @@
                     "C:/work/temp/bootloader_platformio/bootloader_SPI/src/Middlewares/Third_Party/FatFs",
                     "C:/work/temp/bootloader_platformio/bootloader_SPI/src/Middlewares/Third_Party/FatFs/src",
                     "C:/work/temp/bootloader_platformio/bootloader_SPI/src/Middlewares/Third_Party/FatFs/src/option",
+                    "C:/work/temp/bootloader_platformio/bootloader_SPI/src/stm32-bootloader",
+                    "C:/work/temp/bootloader_platformio/bootloader_SPI/src/SPI",
                     "C:/Users/bobku/.platformio/packages/framework-cmsis/CMSIS/Include",
                     "C:/Users/bobku/.platformio/packages/framework-cmsis-stm32f4/Include",
                     ""

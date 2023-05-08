@@ -82,12 +82,12 @@ extern uint32_t APP_first_sector;  // first FLASH sector an application can be l
 extern uint32_t APP_first_addr;    // beginning address of first FLASH sector an application can be loaded into
 extern uint32_t APP_sector_mask;   // mask used to determine if any application sectors are write protected
 #define APP_OFFSET (APP_ADDRESS - FLASH_BASE)  // how far from start of FLASH the APP starts
+#define FLASH_SIZE            ((uint32_t)0x100000)  // 1024K bytes
 //#define FLASH_SIZE            ((uint32_t)0x100000)  // 1024K bytes
-//#define FLASH_SIZE            ((uint32_t)0x100000)  // 1024K bytes
-#define FLASH_SIZE            ((uint32_t)0x80000)  // 512K bytes
+//#define FLASH_SIZE            ((uint32_t)0x80000)  // 512K bytes
 //#define FLASH_SIZE            ((uint32_t)0x40000)  // 256K bytes
-//#define LAST_SECTOR           11  // 1024K bytes STM32F407 has FLASH sectors 0-11
-#define LAST_SECTOR            7  // 512K bytes STM32F407VE has FLASH sectors 0-7
+#define LAST_SECTOR           11  // 1024K bytes STM32F407 has FLASH sectors 0-11
+//#define LAST_SECTOR            7  // 512K bytes STM32F407VE has FLASH sectors 0-7
 #define FLASH_SECTOR_NBPERBANK  (1)
 #define FLASH_SECTOR_SIZE       ((uint32_t)0x4000)  // 16K bytes
 //#define FLASH_BASE            ((uint32_t)0x08000000) // FLASH(up to 1 MB) base address in the alias region
