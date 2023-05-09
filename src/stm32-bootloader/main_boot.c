@@ -92,10 +92,10 @@ int main_boot_init(void)
 {
   /* USER CODE BEGIN 1 */
 
-    sprintf(msg, "SYSCLK_Frequency %08lu\n", HAL_RCC_GetSysClockFreq());
-    print(msg);
-    sprintf(msg, "HCLK_Frequency   %08lu\n", HAL_RCC_GetHCLKFreq());
-    print(msg);
+   // sprintf(msg, "SYSCLK_Frequency %08lu\n", HAL_RCC_GetSysClockFreq());
+   // print(msg);
+   // sprintf(msg, "HCLK_Frequency   %08lu\n", HAL_RCC_GetHCLKFreq());
+   // print(msg);
 
   /* USER CODE END 1 */
 
@@ -320,7 +320,7 @@ uint8_t Enter_Bootloader(void)
   /* Step 1: Init Bootloader and Flash */
 
   /* Check for flash write protection of application area*/
-  if(~Bootloader_GetProtectionStatus() & WRITE_protection) {
+  if(~Bootloader_GetProtectionStatus() & WRITE_protection & APP_sector_mask) {  // F407 high bit says sector is protected
     print("Application space in flash is write protected.\n");
     if (IGNORE_WRITE_PROTECTION) {
       //        print("Press button to disable flash write protection...\n");
@@ -340,15 +340,15 @@ uint8_t Enter_Bootloader(void)
       //        print("Button was not pressed, write protection is still active.\n");
       if (!(WRITE_Prot_Old_Flag == WRITE_Prot_Old_Flag_Restored_flag)) {   // already restored original protection so don't initiate the process again
         print("Disabling write protection and generating system reset...\n");
-        print("  May require power cycle to recover.\n");
+        //print("  May require power cycle to recover.\n");
         
         /* Eject SD card */
         SD_Eject();
         Magic_Location = Magic_BootLoader;  // flag that we should load the bootloader
                                             // after the next reset
-        if (Bootloader_ConfigProtection(WRITE_protection, WP_CLEAR) != BL_OK)   // sends system though reset - no more code executed unless there's an error  // apparently not on a STM32F107
+        if (Bootloader_ConfigProtection(WRITE_protection, APP_sector_mask, WP_SAVE) != BL_OK)   // sends system though reset - no more code executed unless there's an error 
           {
-            print("Failed to clear write protection.\n");
+            print("Failed to set write protection.\n");
             print("Exiting Bootloader.\n");
             return ERR_OK;
           }
@@ -362,6 +362,10 @@ uint8_t Enter_Bootloader(void)
                                             // after the next reset
         // NVIC_System_Reset();  // send system through reset
       }
+      else {
+        return ERR_OK;  // already programmed FLASH & protection restored so it's time to launch the application
+      }
+        
     }
   }
 
@@ -416,7 +420,7 @@ uint8_t Enter_Bootloader(void)
         return ERR_FLASH;
       }
     }
-    if(cntr % 256 == 0)
+    if(cntr % 512 == 0)
     {
       /* Toggle green LED during programming */
       LED_G1_TG();
@@ -460,7 +464,7 @@ uint8_t Enter_Bootloader(void)
   f_close(&SDFile);
   LED_ALL_OFF();
   print("Programming finished.\n");
-  sprintf(msg, "Flashed: %lu bytes.\n", cntr);
+  sprintf(msg, "Flashed: %lu bytes.\n", cntr * 4);
   print(msg);
 
   /* Open file for verification */
@@ -529,9 +533,9 @@ uint8_t Enter_Bootloader(void)
     strncpy(pos, PGM_READ_WORD(&(FILE_EXT_CHANGE)), strlen(FILE_EXT_CHANGE) );  // copy FLASH into ram
     
     fr = f_unlink (new_filename); // if file already exists - delete it
-
+    
     if ((fr == FR_OK) || (fr == FR_NO_FILE)) {
-
+    
       fr = f_rename(CONF_FILENAME, new_filename);  // rename file to .CUR
       if (fr != FR_OK)
       {
@@ -539,7 +543,7 @@ uint8_t Enter_Bootloader(void)
         print("File cannot be renamed.\n");
         sprintf(msg, "FatFs error code: %u\n", fr);
         print(msg);
-
+    
         // allow loading application even if can't rename
         Magic_Location = Magic_Application;  // flag that we should load application
                                              // after the next reset
@@ -550,7 +554,7 @@ uint8_t Enter_Bootloader(void)
             print("removing .CUR failed.\n");
             sprintf(msg, "FatFs error code: %u\n", fr);
             print(msg);
-
+    
             // allow loading application even if can't rename
             Magic_Location = Magic_Application;  // flag that we should load application
                                                  // after the next reset
@@ -566,7 +570,7 @@ uint8_t Enter_Bootloader(void)
   #if(USE_WRITE_PROTECTION && !RESTORE_WRITE_PROTECTION)
     print("Enabling flash write protection and generating system reset...\n");
 
-    if (Bootloader_ConfigProtection(WRITE_protection, WP_SET) != BL_OK)  // sends system though reset - no more code executed unless there's an error
+    if (Bootloader_ConfigProtection(WRITE_protection, APP_sector_mask, WP_DONT_SAVE) != BL_OK)  // sends system though reset - no more code executed unless there's an error
     {
       print("Failed to enable write protection.\n");
     }
@@ -577,9 +581,9 @@ uint8_t Enter_Bootloader(void)
     if (WRITE_Prot_Old_Flag == WRITE_Prot_Original_flag) {
       WRITE_Prot_Old_Flag = WRITE_Prot_Old_Flag_Restored_flag;  // indicate we've restored the protection
       print("Restoring flash write protection and generating system reset...\n");
-      print("  May require power cycle to recover.\n");
+      //print("  May require power cycle to recover.\n");
 
-      if (Bootloader_ConfigProtection(Write_Prot_Old, WP_SET) != BL_OK)  // sends system though reset - no more code executed unless there's an error
+      if (Bootloader_ConfigProtection(Write_Prot_Old, APP_sector_mask, WP_DONT_SAVE) != BL_OK)  // sends system though reset - no more code executed unless there's an error
       {
         print("Failed to restore write protection.\n");
       }
@@ -599,6 +603,7 @@ void print(const char* str)
 {
   #if(USE_VCP)
     HAL_UART_Transmit(&huart3, (uint8_t*)str, (uint16_t)strlen(str), 100);
+    //HAL_UART_Transmit(&huart1, (uint8_t*)str, (uint16_t)strlen(str), 100);  // send it out both ports
   #endif /* USE_VCP */
 }
 

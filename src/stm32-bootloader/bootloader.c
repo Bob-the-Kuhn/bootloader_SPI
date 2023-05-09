@@ -42,8 +42,8 @@ static uint32_t flash_ptr = APP_ADDRESS;
 uint32_t APP_first_sector;  // first FLASH sector an application can be loaded into
 uint32_t APP_first_addr;    // beginning address of first FLASH sector an application can be loaded into
 uint32_t APP_sector_mask;   // mask used to determine if any application sectors are write protected
+                            // F407 mask is actually the first 12 bits in the upper word
 uint32_t WRITE_protection = 0xFFFFFFFF;  // default to removing write protection from all pages 
-
 // force the following unintialized variables into a seperate section so they don't get overwritten
 // when the reset routine zeroes out the bss section       
 uint32_t __attribute__((section("no_init"))) WRITE_Prot_Old_Flag;  // flag if protection was removed (in case need to restore write protection)
@@ -96,9 +96,9 @@ uint8_t Bootloader_Init(void)
     if (BOOT_LOADER_END <= 0x08000 + FLASH_BASE) {APP_first_sector = FLASH_SECTOR_2;   APP_first_addr = 0x08000 + FLASH_BASE;}
     if (BOOT_LOADER_END <= 0x04000 + FLASH_BASE) {APP_first_sector = FLASH_SECTOR_1;   APP_first_addr = 0x04000 + FLASH_BASE;}
     
-    sprintf(msg, "\nBOOT_LOADER_END %08lX\n", BOOT_LOADER_END);
+    sprintf(msg,"\nBOOT_LOADER_END %08lX\n", BOOT_LOADER_END);
     print(msg);
-    sprintf(msg, "Lowest possible APP_ADDRESS is %08lX\n", APP_first_addr);
+    sprintf(msg,"Lowest possible APP_ADDRESS is %08lX\n", APP_first_addr);
     print(msg);
     /* check APP_ADDRESS */
     if (APP_ADDRESS & 0x1ff) {
@@ -135,14 +135,14 @@ uint8_t Bootloader_Erase(void)
     __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_EOP | FLASH_FLAG_OPERR | FLASH_FLAG_WRPERR | FLASH_FLAG_PGAERR | FLASH_FLAG_PGSERR );
     HAL_FLASH_Unlock();  
     for (uint32_t i =  APP_first_sector; i <= LAST_SECTOR; i++) {
-      sprintf(msg, " Erasing sector: %d\n",(uint16_t)i);
+      sprintf(msg," Erasing sector: %d\n",(uint16_t)i);
       print(msg);
 //      __disable_irq();
       FLASH_Erase_Sector(i, FLASH_VOLTAGE_RANGE_3);
       while(FLASH->SR & FLASH_FLAG_BSY){};   // wait for completion
  //     __enable_irq();
       if (FLASH->SR) {
-        sprintf(msg, " FLASH status register: : %08lX\n",FLASH->SR);
+        sprintf(msg," FLASH status register: : %08lX\n",FLASH->SR);
         print(msg);
         __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_EOP | FLASH_FLAG_OPERR | FLASH_FLAG_WRPERR | FLASH_FLAG_PGAERR | FLASH_FLAG_PGSERR );
       }
@@ -209,11 +209,11 @@ uint8_t Bootloader_FlashNext_Buf(uint8_t *data, UINT count)
       /* Flash content doesn't match source content */
         HAL_FLASH_Lock();
         print("Programming error\n");
-        sprintf(msg, "expected data (16 bit): %04X\n", data_16);
+        sprintf(msg,"expected data (16 bit): %04X\n", data_16);
         print(msg);   
-        sprintf(msg, "actual data (16 bit)  : %04X\n", read_data);
+        sprintf(msg,"actual data (16 bit)  : %04X\n", read_data);
         print(msg);   
-        sprintf(msg, "absolute address (byte): %08lX\n", flash_ptr);
+        sprintf(msg,"absolute address (byte): %08lX\n", flash_ptr);
         print(msg);
     
         HAL_FLASH_Lock();
@@ -233,11 +233,11 @@ uint8_t Bootloader_FlashNext_Buf(uint8_t *data, UINT count)
       /* Flash content doesn't match source content */
         HAL_FLASH_Lock();
         print("Programming error\n");
-        sprintf(msg, "expected data (16 bit): %04X\n", data_16);
+        sprintf(msg,"expected data (16 bit): %04X\n", data_16);
         print(msg);   
-        sprintf(msg, "actual data (16 bit)  : %04X\n", read_data);
+        sprintf(msg,"actual data (16 bit)  : %04X\n", read_data);
         print(msg);   
-        sprintf(msg, "absolute address (byte): %08lX\n", flash_ptr);
+        sprintf(msg,"absolute address (byte): %08lX\n", flash_ptr);
         print(msg);
         
         HAL_FLASH_Lock();
@@ -280,11 +280,11 @@ uint8_t Bootloader_FlashNext(uint64_t data)
             /* Flash content doesn't match source content */
             HAL_FLASH_Lock();
             print("Programming error\n");
-            sprintf(msg, "  expected data (64 bit): %08lX %08lX\n", (uint32_t) (data >> 32) ,(uint32_t) data);
+            sprintf(msg,"  expected data (64 bit): %08lX %08lX\n", (uint32_t) (data >> 32) ,(uint32_t) data);
             print(msg);
-            sprintf(msg, "  actual data (64 bit)  : %08lX %08lX\n", (uint32_t) (read_data >> 32) ,(uint32_t) read_data);
+            sprintf(msg,"  actual data (64 bit)  : %08lX %08lX\n", (uint32_t) (read_data >> 32) ,(uint32_t) read_data);
             print(msg);
-            sprintf(msg, "  absolute address (byte): %08lX\n", flash_ptr);
+            sprintf(msg,"  absolute address (byte): %08lX\n", flash_ptr);
             print(msg);
                      
             
@@ -366,30 +366,94 @@ const char *byte_to_binary (uint32_t x)
  * @return Bootloader error code ::eBootloaderErrorCodes
  * @retval BL_OK: upon success
  * @retval BL_OBP_ERROR: upon failure
+ *
+ * Setting the protection is a five step process
+ *   1) Determine final proection
+ *   2) Disable protection on desired sectors
+ *   3) Enable protection on all other sectors
+ *   4) Invoke HAL_FLASH_OB_Launch()
+ *   5) Send the system through reset so that the new settings take effect
+ * 
  */
-uint8_t Bootloader_ConfigProtection(uint32_t protection, uint8_t set){
+uint8_t Bootloader_ConfigProtection(uint32_t protection, uint32_t mask, uint8_t save) {
     FLASH_OBProgramInitTypeDef OBStruct = {0};
     HAL_StatusTypeDef status            = HAL_ERROR;
 
     status = HAL_FLASH_Unlock();
     status |= HAL_FLASH_OB_Unlock();
     
+    // 1 - no write protection
+    // 0 - sector is write protected
+    
+    //#define OPT_WRP_ADDRESS 0x1fffc008
+    //#define FLASH_OB_GetWRP *(__IO uint16_t *)(OPT_WRP_ADDRESS)
+    
+    //sprintf(msg,"\nsave flag: %0u\n", save);
+    //print(msg);
+    //sprintf(msg,"requested protection:  %08lX\n", protection);
+    //print(msg);
+    //
+    //sprintf(msg,"mask:                  %08lX\n", mask);
+    //print(msg);
+
+    
     HAL_FLASHEx_OBGetConfig(&OBStruct);  // get current FLASH config
-    if (!set) Write_Prot_Old = OBStruct.WRPSector;   // save current FLASH protect incase we do a restore later
-    OBStruct.WRPSector = protection;            // select affected sectors
-    OBStruct.WRPState = OB_WRPSTATE_DISABLE;    //  disable write protection
-    status = HAL_FLASHEx_OBProgram(&OBStruct);  // write 
+    uint32_t WRPSector_save = OBStruct.WRPSector;
+    if (save) Write_Prot_Old = WRPSector_save;   // save current FLASH protect incase we do a restore later
+    
+    uint32_t final_protection = (protection & mask) | (WRPSector_save & ~mask); // keep protection of bootloader area
+    
+    //sprintf(msg,"final protection:      %08lX\n", final_protection);
+    //print(msg);
+    //
+    //sprintf(msg,"reported protection:   %08lX\n", WRPSector_save);
+    //print(msg);
+    
+    if (save) {  // only removing write protection
+    
+      OBStruct.WRPState = OB_WRPSTATE_DISABLE;    //  disable write protection
+      OBStruct.WRPSector = final_protection;      // select affected sectors
+      status = HAL_FLASHEx_OBProgram(&OBStruct);  // write 
+      
+      //HAL_FLASHEx_OBGetConfig(&OBStruct);  // get current FLASH config
+      //sprintf(msg,"after disable:         %08lX\n", OBStruct.WRPSector);
+      //print(msg);
+    }
+    else {
+
+      OBStruct.WRPState = OB_WRPSTATE_ENABLE;      //  enable write protection
+      OBStruct.WRPSector = ~final_protection;       // select affected sectors
+      status |= HAL_FLASHEx_OBProgram(&OBStruct);  // write 
+      
+      //HAL_FLASHEx_OBGetConfig(&OBStruct);  // get current FLASH config
+      //sprintf(msg,"after enable:          %08lX\n", OBStruct.WRPSector);
+      //print(msg);
+    }
+
 
     if(status == HAL_OK)
     {
-      if (!set) {
+      if (save) {
         print("write protection removed\n");
         WRITE_Prot_Old_Flag = WRITE_Prot_Original_flag;  // flag that protection was removed so can 
-      }                                             // restore write protection after next reset)
+      }  
+      else {
+        print("write protection restored\n");
+        WRITE_Prot_Old_Flag = WRITE_Prot_Old_Flag_Restored_flag;  // flag that protection was restored so won't 
+                                                                  // try to save write protection after next reset)
+      }
 
         /* Loading Flash Option Bytes - this generates a system reset. */    // apparently not on a STM32F407
-        status |= HAL_FLASH_OB_Launch();
+        status |= HAL_FLASH_OB_Launch();      //  this is needed plus still need to go through reset  
+        
+        //HAL_FLASHEx_OBGetConfig(&OBStruct);  // get current FLASH config
+        //sprintf(msg,"after OB_Launch:       %08lX\n", OBStruct.WRPSector);
+        //print(msg);
+        
+        NVIC_System_Reset();                  // send the system through reset so Flash Option Bytes get loaded
     }
+    
+      
 
     status |= HAL_FLASH_OB_Lock();
     status |= HAL_FLASH_Lock();
@@ -488,11 +552,11 @@ void Bootloader_JumpToApplication(void)
 //    
 //    //char msg[64];
 //    //print("JumpToApplication\n");
-//    //sprintf(msg, "PC  : %08lX\n", *(__IO uint32_t*)(APP_ADDRESS + 4));
+//    //sprintf(msg,"PC  : %08lX\n", *(__IO uint32_t*)(APP_ADDRESS + 4));
 //    //print(msg);
-//    //sprintf(msg, "SP  : %08lX\n", *(__IO uint32_t*)APP_ADDRESS);
+//    //sprintf(msg,"SP  : %08lX\n", *(__IO uint32_t*)APP_ADDRESS);
 //    //print(msg);
-//    //sprintf(msg, "VTOR: %08lX\n", APP_ADDRESS);
+//    //sprintf(msg,"VTOR: %08lX\n", APP_ADDRESS);
 //    //print(msg);
 //    //HAL_Delay(500);
 //    
@@ -572,9 +636,10 @@ uint32_t Bootloader_GetVersion(void)
 void NVIC_System_Reset(void)
 {
   #define SCB_AIRCR_VECTKEY_Pos 16U   /*!< SCB AIRCR: VECTKEY Position */
+  #define SCB_AIRCR_SYSRESETREQ_Pos 2U   /*!< SCB AIRCR: VECTKEY Position */
   volatile uint32_t* SCB_AIRCR = (uint32_t*)0xE000ED0CUL;  
 
-  *SCB_AIRCR = (uint32_t)((0x5FAUL << SCB_AIRCR_VECTKEY_Pos));
+*SCB_AIRCR = (uint32_t)(((0x5FAUL << SCB_AIRCR_VECTKEY_Pos) | (1 << SCB_AIRCR_SYSRESETREQ_Pos)));
 
   for(;;)                                                           /* wait until reset */
   {

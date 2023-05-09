@@ -141,7 +141,7 @@ uint8_t Bootloader_FlashNext(uint64_t data);
 uint8_t Bootloader_FlashEnd(void);
 
 uint32_t Bootloader_GetProtectionStatus(void);
-uint8_t Bootloader_ConfigProtection(uint32_t protection, uint8_t set);
+uint8_t Bootloader_ConfigProtection(uint32_t protection, uint32_t mask, uint8_t save);
 uint8_t Bootloader_CheckSize(uint32_t appsize);
 uint8_t Bootloader_VerifyChecksum(void);
 uint8_t Bootloader_CheckForApplication(void);
@@ -163,6 +163,6 @@ extern uint32_t WRITE_Prot_Old_Flag;             // flag if protection was remov
 extern uint32_t Write_Prot_Old;
 
 
-#define WP_CLEAR 0
-#define WP_SET 1
+#define WP_DONT_SAVE 0
+#define WP_SAVE 1
 #endif /* __BOOTLOADER_H */

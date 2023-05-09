@@ -115,7 +115,11 @@ Reset_Handler:
       LDR R0, = 0                  //  default to boot application
       LDR R1, = Magic_Location
       LDR R1, [R1, #0]                  // read magic value
+      CMP R1, #0
+      BEQ SKIP                          // if 0 then have not yet been through the bootloader
       LDR R2, = MagicApplication
+      CMP R1, #0
+      BEQ SKIP                          // if 0 then have not yet been through the bootloader
       LDR R2, [R2, #0]
       CMP R1, R2
       BNE SKIP                     

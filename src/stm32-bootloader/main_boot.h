@@ -60,13 +60,16 @@ extern char msg[64];
 
 /* Hardware Defines ----------------------------------------------------------*/
                           
+// BTT SKR PRO has only one LED at PA7
+// The 407 black board has two at PA6 and PA7
+
 
 //#define WORK_LED_Pin GPIO_PIN_2
 //#define WORK_LED_GPIO_Port GPIOB
 
 /* D2 */
 #define LED_G1_Port GPIOA
-#define LED_G1_Pin  GPIO_PIN_6
+#define LED_G1_Pin  GPIO_PIN_7
 
 /* D4 */
 #define LED_G2_Port GPIOA
