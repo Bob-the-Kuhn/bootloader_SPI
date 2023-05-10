@@ -183,8 +183,10 @@ static void MX_SPI1_Init(void)
   hspi1.Init.Mode = SPI_MODE_MASTER;
   hspi1.Init.Direction = SPI_DIRECTION_2LINES;
   hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
-  hspi1.Init.CLKPolarity = SPI_POLARITY_HIGH;
-  hspi1.Init.CLKPhase = SPI_PHASE_2EDGE;
+  //hspi1.Init.CLKPolarity = SPI_POLARITY_HIGH;  // Mode 3
+  //hspi1.Init.CLKPhase = SPI_PHASE_2EDGE;       // Mode 3
+  hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;     // Mode 0 (used by SD cards)
+  hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;         // Mode 0 (used by SD cards)
   //hspi1.Init.NSS = SPI_NSS_HARD_OUTPUT;
   hspi1.Init.NSS = SPI_NSS_SOFT; //Let file system control SPI_NSS (SDSS) 
   //hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;  // 24MHZ
