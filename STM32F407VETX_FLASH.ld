@@ -34,7 +34,7 @@
 */
 
 /* Entry Point */
-ENTRY(Reset_Handler)
+/* ENTRY(Reset_Handler)  */
 
 /* Highest address of the user mode stack */
 _estack = ORIGIN(RAM) + LENGTH(RAM); /* end of "RAM" Ram type memory */
@@ -57,7 +57,8 @@ SECTIONS
   .isr_vector :
   {
     . = ALIGN(4);
-    KEEP(*(.isr_vector)) /* Startup code */
+    KEEP(*(isrv_sys)) /* Interrupt Service Routine Vector - System */
+		KEEP(*(isrv_irq)) /* Interrupt Service Routine Vector - Peripherals IRQs */
     . = ALIGN(4);
   } >FLASH
 
@@ -137,6 +138,7 @@ SECTIONS
   .data :
   {
     . = ALIGN(4);
+    _sdata_flash = LOADADDR(.data);
     _sdata = .;        /* create a global symbol at data start */
     *(.data)           /* .data sections */
     *(.data*)          /* .data* sections */

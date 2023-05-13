@@ -15,6 +15,7 @@
 
 #ifndef __BOOTLOADER_H
 #define __BOOTLOADER_H
+#include "ff.h"                           
 
 /** Bootloader Configuration
  * @defgroup Bootloader_Configuration Bootloader Configuration
@@ -34,6 +35,11 @@
 /** Enable write protection after performing in-app-programming */
 #define USE_WRITE_PROTECTION 0
 
+/** Ignore write protection of application area (clear protection and write to FLASH) */
+#define IGNORE_WRITE_PROTECTION 1
+
+/** Restore write protection after performing in-app-programming */
+#define RESTORE_WRITE_PROTECTION 1                  
 /** Automatically set vector table location before launching application */
 #define SET_VECTOR_TABLE 1
 
@@ -72,23 +78,24 @@
 #define APP_SIZE (uint32_t)(((END_ADDRESS - APP_ADDRESS) + 3) / 4)
 
 /** Number of sectors per bank in flash */
-uint32_t APP_first_sector;  // first FLASH sector an application can be loaded into
-uint32_t APP_first_addr;    // beginning address of first FLASH sector an application can be loaded into
-uint32_t APP_sector_mask;   // mask used to determine if any application sectors are write protected
+extern uint32_t APP_first_sector;  // first FLASH sector an application can be loaded into
+extern uint32_t APP_first_addr;    // beginning address of first FLASH sector an application can be loaded into
+extern uint32_t APP_sector_mask;   // mask used to determine if any application sectors are write protected
 #define APP_OFFSET (APP_ADDRESS - FLASH_BASE)  // how far from start of FLASH the APP starts
+//#define FLASH_SIZE            ((uint32_t)0x100000)  // 1024K bytes
 #define FLASH_SIZE            ((uint32_t)0x100000)  // 1024K bytes
 //#define FLASH_SIZE            ((uint32_t)0x80000)  // 512K bytes
 //#define FLASH_SIZE            ((uint32_t)0x40000)  // 256K bytes
 #define LAST_SECTOR           11  // 1024K bytes STM32F407 has FLASH sectors 0-11
-//#define LAST_SECTOR            7  // 512K bytes STM32F407 has FLASH sectors 0-7
+//#define LAST_SECTOR            7  // 512K bytes STM32F407VE has FLASH sectors 0-7
 #define FLASH_SECTOR_NBPERBANK  (1)
 #define FLASH_SECTOR_SIZE       ((uint32_t)0x4000)  // 16K bytes
 //#define FLASH_BASE            ((uint32_t)0x08000000) // FLASH(up to 1 MB) base address in the alias region
 //#define SRAM1_BASE            ((uint32_t)0x20000000) // SRAM1(112 KB) base address in the alias region
 #define SRAM1_SIZE_MAX        ((uint32_t)0x1BFFF)
-//#define SRAM2_BASE            ((uint32_t)0x2001C000) // SRAM2(16 KB) base address in the alias region
+//#define SRAM2_BASE            ((uint32_t)0x2001C000) // SRAM2(16 KB) base address in the alias region  
 #define SRAM2_SIZE_MAX        ((uint32_t)0x03FFF)
-//#define PERIPH_BASE           ((uint32_t)0x40000000) // Peripheral base address in the alias region
+//#define PERIPH_BASE           ((uint32_t)0x40000000) // Peripheral base address in the alias region    
 
 #define FLASH_FLAG_ALL_ERRORS     (FLASH_FLAG_OPERR   | FLASH_FLAG_WRPERR | \
                                    FLASH_FLAG_PGAERR  | FLASH_FLAG_PGSERR | \
@@ -133,8 +140,7 @@ uint8_t Bootloader_FlashNext(uint64_t data);
 uint8_t Bootloader_FlashEnd(void);
 
 uint32_t Bootloader_GetProtectionStatus(void);
-uint8_t Bootloader_ConfigProtection(uint32_t protection);
-
+uint8_t Bootloader_ConfigProtection(uint32_t protection, uint32_t mask, uint8_t save);
 uint8_t Bootloader_CheckSize(uint32_t appsize);
 uint8_t Bootloader_VerifyChecksum(void);
 uint8_t Bootloader_CheckForApplication(void);
@@ -143,4 +149,19 @@ void Bootloader_JumpToSysMem(void);
 
 uint32_t Bootloader_GetVersion(void);
 
+extern uint32_t Magic_Location;
+#define Magic_BootLoader 0xB00720AD   //  semi random pattern to flag that next
+                                      //  reset should load the bootloader code
+#define Magic_Application 0xB0B1B0B2  //  semi random pattern to flag that next
+                                      //  reset should load the APPLICATION code
+
+extern uint32_t WRITE_protection;
+extern uint32_t WRITE_Prot_Old_Flag;             // flag if protection was removed (in case need to restore write protection)
+#define WRITE_Prot_Original_flag 0xB0B3B0B4
+#define WRITE_Prot_Old_Flag_Restored_flag 0xB0B5B0B6   // flag if protection was restored (to break an endless loop))
+extern uint32_t Write_Prot_Old;
+
+
+#define WP_DONT_SAVE 0
+#define WP_SAVE 1   
 #endif /* __BOOTLOADER_H */
