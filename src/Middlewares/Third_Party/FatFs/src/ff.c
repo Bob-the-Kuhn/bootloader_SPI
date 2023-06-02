@@ -20,9 +20,6 @@
 
 #include "ff.h"			/* Declarations of FatFs API */
 #include "diskio.h"		/* Declarations of device I/O functions */
-#include "kprint.h"
-
-void print(const char* str);   // debug
 
 
 /*--------------------------------------------------------------------------
@@ -896,7 +893,6 @@ FRESULT sync_window (	/* Returns FR_OK or FR_DISK_ERROR */
 		wsect = fs->winsect;	/* Current sector number */
 		if (disk_write(fs->drv, fs->win, wsect, 1) != RES_OK) {
 			res = FR_DISK_ERR;
-			print("FR_DISK_ERR 1: synch window\n"); 
 		} else {
 			fs->wflag = 0;
 			if (wsect - fs->fatbase < fs->fsize) {		/* Is it in the FAT area? */
@@ -929,7 +925,6 @@ FRESULT move_window (	/* Returns FR_OK or FR_DISK_ERROR */
 			if (disk_read(fs->drv, fs->win, sector, 1) != RES_OK) {
 				sector = 0xFFFFFFFF;	/* Invalidate window if data is not reliable */
 				res = FR_DISK_ERR;
-				print("FR_DISK_ERR 2:  move window\n"); 
 			}
 			fs->winsect = sector;
 		}
@@ -970,7 +965,7 @@ FRESULT sync_fs (	/* FR_OK:succeeded, !=0:error */
 			fs->fsi_flag = 0;
 		}
 		/* Make sure that no pending write process in the physical drive */
-		if (disk_ioctl(fs->drv, CTRL_SYNC, 0) != RES_OK) {res = FR_DISK_ERR; print("FR_DISK_ERR 3:  synch file system\n"); }
+		if (disk_ioctl(fs->drv, CTRL_SYNC, 0) != RES_OK) res = FR_DISK_ERR;
 	}
 
 	return res;
@@ -1205,7 +1200,7 @@ FRESULT change_bitmap (
 	i = clst / 8 % SS(fs);						/* Byte offset in the sector */
 	bm = 1 << (clst % 8);						/* Bit mask in the byte */
 	for (;;) {
-		if (move_window(fs, sect++) != FR_OK){  kprint("FR_DISK_ERR, line: %d\n",  __LINE__ );  return FR_DISK_ERR;}
+		if (move_window(fs, sect++) != FR_OK) return FR_DISK_ERR;
 		do {
 			do {
 				if (bv == (int)((fs->win[i] & bm) != 0)) return FR_INT_ERR;	/* Is the bit expected value? */
@@ -1302,7 +1297,7 @@ FRESULT remove_chain (	/* FR_OK(0):succeeded, !=0:error */
 		nxt = get_fat(obj, clst);			/* Get cluster status */
 		if (nxt == 0) break;				/* Empty cluster? */
 		if (nxt == 1) return FR_INT_ERR;	/* Internal error? */
-		if (nxt == 0xFFFFFFFF){ print("FR_DISK_ERR 4: remove chain\n"); return FR_DISK_ERR; }	/* Disk error? */
+		if (nxt == 0xFFFFFFFF) return FR_DISK_ERR;	/* Disk error? */
 		if (!_FS_EXFAT || fs->fs_type != FS_EXFAT) {
 			res = put_fat(fs, clst, 0);		/* Mark the cluster 'free' on the FAT */
 			if (res != FR_OK) return res;
@@ -1380,8 +1375,8 @@ DWORD create_chain (	/* 0:No free cluster, 1:Internal error, 0xFFFFFFFF:Disk err
 		ncl = find_bitmap(fs, scl, 1);				/* Find a free cluster */
 		if (ncl == 0 || ncl == 0xFFFFFFFF) return ncl;	/* No free cluster or hard error? */
 		res = change_bitmap(fs, ncl, 1, 1);			/* Mark the cluster 'in use' */
-		if (res == FR_INT_ERR) {print("FR_INT_ERR 5:  exFAT create chain\n");return 1;}
-		if (res == FR_DISK_ERR) {print("FR_DISK_ERR 5:  exFAT create chain\n"); return 0xFFFFFFFF;}
+		if (res == FR_INT_ERR) return 1;
+		if (res == FR_DISK_ERR) return 0xFFFFFFFF;
 		if (clst == 0) {							/* Is it a new chain? */
 			obj->stat = 2;							/* Set status 'contiguous' */
 		} else {									/* It is a stretched chain */
@@ -1427,7 +1422,7 @@ DWORD create_chain (	/* 0:No free cluster, 1:Internal error, 0xFFFFFFFF:Disk err
 	} else {
 		ncl = (res == FR_DISK_ERR) ? 0xFFFFFFFF : 1;	/* Failed. Generate error status */
 	}
-    if (res == FR_DISK_ERR) { kprint("FR_DISK_ERR, line: %d\n",  __LINE__ ); }
+
 	return ncl;		/* Return new cluster number or error status */
 }
 
@@ -1499,7 +1494,7 @@ FRESULT dir_sdi (	/* FR_OK(0):succeeded, !=0:error */
 		csz = (DWORD)fs->csize * SS(fs);	/* Bytes per cluster */
 		while (ofs >= csz) {				/* Follow cluster chain */
 			clst = get_fat(&dp->obj, clst);				/* Get next cluster */
-			if (clst == 0xFFFFFFFF){ print("FR_DISK_ERR 6:dir_sdi\n"); return FR_DISK_ERR; }	/* Disk error */
+			if (clst == 0xFFFFFFFF) return FR_DISK_ERR;	/* Disk error */
 			if (clst < 2 || clst >= fs->n_fatent) return FR_INT_ERR;	/* Reached to end of table or internal error */
 			ofs -= csz;
 		}
@@ -1547,7 +1542,7 @@ FRESULT dir_next (	/* FR_OK(0):succeeded, FR_NO_FILE:End of table, FR_DENIED:Cou
 			if ((ofs / SS(fs) & (fs->csize - 1)) == 0) {		/* Cluster changed? */
 				clst = get_fat(&dp->obj, dp->clust);			/* Get next cluster */
 				if (clst <= 1) return FR_INT_ERR;				/* Internal error */
-				if (clst == 0xFFFFFFFF){ print("FR_DISK_ERR 7: dir_next\n"); return FR_DISK_ERR; }		/* Disk error */
+				if (clst == 0xFFFFFFFF) return FR_DISK_ERR;		/* Disk error */
 				if (clst >= fs->n_fatent) {						/* Reached end of dynamic table */
 #if !_FS_READONLY
 					if (!stretch) {								/* If no stretch, report EOT */
@@ -1556,14 +1551,14 @@ FRESULT dir_next (	/* FR_OK(0):succeeded, FR_NO_FILE:End of table, FR_DENIED:Cou
 					clst = create_chain(&dp->obj, dp->clust);	/* Allocate a cluster */
 					if (clst == 0) return FR_DENIED;			/* No free cluster */
 					if (clst == 1) return FR_INT_ERR;			/* Internal error */
-					if (clst == 0xFFFFFFFF){ print("FR_DISK_ERR 8: dir_next\n"); ; return FR_DISK_ERR; }	/* Disk error */
+					if (clst == 0xFFFFFFFF) return FR_DISK_ERR;	/* Disk error */
 					/* Clean-up the stretched table */
 					if (_FS_EXFAT) dp->obj.stat |= 4;			/* The directory needs to be updated */
-					if (sync_window(fs) != FR_OK){ print("FR_DISK_ERR 8:dir_next\n");  return FR_DISK_ERR; }	/* Flush disk access window */
+					if (sync_window(fs) != FR_OK) return FR_DISK_ERR;	/* Flush disk access window */
 					mem_set(fs->win, 0, SS(fs));				/* Clear window buffer */
 					for (n = 0, fs->winsect = clust2sect(fs, clst); n < fs->csize; n++, fs->winsect++) {	/* Fill the new cluster with 0 */
 						fs->wflag = 1;
-						if (sync_window(fs) != FR_OK){ print("FR_DISK_ERR 9:dir_next\n"); return FR_DISK_ERR; }
+						if (sync_window(fs) != FR_OK) return FR_DISK_ERR;
 					}
 					fs->winsect -= n;							/* Restore window offset */
 #else
@@ -2081,7 +2076,6 @@ FRESULT store_xdir (
 		dirb += SZDIRE;
 		res = dir_next(dp, 0);
 	}
-	if (res == FR_DISK_ERR) { print("FR_DISK_ERR 10: store_xdir\n"); }
 	return (res == FR_OK || res == FR_DISK_ERR) ? res : FR_INT_ERR;
 }
 
@@ -3028,7 +3022,6 @@ FRESULT find_volume (	/* FR_OK(0): successful, !=0: any error occurred */
 		stat = disk_status(fs->drv);
 		if (!(stat & STA_NOINIT)) {		/* and the physical drive is kept initialized */
 			if (!_FS_READONLY && mode && (stat & STA_PROTECT)) {	/* Check write protection if needed */
-				print("FR_WRITE_PROTECTED:  find a volume\n");
 				return FR_WRITE_PROTECTED;
 			}
 			return FR_OK;				/* The file system object is valid */
@@ -3042,16 +3035,14 @@ FRESULT find_volume (	/* FR_OK(0): successful, !=0: any error occurred */
 	fs->drv = LD2PD(vol);				/* Bind the logical drive and a physical drive */
 	stat = disk_initialize(fs->drv);	/* Initialize the physical drive */
 	if (stat & STA_NOINIT) { 			/* Check if the initialization succeeded */
-	    print("FR_NOT_READY 2:  find a volume\n");
 		return FR_NOT_READY;			/* Failed to initialize due to no medium or hard error */
 	}
 	if (!_FS_READONLY && mode && (stat & STA_PROTECT)) { /* Check disk write protection if needed */
-		print("FR_WRITE_PROTECTED 2:  find a volume\n");
 		return FR_WRITE_PROTECTED;
 	}
 #if _MAX_SS != _MIN_SS					/* Get sector size (multiple sector size cfg only) */
-	if (disk_ioctl(fs->drv, GET_SECTOR_SIZE, &SS(fs)) != RES_OK){ print("FR_DISK_ERR 11: find volume\n"); return FR_DISK_ERR; }
-	if (SS(fs) > _MAX_SS || SS(fs) < _MIN_SS || (SS(fs) & (SS(fs) - 1))){ print("FR_DISK_ERR 12: find volume\n"); return FR_DISK_ERR; }
+	if (disk_ioctl(fs->drv, GET_SECTOR_SIZE, &SS(fs)) != RES_OK) return FR_DISK_ERR;
+	if (SS(fs) > _MAX_SS || SS(fs) < _MIN_SS || (SS(fs) & (SS(fs) - 1))) return FR_DISK_ERR;
 #endif
 
 	/* Find an FAT partition on the drive. Supports only generic partitioning rules, FDISK and SFD. */
@@ -3069,7 +3060,7 @@ FRESULT find_volume (	/* FR_OK(0): successful, !=0: any error occurred */
 			fmt = bsect ? check_fs(fs, bsect) : 3;	/* Check the partition */
 		} while (LD2PT(vol) == 0 && fmt >= 2 && ++i < 4);
 	}
-	if (fmt == 4){  print("FR_DISK_ERR 13: find volume\n"); return FR_DISK_ERR; }		/* An error occured in the disk I/O layer */
+	if (fmt == 4) return FR_DISK_ERR;		/* An error occured in the disk I/O layer */
 	if (fmt >= 2) return FR_NO_FILESYSTEM;	/* No FAT volume is found */
 
 	/* An FAT volume is found (bsect). Following code initializes the file system object */
@@ -3110,7 +3101,7 @@ FRESULT find_volume (	/* FR_OK(0): successful, !=0: any error occurred */
 		fs->dirbase = ld_dword(fs->win + BPB_RootClusEx);
 
 		/* Check if bitmap location is in assumption (at the first cluster) */
-		if (move_window(fs, clust2sect(fs, fs->dirbase)) != FR_OK){ print("FR_DISK_ERR 14: find volume\n"); return FR_DISK_ERR; }
+		if (move_window(fs, clust2sect(fs, fs->dirbase)) != FR_OK) return FR_DISK_ERR;
 		for (i = 0; i < SS(fs); i += SZDIRE) {
 			if (fs->win[i] == 0x81 && ld_dword(fs->win + i + 20) == 2) break;	/* 81 entry with cluster #2? */
 		}
@@ -3485,7 +3476,7 @@ FRESULT f_open (
 				for (ofs = fp->obj.objsize; res == FR_OK && ofs > bcs; ofs -= bcs) {
 					clst = get_fat(&fp->obj, clst);
 					if (clst <= 1) res = FR_INT_ERR;
-					if (clst == 0xFFFFFFFF) { kprint("FR_DISK_ERR, line: %d\n",  __LINE__ );res = FR_DISK_ERR;}
+					if (clst == 0xFFFFFFFF) res = FR_DISK_ERR;
 				}
 				fp->clust = clst;
 				if (res == FR_OK && ofs % SS(fs)) {	/* Fill sector buffer if not on the sector boundary */
@@ -3494,7 +3485,7 @@ FRESULT f_open (
 					} else {
 						fp->sect = sc + (DWORD)(ofs / SS(fs));
 #if !_FS_TINY
-						if (disk_read(fs->drv, fp->buf, fp->sect, 1) != RES_OK) { kprint("FR_DISK_ERR, line: %d\n",  __LINE__ );res = FR_DISK_ERR;}
+						if (disk_read(fs->drv, fp->buf, fp->sect, 1) != RES_OK) res = FR_DISK_ERR;
 #endif
 					}
 				}
@@ -3557,7 +3548,7 @@ FRESULT f_read (
 					}
 				}
 				if (clst < 2) ABORT(fs, FR_INT_ERR);
-				if (clst == 0xFFFFFFFF)  { kprint("FR_DISK_ERR, line: %d\n",  __LINE__ ); ABORT(fs, FR_DISK_ERR);}
+				if (clst == 0xFFFFFFFF) ABORT(fs, FR_DISK_ERR);
 				fp->clust = clst;				/* Update current cluster */
 			}
 			sect = clust2sect(fs, fp->clust);	/* Get current sector */
@@ -3568,7 +3559,7 @@ FRESULT f_read (
 				if (csect + cc > fs->csize) {	/* Clip at cluster boundary */
 					cc = fs->csize - csect;
 				}
-				if (disk_read(fs->drv, rbuff, sect, cc) != RES_OK) { kprint("FR_DISK_ERR, line: %d\n",  __LINE__ );  ABORT(fs, FR_DISK_ERR);}
+				if (disk_read(fs->drv, rbuff, sect, cc) != RES_OK) ABORT(fs, FR_DISK_ERR);
 #if !_FS_READONLY && _FS_MINIMIZE <= 2			/* Replace one of the read sectors with cached data if it contains a dirty sector */
 #if _FS_TINY
 				if (fs->wflag && fs->winsect - sect < cc) {
@@ -3587,11 +3578,11 @@ FRESULT f_read (
 			if (fp->sect != sect) {			/* Load data sector if not in cache */
 #if !_FS_READONLY
 				if (fp->flag & FA_DIRTY) {		/* Write-back dirty sector cache */
-					if (disk_write(fs->drv, fp->buf, fp->sect, 1) != RES_OK) { kprint("FR_DISK_ERR, line: %d\n",  __LINE__ ); ABORT(fs, FR_DISK_ERR);}
+					if (disk_write(fs->drv, fp->buf, fp->sect, 1) != RES_OK) ABORT(fs, FR_DISK_ERR);
 					fp->flag &= (BYTE)~FA_DIRTY;
 				}
 #endif
-				if (disk_read(fs->drv, fp->buf, sect, 1) != RES_OK)	{ kprint("FR_DISK_ERR, line: %d\n",  __LINE__ ); ABORT(fs, FR_DISK_ERR);}	/* Fill sector cache */
+				if (disk_read(fs->drv, fp->buf, sect, 1) != RES_OK)	ABORT(fs, FR_DISK_ERR);	/* Fill sector cache */
 			}
 #endif
 			fp->sect = sect;
@@ -3599,7 +3590,7 @@ FRESULT f_read (
 		rcnt = SS(fs) - (UINT)fp->fptr % SS(fs);	/* Number of bytes left in the sector */
 		if (rcnt > btr) rcnt = btr;					/* Clip it by btr if needed */
 #if _FS_TINY
-		if (move_window(fs, fp->sect) != FR_OK) { kprint("FR_DISK_ERR, line: %d\n",  __LINE__ ); ABORT(fs, FR_DISK_ERR);	/* Move sector window */}
+		if (move_window(fs, fp->sect) != FR_OK) ABORT(fs, FR_DISK_ERR);	/* Move sector window */
 		mem_cpy(rbuff, fs->win + fp->fptr % SS(fs), rcnt);	/* Extract partial sector */
 #else
 		mem_cpy(rbuff, fp->buf + fp->fptr % SS(fs), rcnt);	/* Extract partial sector */
@@ -3663,15 +3654,15 @@ FRESULT f_write (
 				}
 				if (clst == 0) break;		/* Could not allocate a new cluster (disk full) */
 				if (clst == 1) ABORT(fs, FR_INT_ERR);
-				if (clst == 0xFFFFFFFF) { kprint("FR_DISK_ERR, line: %d\n",  __LINE__ ); ABORT(fs, FR_DISK_ERR);}
+				if (clst == 0xFFFFFFFF) ABORT(fs, FR_DISK_ERR);
 				fp->clust = clst;			/* Update current cluster */
 				if (fp->obj.sclust == 0) fp->obj.sclust = clst;	/* Set start cluster if the first write */
 			}
 #if _FS_TINY
-			if (fs->winsect == fp->sect && sync_window(fs) != FR_OK) { kprint("FR_DISK_ERR, line: %d\n",  __LINE__ ); ABORT(fs, FR_DISK_ERR);}	/* Write-back sector cache */
+			if (fs->winsect == fp->sect && sync_window(fs) != FR_OK) ABORT(fs, FR_DISK_ERR);	/* Write-back sector cache */
 #else
 			if (fp->flag & FA_DIRTY) {		/* Write-back sector cache */
-				if (disk_write(fs->drv, fp->buf, fp->sect, 1) != RES_OK) { kprint("FR_DISK_ERR, line: %d\n",  __LINE__ ); ABORT(fs, FR_DISK_ERR);}
+				if (disk_write(fs->drv, fp->buf, fp->sect, 1) != RES_OK) ABORT(fs, FR_DISK_ERR);
 				fp->flag &= (BYTE)~FA_DIRTY;
 			}
 #endif
@@ -3683,7 +3674,7 @@ FRESULT f_write (
 				if (csect + cc > fs->csize) {	/* Clip at cluster boundary */
 					cc = fs->csize - csect;
 				}
-				if (disk_write(fs->drv, wbuff, sect, cc) != RES_OK) { kprint("FR_DISK_ERR, line: %d\n",  __LINE__ ); ABORT(fs, FR_DISK_ERR);}
+				if (disk_write(fs->drv, wbuff, sect, cc) != RES_OK) ABORT(fs, FR_DISK_ERR);
 #if _FS_MINIMIZE <= 2
 #if _FS_TINY
 				if (fs->winsect - sect < cc) {	/* Refill sector cache if it gets invalidated by the direct write */
@@ -3702,15 +3693,14 @@ FRESULT f_write (
 			}
 #if _FS_TINY
 			if (fp->fptr >= fp->obj.objsize) {	/* Avoid silly cache filling on the growing edge */
-				if (sync_window(fs) != FR_OK) { kprint("FR_DISK_ERR, line: %d\n",  __LINE__ ); ABORT(fs, FR_DISK_ERR);}
+				if (sync_window(fs) != FR_OK) ABORT(fs, FR_DISK_ERR);
 				fs->winsect = sect;
 			}
 #else
 			if (fp->sect != sect && 		/* Fill sector cache with file data */
 				fp->fptr < fp->obj.objsize &&
 				disk_read(fs->drv, fp->buf, sect, 1) != RES_OK) {
-					 kprint("FR_DISK_ERR, line: %d\n",  __LINE__ ); 
-					 ABORT(fs, FR_DISK_ERR);
+					ABORT(fs, FR_DISK_ERR);
 			}
 #endif
 			fp->sect = sect;
@@ -3718,7 +3708,7 @@ FRESULT f_write (
 		wcnt = SS(fs) - (UINT)fp->fptr % SS(fs);	/* Number of bytes left in the sector */
 		if (wcnt > btw) wcnt = btw;					/* Clip it by btw if needed */
 #if _FS_TINY
-		if (move_window(fs, fp->sect) != FR_OK) { kprint("FR_DISK_ERR, line: %d\n",  __LINE__ ); ABORT(fs, FR_DISK_ERR);}	/* Move sector window */
+		if (move_window(fs, fp->sect) != FR_OK) ABORT(fs, FR_DISK_ERR);	/* Move sector window */
 		mem_cpy(fs->win + fp->fptr % SS(fs), wbuff, wcnt);	/* Fit data to the sector */
 		fs->wflag = 1;
 #else
@@ -3757,7 +3747,7 @@ FRESULT f_sync (
 		if (fp->flag & FA_MODIFIED) {	/* Is there any change to the file? */
 #if !_FS_TINY
 			if (fp->flag & FA_DIRTY) {	/* Write-back cached data if needed */
-				if (disk_write(fs->drv, fp->buf, fp->sect, 1) != RES_OK) { kprint("FR_DISK_ERR, line: %d\n",  __LINE__ ); LEAVE_FF(fs, FR_DISK_ERR);}
+				if (disk_write(fs->drv, fp->buf, fp->sect, 1) != RES_OK) LEAVE_FF(fs, FR_DISK_ERR);
 				fp->flag &= (BYTE)~FA_DIRTY;
 			}
 #endif
@@ -4044,7 +4034,7 @@ FRESULT f_lseek (
 						pcl = cl; ncl++;
 						cl = get_fat(&fp->obj, cl);
 						if (cl <= 1) ABORT(fs, FR_INT_ERR);
-						if (cl == 0xFFFFFFFF) { kprint("FR_DISK_ERR, line: %d\n",  __LINE__ ); ABORT(fs, FR_DISK_ERR);}
+						if (cl == 0xFFFFFFFF) ABORT(fs, FR_DISK_ERR);
 					} while (cl == pcl + 1);
 					if (ulen <= tlen) {		/* Store the length and top of the fragment */
 						*tbl++ = ncl; *tbl++ = tcl;
@@ -4069,11 +4059,11 @@ FRESULT f_lseek (
 #if !_FS_TINY
 #if !_FS_READONLY
 					if (fp->flag & FA_DIRTY) {		/* Write-back dirty sector cache */
-						if (disk_write(fs->drv, fp->buf, fp->sect, 1) != RES_OK) { kprint("FR_DISK_ERR, line: %d\n",  __LINE__ ); ABORT(fs, FR_DISK_ERR);}
+						if (disk_write(fs->drv, fp->buf, fp->sect, 1) != RES_OK) ABORT(fs, FR_DISK_ERR);
 						fp->flag &= (BYTE)~FA_DIRTY;
 					}
 #endif
-					if (disk_read(fs->drv, fp->buf, dsc, 1) != RES_OK) { kprint("FR_DISK_ERR, line: %d\n",  __LINE__ ); ABORT(fs, FR_DISK_ERR);}	/* Load current sector */
+					if (disk_read(fs->drv, fp->buf, dsc, 1) != RES_OK) ABORT(fs, FR_DISK_ERR);	/* Load current sector */
 #endif
 					fp->sect = dsc;
 				}
@@ -4105,7 +4095,7 @@ FRESULT f_lseek (
 				if (clst == 0) {						/* If no cluster chain, create a new chain */
 					clst = create_chain(&fp->obj, 0);
 					if (clst == 1) ABORT(fs, FR_INT_ERR);
-					if (clst == 0xFFFFFFFF) { kprint("FR_DISK_ERR, line: %d\n",  __LINE__ ); ABORT(fs, FR_DISK_ERR);}
+					if (clst == 0xFFFFFFFF) ABORT(fs, FR_DISK_ERR);
 					fp->obj.sclust = clst;
 				}
 #endif
@@ -4129,7 +4119,7 @@ FRESULT f_lseek (
 					{
 						clst = get_fat(&fp->obj, clst);	/* Follow cluster chain if not in write mode */
 					}
-					if (clst == 0xFFFFFFFF) { kprint("FR_DISK_ERR, line: %d\n",  __LINE__ ); ABORT(fs, FR_DISK_ERR);}
+					if (clst == 0xFFFFFFFF) ABORT(fs, FR_DISK_ERR);
 					if (clst <= 1 || clst >= fs->n_fatent) ABORT(fs, FR_INT_ERR);
 					fp->clust = clst;
 				}
@@ -4149,11 +4139,11 @@ FRESULT f_lseek (
 #if !_FS_TINY
 #if !_FS_READONLY
 			if (fp->flag & FA_DIRTY) {			/* Write-back dirty sector cache */
-				if (disk_write(fs->drv, fp->buf, fp->sect, 1) != RES_OK) { kprint("FR_DISK_ERR, line: %d\n",  __LINE__ ); ABORT(fs, FR_DISK_ERR);}
+				if (disk_write(fs->drv, fp->buf, fp->sect, 1) != RES_OK) ABORT(fs, FR_DISK_ERR);
 				fp->flag &= (BYTE)~FA_DIRTY;
 			}
 #endif
-			if (disk_read(fs->drv, fp->buf, nsect, 1) != RES_OK) { kprint("FR_DISK_ERR, line: %d\n",  __LINE__ ); ABORT(fs, FR_DISK_ERR);}	/* Fill sector cache */
+			if (disk_read(fs->drv, fp->buf, nsect, 1) != RES_OK) ABORT(fs, FR_DISK_ERR);	/* Fill sector cache */
 #endif
 			fp->sect = nsect;
 		}
@@ -4423,7 +4413,7 @@ FRESULT f_getfree (
 				clst = 2; obj.fs = fs;
 				do {
 					stat = get_fat(&obj, clst);
-					if (stat == 0xFFFFFFFF) { kprint("FR_DISK_ERR, line: %d\n",  __LINE__ ); res = FR_DISK_ERR; break; }
+					if (stat == 0xFFFFFFFF) { res = FR_DISK_ERR; break; }
 					if (stat == 1) { res = FR_INT_ERR; break; }
 					if (stat == 0) nfree++;
 				} while (++clst < fs->n_fatent);
@@ -4502,7 +4492,7 @@ FRESULT f_truncate (
 		} else {				/* When truncate a part of the file, remove remaining clusters */
 			ncl = get_fat(&fp->obj, fp->clust);
 			res = FR_OK;
-			if (ncl == 0xFFFFFFFF) { kprint("FR_DISK_ERR, line: %d\n",  __LINE__ ); res = FR_DISK_ERR;}
+			if (ncl == 0xFFFFFFFF) res = FR_DISK_ERR;
 			if (ncl == 1) res = FR_INT_ERR;
 			if (res == FR_OK && ncl < fs->n_fatent) {
 				res = remove_chain(&fp->obj, ncl, fp->clust);
@@ -4513,7 +4503,6 @@ FRESULT f_truncate (
 #if !_FS_TINY
 		if (res == FR_OK && (fp->flag & FA_DIRTY)) {
 			if (disk_write(fs->drv, fp->buf, fp->sect, 1) != RES_OK) {
-			    kprint("FR_DISK_ERR, line: %d\n",  __LINE__ ); 
 				res = FR_DISK_ERR;
 			} else {
 				fp->flag &= (BYTE)~FA_DIRTY;
@@ -4657,7 +4646,7 @@ FRESULT f_mkdir (
 			res = FR_OK;
 			if (dcl == 0) res = FR_DENIED;		/* No space to allocate a new cluster */
 			if (dcl == 1) res = FR_INT_ERR;
-			if (dcl == 0xFFFFFFFF) { kprint("FR_DISK_ERR, line: %d\n",  __LINE__ ); res = FR_DISK_ERR;}
+			if (dcl == 0xFFFFFFFF) res = FR_DISK_ERR;
 			if (res == FR_OK) res = sync_window(fs);	/* Flush FAT */
 			tm = GET_FATTIME();
 			if (res == FR_OK) {					/* Initialize the new directory table */
@@ -5174,7 +5163,7 @@ FRESULT f_expand (
 	if (fs->fs_type == FS_EXFAT) {
 		scl = find_bitmap(fs, stcl, tcl);			/* Find a contiguous cluster block */
 		if (scl == 0) res = FR_DENIED;				/* No contiguous cluster block was found */
-		if (scl == 0xFFFFFFFF) { kprint("FR_DISK_ERR, line: %d\n",  __LINE__ ); res = FR_DISK_ERR;}
+		if (scl == 0xFFFFFFFF) res = FR_DISK_ERR;
 		if (res == FR_OK) {	/* A contiguous free area is found */
 			if (opt) {		/* Allocate it now */
 				res = change_bitmap(fs, scl, tcl, 1);	/* Mark the cluster block 'in use' */
@@ -5191,7 +5180,7 @@ FRESULT f_expand (
 			n = get_fat(&fp->obj, clst);
 			if (++clst >= fs->n_fatent) clst = 2;
 			if (n == 1) { res = FR_INT_ERR; break; }
-			if (n == 0xFFFFFFFF) { kprint("FR_DISK_ERR, line: %d\n",  __LINE__ );  res = FR_DISK_ERR; break; }
+			if (n == 0xFFFFFFFF) { res = FR_DISK_ERR; break; }
 			if (n == 0) {	/* Is it a free cluster? */
 				if (++ncl == tcl) break;	/* Break if a contiguous cluster block is found */
 			} else {
@@ -5269,7 +5258,7 @@ FRESULT f_forward (
 				clst = (fp->fptr == 0) ?			/* On the top of the file? */
 					fp->obj.sclust : get_fat(&fp->obj, fp->clust);
 				if (clst <= 1) ABORT(fs, FR_INT_ERR);
-				if (clst == 0xFFFFFFFF) { kprint("FR_DISK_ERR, line: %d\n",  __LINE__ ); ABORT(fs, FR_DISK_ERR);}
+				if (clst == 0xFFFFFFFF) ABORT(fs, FR_DISK_ERR);
 				fp->clust = clst;					/* Update current cluster */
 			}
 		}
@@ -5277,17 +5266,17 @@ FRESULT f_forward (
 		if (!sect) ABORT(fs, FR_INT_ERR);
 		sect += csect;
 #if _FS_TINY
-		if (move_window(fs, sect) != FR_OK) { kprint("FR_DISK_ERR, line: %d\n",  __LINE__ ); ABORT(fs, FR_DISK_ERR);}	/* Move sector window to the file data */
+		if (move_window(fs, sect) != FR_OK) ABORT(fs, FR_DISK_ERR);	/* Move sector window to the file data */
 		dbuf = fs->win;
 #else
 		if (fp->sect != sect) {		/* Fill sector cache with file data */
 #if !_FS_READONLY
 			if (fp->flag & FA_DIRTY) {		/* Write-back dirty sector cache */
-				if (disk_write(fs->drv, fp->buf, fp->sect, 1) != RES_OK) { kprint("FR_DISK_ERR, line: %d\n",  __LINE__ ); ABORT(fs, FR_DISK_ERR);}
+				if (disk_write(fs->drv, fp->buf, fp->sect, 1) != RES_OK) ABORT(fs, FR_DISK_ERR);
 				fp->flag &= (BYTE)~FA_DIRTY;
 			}
 #endif
-			if (disk_read(fs->drv, fp->buf, sect, 1) != RES_OK) { kprint("FR_DISK_ERR, line: %d\n",  __LINE__ ); ABORT(fs, FR_DISK_ERR);}
+			if (disk_read(fs->drv, fp->buf, sect, 1) != RES_OK) ABORT(fs, FR_DISK_ERR);
 		}
 		dbuf = fp->buf;
 #endif
@@ -5343,18 +5332,12 @@ FRESULT f_mkfs (
 
 	/* Check physical drive status */
 	stat = disk_initialize(pdrv);
-	if (stat & STA_NOINIT) {
-		print("FR_NOT_READY: create a volume\n");
-		return FR_NOT_READY;
-	}
-	if (stat & STA_PROTECT)  {
-		print("FR_WRITE_PROTECTED 4:  creat volume\n");
-		return FR_WRITE_PROTECTED;
-	}
+	if (stat & STA_NOINIT) return FR_NOT_READY;
+	if (stat & STA_PROTECT) return FR_WRITE_PROTECTED;
 	if (disk_ioctl(pdrv, GET_BLOCK_SIZE, &sz_blk) != RES_OK || !sz_blk || sz_blk > 32768 || (sz_blk & (sz_blk - 1))) sz_blk = 1;	/* Erase block to align data area */
 #if _MAX_SS != _MIN_SS		/* Get sector size of the medium if variable sector size cfg. */
-	if (disk_ioctl(pdrv, GET_SECTOR_SIZE, &ss) != RES_OK){ kprint("FR_DISK_ERR, line: %d\n",  __LINE__ );  return FR_DISK_ERR; }
-	if (ss > _MAX_SS || ss < _MIN_SS || (ss & (ss - 1))){ kprint("FR_DISK_ERR, line: %d\n",  __LINE__ );  return FR_DISK_ERR; }
+	if (disk_ioctl(pdrv, GET_SECTOR_SIZE, &ss) != RES_OK) return FR_DISK_ERR;
+	if (ss > _MAX_SS || ss < _MIN_SS || (ss & (ss - 1))) return FR_DISK_ERR;
 #else
 	ss = _MAX_SS;
 #endif
@@ -5370,7 +5353,7 @@ FRESULT f_mkfs (
 	/* Determine where the volume to be located (b_vol, sz_vol) */
 	if (_MULTI_PARTITION && part != 0) {
 		/* Get partition information from partition table in the MBR */
-		if (disk_read(pdrv, buf, 0, 1) != RES_OK){ kprint("FR_DISK_ERR, line: %d\n",  __LINE__ );  return FR_DISK_ERR; }	/* Load MBR */
+		if (disk_read(pdrv, buf, 0, 1) != RES_OK) return FR_DISK_ERR;	/* Load MBR */
 		if (ld_word(buf + BS_55AA) != 0xAA55) return FR_MKFS_ABORTED;	/* Check if MBR is valid */
 		pte = buf + (MBR_Table + (part - 1) * SZ_PTE);
 		if (!pte[PTE_System]) return FR_MKFS_ABORTED;	/* No partition? */
@@ -5378,7 +5361,7 @@ FRESULT f_mkfs (
 		sz_vol = ld_dword(pte + PTE_SizLba);	/* Get volume size */
 	} else {
 		/* Create a single-partition in this function */
-		if (disk_ioctl(pdrv, GET_SECTOR_COUNT, &sz_vol) != RES_OK){ kprint("FR_DISK_ERR, line: %d\n",  __LINE__ );  return FR_DISK_ERR; }
+		if (disk_ioctl(pdrv, GET_SECTOR_COUNT, &sz_vol) != RES_OK) return FR_DISK_ERR;
 		b_vol = (opt & FM_SFD) ? 0 : 63;		/* Volume start sector */
 		if (sz_vol < b_vol) return FR_MKFS_ABORTED;
 		sz_vol -= b_vol;						/* Volume size */
@@ -5462,7 +5445,7 @@ FRESULT f_mkfs (
 			i += 2; szb_case += 2;
 			if (!si || i == szb_buf) {		/* Write buffered data when buffer full or end of process */
 				n = (i + ss - 1) / ss;
-				if (disk_write(pdrv, buf, sect, n) != RES_OK){ kprint("FR_DISK_ERR, line: %d\n",  __LINE__ );  return FR_DISK_ERR; }
+				if (disk_write(pdrv, buf, sect, n) != RES_OK) return FR_DISK_ERR;
 				sect += n; i = 0;
 			}
 		} while (si);
@@ -5477,7 +5460,7 @@ FRESULT f_mkfs (
 			for (i = 0; nb >= 8 && i < szb_buf; buf[i++] = 0xFF, nb -= 8) ;
 			for (b = 1; nb && i < szb_buf; buf[i] |= b, b <<= 1, nb--) ;
 			n = (nsect > sz_buf) ? sz_buf : nsect;		/* Write the buffered data */
-			if (disk_write(pdrv, buf, sect, n) != RES_OK){ kprint("FR_DISK_ERR, line: %d\n",  __LINE__ );  return FR_DISK_ERR; }
+			if (disk_write(pdrv, buf, sect, n) != RES_OK) return FR_DISK_ERR;
 			sect += n; nsect -= n;
 		} while (nsect);
 
@@ -5498,7 +5481,7 @@ FRESULT f_mkfs (
 				if (!nb && j < 3) nb = tbl[j++];	/* Next chain */
 			} while (nb && i < szb_buf);
 			n = (nsect > sz_buf) ? sz_buf : nsect;	/* Write the buffered data */
-			if (disk_write(pdrv, buf, sect, n) != RES_OK){ kprint("FR_DISK_ERR, line: %d\n",  __LINE__ );  return FR_DISK_ERR; }
+			if (disk_write(pdrv, buf, sect, n) != RES_OK) return FR_DISK_ERR;
 			sect += n; nsect -= n;
 		} while (nsect);
 
@@ -5515,7 +5498,7 @@ FRESULT f_mkfs (
 		sect = b_data + au * (tbl[0] + tbl[1]);	nsect = au;	/* Start of the root directory and number of sectors */
 		do {	/* Fill root directory sectors */
 			n = (nsect > sz_buf) ? sz_buf : nsect;
-			if (disk_write(pdrv, buf, sect, n) != RES_OK){ kprint("FR_DISK_ERR, line: %d\n",  __LINE__ );  return FR_DISK_ERR; }
+			if (disk_write(pdrv, buf, sect, n) != RES_OK) return FR_DISK_ERR;
 			mem_set(buf, 0, ss);
 			sect += n; nsect -= n;
 		} while (nsect);
@@ -5544,23 +5527,23 @@ FRESULT f_mkfs (
 			for (i = sum = 0; i < ss; i++) {		/* VBR checksum */
 				if (i != BPB_VolFlagEx && i != BPB_VolFlagEx + 1 && i != BPB_PercInUseEx) sum = xsum32(buf[i], sum);
 			}
-			if (disk_write(pdrv, buf, sect++, 1) != RES_OK){ kprint("FR_DISK_ERR, line: %d\n",  __LINE__ ); return FR_DISK_ERR; }
+			if (disk_write(pdrv, buf, sect++, 1) != RES_OK) return FR_DISK_ERR;
 			/* Extended bootstrap record (+1..+8) */
 			mem_set(buf, 0, ss);
 			st_word(buf + ss - 2, 0xAA55);	/* Signature (placed at end of sector) */
 			for (j = 1; j < 9; j++) {
 				for (i = 0; i < ss; sum = xsum32(buf[i++], sum)) ;	/* VBR checksum */
-				if (disk_write(pdrv, buf, sect++, 1) != RES_OK){ kprint("FR_DISK_ERR, line: %d\n",  __LINE__ ); return FR_DISK_ERR; }
+				if (disk_write(pdrv, buf, sect++, 1) != RES_OK) return FR_DISK_ERR;
 			}
 			/* OEM/Reserved record (+9..+10) */
 			mem_set(buf, 0, ss);
 			for ( ; j < 11; j++) {
 				for (i = 0; i < ss; sum = xsum32(buf[i++], sum)) ;	/* VBR checksum */
-				if (disk_write(pdrv, buf, sect++, 1) != RES_OK){ kprint("FR_DISK_ERR, line: %d\n",  __LINE__ ); return FR_DISK_ERR; }
+				if (disk_write(pdrv, buf, sect++, 1) != RES_OK) return FR_DISK_ERR;
 			}
 			/* Sum record (+11) */
 			for (i = 0; i < ss; i += 4) st_dword(buf + i, sum);		/* Fill with checksum value */
-			if (disk_write(pdrv, buf, sect++, 1) != RES_OK){ kprint("FR_DISK_ERR, line: %d\n",  __LINE__ ); return FR_DISK_ERR; }
+			if (disk_write(pdrv, buf, sect++, 1) != RES_OK) return FR_DISK_ERR;
 		}
 
 	} else
@@ -5675,7 +5658,7 @@ FRESULT f_mkfs (
 			mem_cpy(buf + BS_VolLab, "NO NAME    " "FAT     ", 19);	/* Volume label, FAT signature */
 		}
 		st_word(buf + BS_55AA, 0xAA55);					/* Signature (offset is fixed here regardless of sector size) */
-		if (disk_write(pdrv, buf, b_vol, 1) != RES_OK){ kprint("FR_DISK_ERR, line: %d\n",  __LINE__ ); return FR_DISK_ERR; }	/* Write it to the VBR sector */
+		if (disk_write(pdrv, buf, b_vol, 1) != RES_OK) return FR_DISK_ERR;	/* Write it to the VBR sector */
 
 		/* Create FSINFO record if needed */
 		if (fmt == FS_FAT32) {
@@ -5704,7 +5687,7 @@ FRESULT f_mkfs (
 			nsect = sz_fat;		/* Number of FAT sectors */
 			do {	/* Fill FAT sectors */
 				n = (nsect > sz_buf) ? sz_buf : nsect;
-				if (disk_write(pdrv, buf, sect, (UINT)n) != RES_OK){ kprint("FR_DISK_ERR, line: %d\n",  __LINE__ ); return FR_DISK_ERR; }
+				if (disk_write(pdrv, buf, sect, (UINT)n) != RES_OK) return FR_DISK_ERR;
 				mem_set(buf, 0, ss);
 				sect += n; nsect -= n;
 			} while (nsect);
@@ -5714,7 +5697,7 @@ FRESULT f_mkfs (
 		nsect = (fmt == FS_FAT32) ? pau : sz_dir;	/* Number of root directory sectors */
 		do {
 			n = (nsect > sz_buf) ? sz_buf : nsect;
-			if (disk_write(pdrv, buf, sect, (UINT)n) != RES_OK){ kprint("FR_DISK_ERR, line: %d\n",  __LINE__ ); return FR_DISK_ERR; }
+			if (disk_write(pdrv, buf, sect, (UINT)n) != RES_OK) return FR_DISK_ERR;
 			sect += n; nsect -= n;
 		} while (nsect);
 	}
@@ -5737,9 +5720,9 @@ FRESULT f_mkfs (
 	/* Update partition information */
 	if (_MULTI_PARTITION && part != 0) {	/* Created in the existing partition */
 		/* Update system ID in the partition table */
-		if (disk_read(pdrv, buf, 0, 1) != RES_OK){ kprint("FR_DISK_ERR, line: %d\n",  __LINE__ ); return FR_DISK_ERR; }	/* Read the MBR */
+		if (disk_read(pdrv, buf, 0, 1) != RES_OK) return FR_DISK_ERR;	/* Read the MBR */
 		buf[MBR_Table + (part - 1) * SZ_PTE + PTE_System] = sys;		/* Set system ID */
-		if (disk_write(pdrv, buf, 0, 1) != RES_OK){ kprint("FR_DISK_ERR, line: %d\n",  __LINE__ ); return FR_DISK_ERR; }	/* Write it back to the MBR */
+		if (disk_write(pdrv, buf, 0, 1) != RES_OK) return FR_DISK_ERR;	/* Write it back to the MBR */
 	} else {								/* Created as a new single partition */
 		if (!(opt & FM_SFD)) {	/* Create partition table if in FDISK format */
 			mem_set(buf, 0, ss);
@@ -5756,11 +5739,11 @@ FRESULT f_mkfs (
 			pte[PTE_EdCyl] = (BYTE)n;			/* End cylinder */
 			st_dword(pte + PTE_StLba, b_vol);	/* Start offset in LBA */
 			st_dword(pte + PTE_SizLba, sz_vol);	/* Size in sectors */
-			if (disk_write(pdrv, buf, 0, 1) != RES_OK){ kprint("FR_DISK_ERR, line: %d\n",  __LINE__ ); return FR_DISK_ERR; }	/* Write it to the MBR */
+			if (disk_write(pdrv, buf, 0, 1) != RES_OK) return FR_DISK_ERR;	/* Write it to the MBR */
 		}
 	}
 
-	if (disk_ioctl(pdrv, CTRL_SYNC, 0) != RES_OK){ kprint("FR_DISK_ERR, line: %d\n",  __LINE__ );  return FR_DISK_ERR; }
+	if (disk_ioctl(pdrv, CTRL_SYNC, 0) != RES_OK) return FR_DISK_ERR;
 
 	return FR_OK;
 }
@@ -5785,19 +5768,9 @@ FRESULT f_fdisk (
 
 
 	stat = disk_initialize(pdrv);
-	if (stat & STA_NOINIT) {
-		print("FR_NOT_READY: creating a volume\n");
-		return FR_NOT_READY;
-	}
-	if (stat & STA_PROTECT) {
-		print("FR_WRITE_PROTECTED:  creating a volume\n");
-		return FR_WRITE_PROTECTED;
-	}
-	
-	if (disk_ioctl(pdrv, GET_SECTOR_COUNT, &sz_disk)) {
-		print("FR_DISK_ERROR:  creating a volume\n");
-		return FR_DISK_ERR; 
-	}
+	if (stat & STA_NOINIT) return FR_NOT_READY;
+	if (stat & STA_PROTECT) return FR_WRITE_PROTECTED;
+	if (disk_ioctl(pdrv, GET_SECTOR_COUNT, &sz_disk)) return FR_DISK_ERR;
 
 	/* Determine the CHS without any consideration of the drive geometry */
 	for (n = 16; n < 256 && sz_disk / n / 63 > 1024; n *= 2) ;
@@ -5840,14 +5813,7 @@ FRESULT f_fdisk (
 	st_word(p, 0xAA55);
 
 	/* Write it to the MBR */
-	//return (disk_write(pdrv, buf, 0, 1) != RES_OK || disk_ioctl(pdrv, CTRL_SYNC, 0) != RES_OK) ? FR_DISK_ERR : FR_OK;
-	FRESULT temp_status = (disk_write(pdrv, buf, 0, 1) != RES_OK || disk_ioctl(pdrv, CTRL_SYNC, 0) != RES_OK) ? FR_DISK_ERR : FR_OK;
-	if (temp_status == FR_DISK_ERR) {
-		print("FR_DISK_ERR: write MBD multi-partition\n");
-	}
-	
-	
-	return temp_status;
+	return (disk_write(pdrv, buf, 0, 1) != RES_OK || disk_ioctl(pdrv, CTRL_SYNC, 0) != RES_OK) ? FR_DISK_ERR : FR_OK;
 }
 
 #endif /* _MULTI_PARTITION */
