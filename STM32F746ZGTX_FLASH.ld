@@ -146,8 +146,6 @@ SECTIONS
 
   } >RAM AT> FLASH
 
-  */
-  .ccmram :
   /* Uninitialized data section into "RAM" Ram type memory */
   . = ALIGN(4);
   .bss :
