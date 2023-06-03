@@ -64,10 +64,14 @@ void NVIC_System_Reset(void);
  */
 uint8_t Bootloader_Init(void)
 {
-    extern uint32_t _siccmram[];
-    // Read and use the `_siccmram` linkerscript variable
-    uint32_t siccmram = (uint32_t)_siccmram;
-    #define BOOT_LOADER_END siccmram
+    // Use linkerscript variables to find end of boot image
+    extern uint32_t _sidata[];
+    uint32_t sidata = (uint32_t)_sidata;
+    extern uint32_t _sdata[];
+    uint32_t sdata = (uint32_t)_sdata;
+    extern uint32_t _sbss[];
+    uint32_t sbss = (uint32_t)_sbss;
+    #define BOOT_LOADER_END (sidata + (sbss - sdata))
 
     /* Clear flash flags */
     HAL_FLASH_Unlock();

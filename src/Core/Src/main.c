@@ -57,10 +57,22 @@ static void MX_USART3_UART_Init(void);
 static void MX_SPI1_Init(void);
 /* USER CODE BEGIN PFP */
 
+void main_boot_init(void);
+void Error_Handler_boot(void);                          
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+
+void print(const char* str)
+{
+	
+	uint16_t i;
+	for (i = 0; str[i] != '\0'; ++i);
+	
+    HAL_UART_Transmit(&huart3, (uint8_t*)str, i, 100);
+}
 
 /* USER CODE END 0 */
 
@@ -101,6 +113,7 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  main_boot_init();                 
   while (1)
   {
     /* USER CODE END WHILE */
@@ -138,14 +151,14 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLQ = 8;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
-    Error_Handler();
+    Error_Handler_boot();
   }
 
   /** Activate the Over-Drive mode
   */
   if (HAL_PWREx_EnableOverDrive() != HAL_OK)
   {
-    Error_Handler();
+    Error_Handler_boot();
   }
 
   /** Initializes the CPU, AHB and APB buses clocks
@@ -159,7 +172,7 @@ void SystemClock_Config(void)
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK)
   {
-    Error_Handler();
+    Error_Handler_boot();
   }
 }
 
@@ -195,7 +208,7 @@ static void MX_SPI1_Init(void)
   hspi1.Init.NSSPMode = SPI_NSS_PULSE_ENABLE;
   if (HAL_SPI_Init(&hspi1) != HAL_OK)
   {
-    Error_Handler();
+    Error_Handler_boot();
   }
   /* USER CODE BEGIN SPI1_Init 2 */
 
@@ -230,7 +243,7 @@ static void MX_USART3_UART_Init(void)
   huart3.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
   if (HAL_UART_Init(&huart3) != HAL_OK)
   {
-    Error_Handler();
+    Error_Handler_boot();
   }
   /* USER CODE BEGIN USART3_Init 2 */
 
@@ -297,10 +310,12 @@ void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
-  __disable_irq();
-  while (1)
-  {
-  }
+//  __disable_irq();
+//  while (1)
+//  {
+//  }
+//  
+//                       
   /* USER CODE END Error_Handler_Debug */
 }
 
