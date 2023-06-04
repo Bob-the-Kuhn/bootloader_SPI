@@ -261,6 +261,16 @@ static void main_boot(void)
 */
 uint8_t Enter_Bootloader(void)
 {
+  
+  #ifdef HAS_SD_DETECT
+    /* Check SD card detect pin */
+    if(HAL_GPIO_ReadPin(SD_DETECT_GPIO_PORT, SD_DETECT_PIN) != SD_PRESENT)
+    {
+      print("SD card not present.\n");
+      return ERR_SD_MOUNT;
+    }
+  #endif // HAS_SD_DETECT
+  
   FATFS SDFatFS;
   
   FIL SDFile;
