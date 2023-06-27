@@ -12,11 +12,11 @@
             "type": "platformio-debug",
             "request": "launch",
             "name": "PIO Debug",
-            "executable": "C:/work/temp/bootloader_platformio/bootloader_SPI/.pio/build/bootloader_SDIO_STM32F407VET6/firmware.elf",
-            "projectEnvName": "bootloader_SDIO_STM32F407VET6",
+            "executable": "C:/work/temp/bootloader_platformio/bootloader_SPI/.pio/build/genericSTM32F103ZE/firmware.elf",
+            "projectEnvName": "genericSTM32F103ZE",
             "toolchainBinDir": "C:/Users/bobku/.platformio/packages/toolchain-gccarmnoneeabi@1.70201.0/bin",
             "internalConsoleOptions": "openOnSessionStart",
-            "svdPath": "C:/Users/bobku/.platformio/platforms/ststm32/misc/svd/STM32F40x.svd",
+            "svdPath": "C:/Users/bobku/.platformio/platforms/ststm32/misc/svd/STM32F103xx.svd",
             "preLaunchTask": {
                 "type": "PlatformIO",
                 "task": "Pre-Debug"
@@ -26,21 +26,21 @@
             "type": "platformio-debug",
             "request": "launch",
             "name": "PIO Debug (skip Pre-Debug)",
-            "executable": "C:/work/temp/bootloader_platformio/bootloader_SPI/.pio/build/bootloader_SDIO_STM32F407VET6/firmware.elf",
-            "projectEnvName": "bootloader_SDIO_STM32F407VET6",
+            "executable": "C:/work/temp/bootloader_platformio/bootloader_SPI/.pio/build/genericSTM32F103ZE/firmware.elf",
+            "projectEnvName": "genericSTM32F103ZE",
             "toolchainBinDir": "C:/Users/bobku/.platformio/packages/toolchain-gccarmnoneeabi@1.70201.0/bin",
             "internalConsoleOptions": "openOnSessionStart",
-            "svdPath": "C:/Users/bobku/.platformio/platforms/ststm32/misc/svd/STM32F40x.svd"
+            "svdPath": "C:/Users/bobku/.platformio/platforms/ststm32/misc/svd/STM32F103xx.svd"
         },
         {
             "type": "platformio-debug",
             "request": "launch",
             "name": "PIO Debug (without uploading)",
-            "executable": "C:/work/temp/bootloader_platformio/bootloader_SPI/.pio/build/bootloader_SDIO_STM32F407VET6/firmware.elf",
-            "projectEnvName": "bootloader_SDIO_STM32F407VET6",
+            "executable": "C:/work/temp/bootloader_platformio/bootloader_SPI/.pio/build/genericSTM32F103ZE/firmware.elf",
+            "projectEnvName": "genericSTM32F103ZE",
             "toolchainBinDir": "C:/Users/bobku/.platformio/packages/toolchain-gccarmnoneeabi@1.70201.0/bin",
             "internalConsoleOptions": "openOnSessionStart",
-            "svdPath": "C:/Users/bobku/.platformio/platforms/ststm32/misc/svd/STM32F40x.svd",
+            "svdPath": "C:/Users/bobku/.platformio/platforms/ststm32/misc/svd/STM32F103xx.svd",
             "loadMode": "manual"
         }
     ]

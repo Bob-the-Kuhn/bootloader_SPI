@@ -19,6 +19,7 @@
 #define i8 int8_t
 #define u8 uint8_t
 
-#define uint unsigned int
+//#define uint unsigned int
+//#define uint uint16_t
 
 #endif /* _INTDEFS_H_ */

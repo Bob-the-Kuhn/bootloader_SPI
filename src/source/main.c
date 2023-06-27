@@ -30,6 +30,8 @@
 #include "ffconf.h"
 #include <ctype.h>
 #include "gpio.h"
+uint32_t __attribute__((section("no_init"))) init_1;  // debug
+uint32_t __attribute__((section("no_init"))) init_2;
 
 
 /* USER CODE END Includes */
@@ -65,14 +67,16 @@ uint8_t Enter_Bootloader(void);
 void SD_Eject(void) {};
 void Error_Handler(void);
 void GPIO_Init(void);
-void print(const char* str);   // debug
+//void kprint(const char* str);   // debug
 void k_delay(const uint32_t ms);
 
 void SPI_GPIOConfig(void);
-void SPIConfig(void);
-void SPI_Enable(void);
+//void SPIConfig(void);
+//void SPI_Enable(void);
 
 void SPI_Transmit (BYTE *data, UINT size);
+
+void gpio_mode( uint16_t port_pin, uint8_t mode, uint8_t speed);
 
 #define PGM_READ_WORD(x) *(x)
 
@@ -92,14 +96,14 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
   
-  /* USER CODE END 1 */
-  
   /* MCU Configuration--------------------------------------------------------*/
   
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
 
   
   /* USER CODE BEGIN Init */
+  
+  HAL_NVIC_EnableIRQ(SysTick_IRQn);  // enable Systick irq
   
   /* USER CODE END Init */
   
@@ -112,14 +116,17 @@ int main(void)
   /* Initialize all configured peripherals */
   GPIO_Init();
   
-  SPI_GPIOConfig();
-  SPIConfig();
-  SPI_Enable();
+  LED_G1_ON();
+  LED_G2_OFF(); 
   
-  //sprintf(msg, "\nSYSCLK_Frequency %08lu\n", HAL_RCC_GetSysClockFreq());
-  //print(msg);
-  //sprintf(msg, "HCLK_Frequency   %08lu\n", HAL_RCC_GetHCLKFreq());
-  //print(msg);
+  SPI_GPIOConfig();
+  //SPIConfig();
+  //SPI_Enable();
+  
+  sprintf(msg, "\nSYSCLK_Frequency %08lu\n", HAL_RCC_GetSysClockFreq());
+  kprint(msg);
+  sprintf(msg, "HCLK_Frequency   %08lu\n", HAL_RCC_GetHCLKFreq());
+  kprint(msg);
   
   LED_G1_OFF();
   LED_G2_OFF();             
@@ -158,39 +165,59 @@ void GPIO_Init(void)
   /* USER CODE BEGIN MX_GPIO_Init_1 */
   /* USER CODE END MX_GPIO_Init_1 */
   
+// D2_LED_G1_Pin PE5
+// Detect_SDIO_Pin PC1
+// SD_MISO_Pin PC8
+// SDSS_Pin PC11
+// SD_SCK_Pin PC12
+// SD_MOSI_Pin PD2
+// D4_LED_G2_Pin PB5 
+  
+  
   /*Configure GPIO pin Output Level */
  
-  
    /*Configure GPIO pins : LED_D2_Pin */
- // gpio_wr(  IO(PORTA, 6), 0);
- // gpio_func(IO(PORTA, 6), 0);
- // gpio_dir( IO(PORTA, 6), GPIO_OUTPUT);
- // gpio_mode(IO(PORTA, 6), PULL_NO);
+  gpio_wr(  IO(D2_LED_G1_GPIO_Port, D2_LED_G1_Pin), 0);
+  gpio_mode(IO(D2_LED_G1_GPIO_Port, D2_LED_G1_Pin), Output_Push_Pull, Speed_Low);
   
-  /*Configure GPIO pins : LED_D3_Pin */
-  gpio_wr(  IO(PORTA, 7), 0);
-  gpio_func(IO(PORTA, 7), 0);
-  gpio_dir( IO(PORTA, 7), GPIO_OUTPUT);
-  gpio_mode(IO(PORTA, 7), PULL_NO);
+  /*Configure GPIO pins : LED_D4_Pin */
+//  gpio_wr(  IO(D4_LED_G2_GPIO_Port, D4_LED_G2_Pin), 0);
+//  gpio_mode(IO(D4_LED_G2_GPIO_Port, D4_LED_G2_Pin), Output_Push_Pull, Speed_Low);
   
-
-  /*Configure GPIO pins : B5 */
-  //gpio_wr(  IO(PORTB, 5), 0);
-  //gpio_func(IO(PORTB, 5), 0);
-  //gpio_dir( IO(PORTB, 5), GPIO_OUTPUT);
-  //gpio_mode(IO(PORTB, 5), PULL_NO);
   
   /*Configure GPIO pin : Detect_SDIO_Pin */
   	/* SDIO_CD: input gpio, card detect */
   #ifdef HAS_SD_DETECT
-    gpio_func(IO(PORTB, 11), 0);
-    gpio_dir( IO(PORTB, 11), GPIO_INPUT);
-    gpio_mode(IO(PORTB, 11), PULL_NO);
+ //   gpio_mode(IO(Detect_SDIO_GPIO_Port, Detect_SDIO_Pin), Input_Floating);
   #endif  
   
   /* USER CODE BEGIN MX_GPIO_Init_2 */
   /* USER CODE END MX_GPIO_Init_2 */
 }
+
+/**
+  * @brief SPI GPIO Initialization Function
+  * @param None
+  * @retval None
+*/
+void SPI_GPIOConfig(void){
+  
+   /*Configure GPIO pins : SCK */
+  gpio_wr(  IO(SD_SCK_GPIO_Port, SD_SCK_Pin), 0);
+  gpio_mode(IO(SD_SCK_GPIO_Port, SD_SCK_Pin), Output_Push_Pull, Speed_High);
+  
+  /*Configure GPIO pins : MOSI */
+  gpio_wr(  IO(SD_MOSI_GPIO_Port, SD_MOSI_Pin), 0);
+  gpio_mode(IO(SD_MOSI_GPIO_Port, SD_MOSI_Pin), Output_Push_Pull, Speed_High); 
+  
+  /*Configure GPIO pins : SDSS */
+  gpio_wr(  IO(SDSS_GPIO_Port, SDSS_Pin), 0);
+  gpio_mode(IO(SDSS_GPIO_Port, SDSS_Pin), Output_Push_Pull, Speed_Low); 
+  
+  /*Configure GPIO pins : MISO  */
+  gpio_mode(IO(SD_MISO_GPIO_Port, SD_MISO_Pin), Input_Floating, 0);
+}
+
 
 /* USER CODE BEGIN 4 */
 
@@ -204,7 +231,7 @@ void GPIO_Init(void)
 static void main_boot(void)
 {
   
-  print("\nPower up, Boot started.\n");
+  kprint("\nPower up, Boot started.\n");
   
   /* Check system reset flags */
   if(__HAL_RCC_GET_FLAG(RCC_FLAG_PORRST))
@@ -217,7 +244,7 @@ static void main_boot(void)
     #endif
   }
   
-  print("Entering Bootloader...\n");
+  kprint("Entering Bootloader...\n");
   Bootloader_Init();
   uint8_t temp_stat = Enter_Bootloader();
   if((temp_stat == ERR_FLASH) || (temp_stat == ERR_VERIFY)) Error_Handler();
@@ -229,16 +256,16 @@ static void main_boot(void)
       /* Verify application checksum */
       if(Bootloader_VerifyChecksum() != BL_OK)
       {
-        print("Checksum Error.\n");
+        kprint("Checksum Error.\n");
         Error_Handler();
       }
       else
       {
-        print("Checksum OK.\n");
+        kprint("Checksum OK.\n");
       }
     #endif
     
-    print("Launching Application.\n");
+    kprint("Launching Application.\n");
     LED_G1_ON();
     LED_G2_ON();
     
@@ -256,7 +283,7 @@ static void main_boot(void)
   }
   
   /* No application found */
-  print("No application in flash.\n");
+  kprint("No application in flash.\n");
   while(1)
   {
     Error_Handler();
@@ -290,48 +317,60 @@ uint8_t Enter_Bootloader(void)
   if(fr != FR_OK)
   {
     /* f_mount failed */
-    print("SD card cannot be mounted.\n");
+    kprint("SD card cannot be mounted.\n");
     //        kprint("FatFs error code: %u\n", fr);
     //      //print(msg);
     return ERR_SD_MOUNT;
   }
-  print("SD mounted.\n");
+  kprint("SD mounted.\n");
   
   /* Open file for programming */
   fr = f_open(&SDFile, CONF_FILENAME, FA_READ);
   if(fr != FR_OK)
   {
     /* f_open failed */
-    print("File cannot be opened.\n");
+    kprint("File cannot be opened.\n");
     //        kprint("FatFs error code: %u\n", fr);
     //      //print(msg);
     
     SD_Eject();
-    print("SD ejected.\n");
+    kprint("SD ejected.\n");
     return ERR_SD_FILE;
   }
-  print("Software found on SD.\n");
+  kprint("Software found on SD.\n");
   
   /* Check size of application found on SD card */
   if(Bootloader_CheckSize(f_size(&SDFile)) != BL_OK)
   {
-    print("Error: app on SD card is too large.\n");
+    kprint("Error: app on SD card is too large.\n");
     
     f_close(&SDFile);
     SD_Eject();
-    print("SD ejected.\n");
+    kprint("SD ejected.\n");
     return ERR_APP_LARGE;
   }
-  print("App size OK.\n");
+  kprint("App size OK.\n");
   
   /* Step 1: Init Bootloader and Flash */
   
+  if(init_1 ) {
+    Write_Prot_Old = WRITE_Prot_Old_Flag = Magic_Location = 0;
+    init_2 = 1;
+    init_1 = 0;
+    Bootloader_ConfigProtection(0xFFFFFFFFUL, 0xFFFFFFFFUL, WP_SAVE);
+  }
+  
+  if(init_2 ) {
+    init_2 = 0;
+    Write_Prot_Old = WRITE_Prot_Old_Flag = Magic_Location = 0;
+    Bootloader_ConfigProtection(0x7FFFFFF7UL, 0xFFFFFFFFUL, WP_DONT_SAVE);
+  }  
   
   /* Check for flash write protection of application area*/
   if(~Bootloader_GetProtectionStatus() & WRITE_protection & APP_sector_mask) {  // F407 high bit says sector is protected
-    print("Application space in flash is write protected.\n");
+    kprint("Application space in flash is write protected.\n");
     if (IGNORE_WRITE_PROTECTION) {                              
-      //        print("Press button to disable flash write protection...\n");
+      //        kprint("Press button to disable flash write protection...\n");
       //        LED_ALL_ON();
       //        for(i = 0; i < 100; ++i)
       //        {
@@ -339,27 +378,27 @@ uint8_t Enter_Bootloader(void)
       //            k_delay(50);
       //            if(IS_BTN_PRESSED())
       //            {
-      //                print("Disabling write protection and generating system "
+      //                kprint("Disabling write protection and generating system "
       //                      "reset...\n");
       //                Bootloader_ConfigProtection(BL_PROTECTION_NONE);
       //            }
       //        }
       //        LED_ALL_OFF();
-      //        print("Button was not pressed, write protection is still active.\n");
+      //        kprint("Button was not pressed, write protection is still active.\n");
       if (!(WRITE_Prot_Old_Flag == WRITE_Prot_Old_Flag_Restored_flag)) {   // already restored original protection so don't initiate the process again                             
-      print("Disabling write protection and generating system reset...\n"); 
+      kprint("Disabling write protection and generating system reset...\n"); 
       /* Eject SD card */
       SD_Eject();
       Magic_Location = Magic_BootLoader;  // flag that we should load the bootloader
                                           // after the next reset
       if (Bootloader_ConfigProtection(WRITE_protection, APP_sector_mask, WP_SAVE) != BL_OK)   // sends system though reset - no more code executed unless there's an error 
         {
-          print("Failed to set write protection.\n");
-          print("Exiting Bootloader.\n");
+          kprint("Failed to set write protection.\n");
+          kprint("Exiting Bootloader.\n");
           return ERR_OK;
         }
 
-        print("write protection removed\n");
+        kprint("write protection removed\n");
 
         WRITE_Prot_Old_Flag = WRITE_Prot_Original_flag;  // flag that protection was removed so can
                                                        // restore write protection after next reset)
@@ -376,25 +415,25 @@ uint8_t Enter_Bootloader(void)
   }
  
   /* Step 2: Erase Flash */
-  print("Erasing flash...\n");
+  kprint("Erasing flash...\n");
   LED_G2_ON();
   Bootloader_Erase();
   LED_G2_OFF();
-  print("Flash erase finished.\n");
+  kprint("Flash erase finished.\n");
   
   /* If BTN is pressed, then skip programming */
   //   if(IS_BTN_PRESSED())
   //   {
-  //       print("Programming skipped.\n");
+  //       kprint("Programming skipped.\n");
   //
   //       f_close(&SDFile);
   //       SD_Eject();
-  //       print("SD ejected.");
+  //       kprint("SD ejected.");
   //       return ERR_OK;
   //   }
   
   /* Step 3: Programming */
-  print("Starting programming...\n");
+  kprint("Starting programming...\n");
   LED_G2_ON();
   cntr = 0;
   Bootloader_FlashBegin();
@@ -419,7 +458,7 @@ uint8_t Enter_Bootloader(void)
         
         f_close(&SDFile);
         SD_Eject();
-        print("SD ejected.\n");
+        kprint("SD ejected.\n");
         
         LED_ALL_OFF();
         return ERR_FLASH;
@@ -436,9 +475,9 @@ uint8_t Enter_Bootloader(void)
   Bootloader_FlashEnd();
   f_close(&SDFile);
   LED_ALL_OFF();
-  print("Programming finished.\n");
+  kprint("Programming finished.\n");
   sprintf(msg, "Flashed: %ld bytes.\n", (cntr * 4));
-  print(msg);
+  kprint(msg);
   
   
 #if 0  // adds 25-26 seconds but doesn't add any value (verify during programming only costs 60mS)  
@@ -448,16 +487,18 @@ uint8_t Enter_Bootloader(void)
   if(fr != FR_OK)
   {
     /* f_open failed */
-    print("File cannot be opened.\n");
+    kprint("File cannot be opened.\n");
     kprint("FatFs error code: %u\n", fr);
   //print(msg);
     
     SD_Eject();
-    print("SD ejected.");
+    kprint("SD ejected.");
     return ERR_SD_FILE;
   }
   
-  print("Verifying ...\n");
+   /* Step 5: Verify Flash Content */
+#if 0  // adds 25-26 seconds but doesn't add any value (verify during programming only costs 60mS)
+  kprint("Verifying ...\n");
   addr = APP_ADDRESS;
   cntr = 0;
   do
@@ -478,7 +519,7 @@ uint8_t Enter_Bootloader(void)
         
         f_close(&SDFile);
         SD_Eject();
-        print("SD ejected.\n");
+        kprint("SD ejected.\n");
         
         LED_G1_OFF();
         return ERR_VERIFY;
@@ -491,12 +532,13 @@ uint8_t Enter_Bootloader(void)
     }
   } while((fr == FR_OK) && (num > 0));
 
-  print("Verification passed.\n");
+  kprint("Verification passed.\n");
   f_close(&SDFile);
-#endif          
+#endif  
+#endif
                    
   LED_G1_OFF();
-  
+#if 0  
   #if defined(FILE_EXT_CHANGE) && (_LFN_UNICODE == 0)   // rename file if using ANSI/OEM strings
     TCHAR new_filename[strlen(CONF_FILENAME) + 1];
     new_filename[strlen(CONF_FILENAME)] = '\0';  // terminate the string
@@ -514,7 +556,7 @@ uint8_t Enter_Bootloader(void)
                                                                        if (fr != FR_OK)  
       {
         /* f_open failed */
-        print("File cannot be renamed.\n");
+        kprint("File cannot be renamed.\n");
         kprint("FatFs error code: %u\n", fr);
         //print(msg);
         
@@ -525,7 +567,7 @@ uint8_t Enter_Bootloader(void)
     }
     else {
     /* f_open failed */
-      print("removing .CUR failed.\n");
+      kprint("removing .CUR failed.\n");
       kprint("FatFs error code: %u\n", fr);
 
       // allow loading application even if can't rename
@@ -533,17 +575,18 @@ uint8_t Enter_Bootloader(void)
                                            // after the next reset
     }
   #endif
-  
+ #endif //file rename
+ 
   /* Eject SD card */
   SD_Eject();
-  print("SD ejected.\n");
+  kprint("SD ejected.\n");
   
   /* Enable flash write protection on application area */
 #if(USE_WRITE_PROTECTION && !RESTORE_WRITE_PROTECTION)
-    print("Enabling flash write protection and generating system reset...\n");
+    kprint("Enabling flash write protection and generating system reset...\n");
     if(Bootloader_ConfigProtection(BL_PROTECTION_WRP, APP_sector_mask, WP_DONT_SAVE) != BL_OK)   // sends system though reset - no more code executed unless there's an error
     {
-      print("Failed to enable write protection.\n");
+      kprint("Failed to enable write protection.\n");
 
     }
   #endif
@@ -552,12 +595,12 @@ uint8_t Enter_Bootloader(void)
   #if(!USE_WRITE_PROTECTION && RESTORE_WRITE_PROTECTION && IGNORE_WRITE_PROTECTION)
     if (WRITE_Prot_Old_Flag == WRITE_Prot_Original_flag) {
       WRITE_Prot_Old_Flag = WRITE_Prot_Old_Flag_Restored_flag;  // indicate we've restored the protection
-      print("Restoring flash write protection and generating system reset...\n");
+      kprint("Restoring flash write protection and generating system reset...\n");
       //print("  May require power cycle to recover.\n");
 
       if (Bootloader_ConfigProtection(Write_Prot_Old, APP_sector_mask, WP_DONT_SAVE) != BL_OK)  // sends system though reset - no more code executed unless there's an error
       {
-        print("Failed to restore write protection.\n");
+        kprint("Failed to restore write protection.\n");
       }
     }
   #endif
@@ -570,10 +613,10 @@ uint8_t Enter_Bootloader(void)
   * @param  str: string to be written to UART2
   * @retval None
 */
-void print(const char* str)
-{
-  kprint(str);
-}
+//void kprint(const char* str)
+//{
+//  kprint(str);
+//}
 
 
 /* USER CODE END 4 */

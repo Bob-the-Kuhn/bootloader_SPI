@@ -30,7 +30,7 @@
 #include <intdefs.h>
 #include <stdint.h>
 #include "user_diskio.h"
-#include "SPI_defines.h"
+#include "main.h"
 
 
 typedef BYTE	DSTATUS;
@@ -120,7 +120,7 @@ BYTE xchg_spi (
 	BYTE dat	/* Data to send */
 )
 {
-  return SPI_Transfer(dat);
+  return SOFT_SPI_STM32_SpiTransfer_Mode_3(dat);
 }
 
 

@@ -8,7 +8,10 @@
 #include <basic.h>
 #include <log.h>
 #include <gpio.h>
-#include <stm32f407x_defines.h>
+#include "stm32f103ZE_defines.h"
+//#include <stm32f103xg.h>
+//#include <stm32f1xx_ll_gpio.h>
+
 #include <string.h>
 #include <string.h>
 
@@ -31,6 +34,8 @@ extern unsigned char _ebss;
 extern void main(void);
 
 void init(void);
+
+void gpio_mode( uint16_t port_pin, uint8_t mode, uint8_t speed);
 
 void __attribute__ ((weak)) isr_reset(void)
 {
@@ -76,6 +81,11 @@ void attr_weak isr_hf(void)
 }
 
 void attr_weak isr_systick(void)
+{
+  ticks++;
+}
+
+void SysTick_Handler(void)
 {
   ticks++;
 }
@@ -208,38 +218,57 @@ u32 k_ticks_freq(void) attr_alias("systicks_freq");
 
 void init_clock(void)
 {
+  
+  /* Configure flash */
+  // F103  must set latency before switching to higher speed
+  or32(R_FLASH_ACR, 0x00000012UL);  // 2 wait states, prefetch enabled.
+  and32(RCC_CR, ~(BIT24 | BIT18) ); // turn off PLL so can update RCC_CFGR, select HSE as crystal
+  while ((rd32(RCC_CR) & BIT25));  // wait for PLL to stop
+  
   /* Enable HSE (8MHz external oscillator) */
   or32(RCC_CR, BIT16);
   while (!(rd32(RCC_CR) & BIT17));
+  
 
+  // F407
   /* PLLM=8 PLLN=336, PLLP=00 (2), PLLQ=7; f_PLL=168MHz, f_USB=48MHz */
   // STMcubeIDE says this is impossible, SYSCLK reports 525MHz
-  and32(RCC_PLLCFGR, ~0x0f037fff);
-  or32(RCC_PLLCFGR, BIT22 | (7 << 24) | (336 << 6) | 8);
-  or32(RCC_CR, BIT24);
-  while (!(rd32(RCC_CR) & BIT25));
+ //and32(RCC_PLLCFGR, ~0x0f037fff);
+ //or32(RCC_PLLCFGR, BIT22 | (7 << 24) | (336 << 6) | 8);
+ //or32(RCC_CR, BIT24);
+ //while (!(rd32(RCC_CR) & BIT25));
   
-  ///* PLLM=4 PLLN=96, PLLP=00 (2), PLLQ=4; f_PLL=96MHz, AHB=2, f_USB=48MHz */
-  //and32(RCC_PLLCFGR, ~0x0f037fff);
-  //or32(RCC_PLLCFGR, BIT22 | (4 << 24) | (96 << 6) | 4);
-  ////or32(RCC_PLLCFGR, (4 << 24) | (96 << 6) | 4); // use HSI clock - dead CPU
-  //or32(RCC_CR, BIT24);
-  //while (!(rd32(RCC_CR) & BIT25));
+  // F103
+  ///* SYSCLOCK=48MHz, f_USB=48MHz */
+  /* use PLL, AHB: /1  APB1: /2  APB2: /1  ADC: /1  HSE used a PLL source */
+  /* USB prescaler: /1  MCO:none */
+  and32(RCC_CFGR, ~0x07fffff3UL);  // set all bits to zero except reserved and hardware controlled
+  or32(RCC_CFGR, (1 << 22)  | (10 << 18) | (3 << 16)| (4 << 8) | 2); 
+  or32(RCC_CR, BIT24);  // turn on PLL
+  while (!(rd32(RCC_CR) & BIT25));  // wait until PLL is locked
 
   /* Configure flash */
-  wr32(R_FLASH_ACR, BIT10 | BIT9 | BIT8 | 1);
+  // F407
+  //wr32(R_FLASH_ACR, BIT10 | BIT9 | BIT8 | 1);
+  // F103
+  //or32(R_FLASH_ACR, 0x00000019UL);  // 1 wait state, prefetch enabled.
 
-  /* Use PLL as system clock, with AHB prescaler set to 4 */
-  wr32(RCC_CFGR, (0x9 << 4) | 0x2); // APB1 & APB2 set to 1
+  /* F407 Use PLL as system clock, with AHB prescaler set to 4 */
+  //wr32(RCC_CFGR, (0x9 << 4) | 0x2); // APB1 & APB2 set to 1
   
   /* Use PLL as system clock, with AHB prescaler set to 2 */
   //wr32(RCC_CFGR, (0x8 << 4) | 4 << 10 | 0x2);   // APB1 set to 2, APB2 to 1
   //while (((rd32(RCC_CFGR) >> 2) & 0x3) != 0x2);
 
   /* Enable clock on AHB and APB peripherals */
-  wr32(RCC_AHB1ENR, BIT7 | BIT4 | BIT3 | BIT2 | BIT1 | BIT0); /* GPIO A,B,C,D,E,H*/
-  wr32(RCC_APB1ENR, BIT1 | BIT2 | BIT17| BIT18); /* TIM3, TIM4, USART2 and USART3 */
-  wr32(RCC_APB2ENR, BIT0 | BIT4 | BIT8 | BIT12| BIT18); /* TIM1/11, ADC1, SPI1, USART1 */
+  // F407
+  //wr32(RCC_AHB1ENR, BIT7 | BIT4 | BIT3 | BIT2 | BIT1 | BIT0); /* GPIO A,B,C,D,E,H*/
+  //wr32(RCC_APB1ENR, BIT1 | BIT2 | BIT17| BIT18); /* TIM3, TIM4, USART2 and USART3 */
+  //wr32(RCC_APB2ENR, BIT0 | BIT4 | BIT8 | BIT12| BIT18); /* TIM1/11, ADC1, SPI1, USART1 */
+  // F103
+  or32(RCC_AHBENR, BIT10); /* SDIO*/
+  or32(RCC_APB1ENR, 0x0004003fUL); /* TIM2-7, 12-14, USART3 */
+  or32(RCC_APB2ENR, 0x000079fdUL); /* TIM1,8, SPI1, USART1, GPIOA-G */
 }
 
 void init_systick(void)
@@ -266,12 +295,13 @@ void init_uart(void)
   /* USART3 on PD8/PD9 */                       
   /* USART2 on PD5/PD6 */
   /* USART1 on PA9/PA10 */
-  gpio_func(IO(PORTD, 8), 7);
-  gpio_func(IO(PORTD, 9), 7);
-  gpio_mode(IO(PORTD, 8), PULL_NO);
-  gpio_mode(IO(PORTD, 9), PULL_NO);
+  or32(R_AFIO_MAPR, ~AFIO_MAPR_USART3_REMAP_Msk);  //  set USART3 remap bits which maps PD8/PD9 to USART3
+  gpio_mode(IO(PORTD, 8), Output_Push_Pull_Alternate_Function, Speed_High);
+  gpio_mode(IO(PORTD, 9), Input_Floating, 0);
   /* fPCLK=42MHz, br=115.2KBps, USARTDIV=22.8125, see table 80 pag. 519 */
-  wr32(R_USART3_BRR, (22 << 4) | 13);
+  //wr32(R_USART3_BRR, (22 << 4) | 13);
+  /* fPCLK=48MHz, br=115.2KBps, USARTDIV=26.04 */
+  wr32(R_USART3_BRR, (26 << 4) | 1);
   or32(R_USART3_CR1, BIT13 | BIT5 | BIT3 | BIT2);
   or32(R_NVIC_ISER(1), BIT7); /* USART3 is irq 39 */
   //or32(R_NVIC_ISER(1), BIT6); /* USART2 is irq 38 */
@@ -280,12 +310,13 @@ void init_uart(void)
   /* USART3 on PD8/PD9 */
   /* USART2 on PD5/PD6 */
   /* USART1 on PA9/PA10 */
-  gpio_func(IO(PORTA, 9), 7);
-  gpio_func(IO(PORTA, 10), 7);
-  gpio_mode(IO(PORTA, 9), PULL_NO);
-  gpio_mode(IO(PORTA, 10), PULL_NO);
+  and32(R_AFIO_MAPR, ~AFIO_MAPR_USART1_REMAP_Msk);  //  clear USART1 remap bit which maps PA9 & PA10 to USART1
+  gpio_mode(IO(PORTA, 9), Output_Push_Pull_Alternate_Function, Speed_High);
+  gpio_mode(IO(PORTA, 10), Input_Floating, 0);
   /* fPCLK=42MHz, br=115.2KBps, USARTDIV=22.8125, see table 80 pag. 519 */
-  wr32(R_USART1_BRR, (22 << 4) | 13);
+  //wr32(R_USART3_BRR, (22 << 4) | 13);
+  /* fPCLK=48MHz, br=115.2KBps, USARTDIV=26.04 */
+  wr32(R_USART1_BRR, (26 << 4) | 1);
   or32(R_USART1_CR1, BIT13 | BIT5 | BIT3 | BIT2);
   //or32(R_NVIC_ISER(1), BIT7); /* USART3 is irq 39 */                                                    
   //or32(R_NVIC_ISER(1), BIT6); /* USART2 is irq 38 */
