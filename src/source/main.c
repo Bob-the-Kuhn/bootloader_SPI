@@ -124,10 +124,10 @@ int main(void)
   //SPIConfig();
   //SPI_Enable();
   
-  sprintf(msg, "\nSYSCLK_Frequency %08lu\n", HAL_RCC_GetSysClockFreq());
-  kprint(msg);
-  sprintf(msg, "HCLK_Frequency   %08lu\n", HAL_RCC_GetHCLKFreq());
-  kprint(msg);
+  //sprintf(msg, "\nSYSCLK_Frequency %08lu\n", HAL_RCC_GetSysClockFreq());
+  //kprint(msg);
+  //sprintf(msg, "HCLK_Frequency   %08lu\n", HAL_RCC_GetHCLKFreq());
+  //kprint(msg);
   
   LED_G1_OFF();
   LED_G2_OFF();             
@@ -232,7 +232,7 @@ void SPI_GPIOConfig(void){
 static void main_boot(void)
 {
   
-  report_WP_ConfigProtection();  
+  //report_WP_ConfigProtection();  
   
   kprint("\nPower up, Boot started.\n");
   
