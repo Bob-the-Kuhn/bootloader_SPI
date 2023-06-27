@@ -822,8 +822,7 @@ uint8_t Bootloader_CheckForApplication(void)
  */
 
 void Bootloader_JumpToApplication(void) {
-  
-Error_Handler();
+ 
   Magic_Location = Magic_Application;  // flag that we should load application 
                                        // after the next reset
   NVIC_System_Reset();                  // send the system through reset

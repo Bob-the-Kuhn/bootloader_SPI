@@ -73,6 +73,7 @@ void k_delay(const uint32_t ms);
 void SPI_GPIOConfig(void);
 //void SPIConfig(void);
 //void SPI_Enable(void);
+void report_WP_ConfigProtection(void);
 
 void SPI_Transmit (BYTE *data, UINT size);
 
@@ -231,6 +232,8 @@ void SPI_GPIOConfig(void){
 static void main_boot(void)
 {
   
+  report_WP_ConfigProtection();  
+  
   kprint("\nPower up, Boot started.\n");
   
   /* Check system reset flags */
@@ -353,18 +356,26 @@ uint8_t Enter_Bootloader(void)
   
   /* Step 1: Init Bootloader and Flash */
   
-  if(init_1 ) {
-    Write_Prot_Old = WRITE_Prot_Old_Flag = Magic_Location = 0;
-    init_2 = 1;
-    init_1 = 0;
-    Bootloader_ConfigProtection(0xFFFFFFFFUL, 0xFFFFFFFFUL, WP_SAVE);
-  }
-  
-  if(init_2 ) {
-    init_2 = 0;
-    Write_Prot_Old = WRITE_Prot_Old_Flag = Magic_Location = 0;
-    Bootloader_ConfigProtection(0x7FFFFFF7UL, 0xFFFFFFFFUL, WP_DONT_SAVE);
-  }  
+      // debug/test routines used to test sector write protect logic
+      //
+      // using debugger, set init_1 to a non-zero number to protect a sector
+      // in the app and in the bootloader.
+      //
+      // Ozone debugger removed all sector write protection when downloading
+      // a new image or when starting a debug session. 
+      
+      //if(init_1 ) {
+      //  Write_Prot_Old = WRITE_Prot_Old_Flag = Magic_Location = 0;
+      //  init_2 = 1;
+      //  init_1 = 0;
+      //  Bootloader_ConfigProtection(0xFFFFFFFFUL, 0xFFFFFFFFUL, WP_SAVE);
+      //}
+      //
+      //if(init_2 ) {
+      //  init_2 = 0;
+      //  Write_Prot_Old = WRITE_Prot_Old_Flag = Magic_Location = 0;
+      //  Bootloader_ConfigProtection(0x7FFFFFF7UL, 0xFFFFFFFFUL, WP_DONT_SAVE);
+      //}  
   
   /* Check for flash write protection of application area*/
   if(~Bootloader_GetProtectionStatus() & WRITE_protection & APP_sector_mask) {  // F407 high bit says sector is protected
@@ -391,6 +402,7 @@ uint8_t Enter_Bootloader(void)
       SD_Eject();
       Magic_Location = Magic_BootLoader;  // flag that we should load the bootloader
                                           // after the next reset
+      save_WRP_state();  // save WRP state and set flag so can be restored later                                                                                  
       if (Bootloader_ConfigProtection(WRITE_protection, APP_sector_mask, WP_SAVE) != BL_OK)   // sends system though reset - no more code executed unless there's an error 
         {
           kprint("Failed to set write protection.\n");
@@ -440,8 +452,8 @@ uint8_t Enter_Bootloader(void)
   do
   {
     data = 0xFFFFFFFFFFFFFFFF;
-    //      fr   = f_read(&SDFile, &data, 8, &num);
-    fr   = f_read(&SDFile, &data, 4, &num);
+    fr   = f_read(&SDFile, &data, 8, &num);
+    //fr   = f_read(&SDFile, &data, 4, &num);
     if(num)
     {
       status = Bootloader_FlashNext(data);
@@ -538,7 +550,7 @@ uint8_t Enter_Bootloader(void)
 #endif
                    
   LED_G1_OFF();
-#if 0  
+
   #if defined(FILE_EXT_CHANGE) && (_LFN_UNICODE == 0)   // rename file if using ANSI/OEM strings
     TCHAR new_filename[strlen(CONF_FILENAME) + 1];
     new_filename[strlen(CONF_FILENAME)] = '\0';  // terminate the string
@@ -553,7 +565,7 @@ uint8_t Enter_Bootloader(void)
     
     if ((fr == FR_OK) || (fr == FR_NO_FILE)) {
       fr = f_rename(CONF_FILENAME, new_filename);  // rename file to .CUR
-                                                                       if (fr != FR_OK)  
+      if (fr != FR_OK)                                                                 if (fr != FR_OK)  
       {
         /* f_open failed */
         kprint("File cannot be renamed.\n");
@@ -575,7 +587,7 @@ uint8_t Enter_Bootloader(void)
                                            // after the next reset
     }
   #endif
- #endif //file rename
+
  
   /* Eject SD card */
   SD_Eject();
