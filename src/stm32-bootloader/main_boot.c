@@ -31,6 +31,8 @@
 #include <ctype.h>
 //#include "gpio.h"
 
+uint32_t __attribute__((section("no_init"))) init_1;  // debug
+uint32_t __attribute__((section("no_init"))) init_2;
 
 /* USER CODE END Includes */
 
@@ -326,6 +328,29 @@ uint8_t Enter_Bootloader(void)
   
   /* Step 1: Init Bootloader and Flash */
   
+        // debug/test routines used to test sector write protect logic
+      //
+      // using debugger, set init_1 to a non-zero number to protect a sector
+      // in the app and in the bootloader.
+      //
+      // Ozone debugger removed all sector write protection when downloading
+      // a new image or when starting a debug session. 
+      
+      if(init_1 ) {
+        Write_Prot_Old = WRITE_Prot_Old_Flag = Magic_Location = 0;
+        init_2 = 1;
+        init_1 = 0;
+        Bootloader_ConfigProtection(0xFFFFFFFFUL, 0xFFFFFFFFUL, WP_SAVE);
+      }
+      
+      if(init_2 ) {
+        init_2 = 0;
+        Write_Prot_Old = WRITE_Prot_Old_Flag = Magic_Location = 0;
+        Bootloader_ConfigProtection(0x7FFFFFF7UL, 0xFFFFFFFFUL, WP_DONT_SAVE);
+      }  
+  
+  
+  
   /* Check for flash write protection of application area*/
   if(~Bootloader_GetProtectionStatus() & WRITE_protection & APP_sector_mask) {  // F407 high bit says sector is protected
     print("Application space in flash is write protected.\n");
@@ -373,7 +398,7 @@ uint8_t Enter_Bootloader(void)
         
     }
   }
-
+#if 0  
   /* Step 2: Erase Flash */
   print("Erasing flash...\n");
   LED_G2_ON();
@@ -395,6 +420,7 @@ uint8_t Enter_Bootloader(void)
   /* Step 3: Programming */
   print("Starting programming...\n");
   LED_G2_ON();
+
   cntr = 0;
   Bootloader_FlashBegin();
   do
@@ -438,7 +464,8 @@ uint8_t Enter_Bootloader(void)
   sprintf(msg, "Flashed: %ld bytes.\n", (cntr * 4));
   print(msg);
   
-  
+#endif  
+
 #if 0  // adds 25-26 seconds but doesn't add any value (verify during programming only costs 60mS)  
   /* Step 5: Verify Flash Content */  
   /* Open file for verification */

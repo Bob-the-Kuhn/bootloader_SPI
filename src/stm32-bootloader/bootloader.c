@@ -75,32 +75,41 @@ uint8_t Bootloader_Init(void)
 
     /* Clear flash flags */
     HAL_FLASH_Unlock();
-    __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_ALL_ERRORS);
+//    __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_ALL_ERRORS);
     HAL_FLASH_Lock();
 
     APP_first_sector = 0;
     APP_first_addr = 0;
    
-    // STM32F746 has different length FLASH sectors.
-    //   Sector 0 to Sector 3 being 32 KB each
-    //   Sector 4 is 128 KB
-    //   Sector 5–7 are 256 KB each
+    // STM32H753 has 8 or 16 equal length FLASH sectors.
+    //   All sectors are 32k bytes.
 
     
-    if (BOOT_LOADER_END <= 0xC0000 + FLASH_BASE) {APP_first_sector = FLASH_SECTOR_7;   APP_first_addr = 0xC0000 + FLASH_BASE;}
-    if (BOOT_LOADER_END <= 0x80000 + FLASH_BASE) {APP_first_sector = FLASH_SECTOR_6;   APP_first_addr = 0x80000 + FLASH_BASE;}
-    if (BOOT_LOADER_END <= 0x40000 + FLASH_BASE) {APP_first_sector = FLASH_SECTOR_5;   APP_first_addr = 0x40000 + FLASH_BASE;}
-    if (BOOT_LOADER_END <= 0x20000 + FLASH_BASE) {APP_first_sector = FLASH_SECTOR_4;   APP_first_addr = 0x20000 + FLASH_BASE;}
-    if (BOOT_LOADER_END <= 0x18000 + FLASH_BASE) {APP_first_sector = FLASH_SECTOR_3;   APP_first_addr = 0x18000 + FLASH_BASE;}
-    if (BOOT_LOADER_END <= 0x10000 + FLASH_BASE) {APP_first_sector = FLASH_SECTOR_2;   APP_first_addr = 0x10000 + FLASH_BASE;}
-    if (BOOT_LOADER_END <= 0x08000 + FLASH_BASE) {APP_first_sector = FLASH_SECTOR_1;   APP_first_addr = 0x08000 + FLASH_BASE;}
+    uint32_t mask = 1;  // mask for clearing write protect bits
+    for (uint16_t counter = 0; counter < FLASH_SIZE/FLASH_SECTOR_SIZE; counter++) {   // find 
+      
+      APP_first_addr = ((counter * FLASH_SECTOR_SIZE) + FLASH_BASE);
+      if (BOOT_LOADER_END <= APP_first_addr) {
+        APP_first_sector = counter; 
+        break;
+      }
+      else {
+        APP_sector_mask |= mask;   // remove write protection on this sector 
+        mask = mask << 1; // move mask to left every sector
+      }
+    }
     
+    APP_sector_mask = ~APP_sector_mask;  // don't touch write protection on sectors with bootloader in it
     
-    
+    sprintf(msg, "\nAPP_sector_mask %08lX\n", APP_sector_mask);
+    print(msg);
+     
     sprintf(msg, "\nBOOT_LOADER_END %08lX\n", BOOT_LOADER_END);
     print(msg);
     sprintf(msg, "Lowest possible APP_ADDRESS is %08lX\n", APP_first_addr);
     print(msg);
+    
+
     /* check APP_ADDRESS */
     if (APP_ADDRESS & 0x1ff) {
       print("ERROR - application address not on 512 byte boundary\n");
@@ -126,6 +135,7 @@ uint8_t Bootloader_Init(void)
     return BL_OK;
 }
 
+#if 0
 /**
  * @brief  This function erases the user application area in flash
  * @return Bootloader error code ::eBootloaderErrorCodes
@@ -248,6 +258,7 @@ uint8_t Bootloader_FlashEnd(void)
 
     return BL_OK;
 }
+#endif
 
 /**
  * @brief  This function returns the protection status of flash.

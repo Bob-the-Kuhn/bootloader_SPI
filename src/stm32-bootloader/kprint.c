@@ -9,8 +9,8 @@
 #include <stdarg.h>
 #include <endiannes.h>
 #include <basic.h>
-#include "stm32f7xx_hal.h"
-#include "stm32f7xx_hal_uart.h"
+#include "stm32h7xx_hal.h"
+#include "stm32h7xx_hal_uart.h"
 
 //extern int putchar(int c);
 
