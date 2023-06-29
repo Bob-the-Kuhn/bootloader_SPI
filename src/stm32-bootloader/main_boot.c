@@ -165,7 +165,7 @@ void GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
 
-  /*Configure GPIO pin : LED_G1: PB0, LED_G2: PB7*/
+  /*Configure GPIO pin : LED_G1: PB0, LED_G2: PB14*/
   GPIO_InitStruct.Pin = (LED_G1_Pin | LED_G2_Pin);
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
@@ -346,7 +346,7 @@ uint8_t Enter_Bootloader(void)
       if(init_2 ) {
         init_2 = 0;
         Write_Prot_Old = WRITE_Prot_Old_Flag = Magic_Location = 0;
-        Bootloader_ConfigProtection(0x7FFFFFF7UL, 0xFFFFFFFFUL, WP_DONT_SAVE);
+        Bootloader_ConfigProtection(0xFFFF1234UL, 0xFFFFFFFFUL, WP_DONT_SAVE);
       }  
   
   
@@ -398,7 +398,7 @@ uint8_t Enter_Bootloader(void)
         
     }
   }
-#if 0  
+
   /* Step 2: Erase Flash */
   print("Erasing flash...\n");
   LED_G2_ON();
@@ -464,7 +464,7 @@ uint8_t Enter_Bootloader(void)
   sprintf(msg, "Flashed: %ld bytes.\n", (cntr * 4));
   print(msg);
   
-#endif  
+  
 
 #if 0  // adds 25-26 seconds but doesn't add any value (verify during programming only costs 60mS)  
   /* Step 5: Verify Flash Content */  

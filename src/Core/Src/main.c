@@ -223,6 +223,8 @@ static void MX_SPI1_Init(void)
     Error_Handler_boot();
   }
   /* USER CODE BEGIN SPI1_Init 2 */
+  
+  hspi1.Instance->CR1 |= SPI_CR1_SPE;  // enable SPI 
 
   /* USER CODE END SPI1_Init 2 */
 

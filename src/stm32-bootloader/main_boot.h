@@ -63,10 +63,12 @@ void Error_Handler(void);
 // BTT SKR PRO has only one LED at PA7
 // The 407 black board has two at PA6 and PA7
 
-//Nucleo_F746  has three LEDs
+//Nucleo_H753  has three LEDs
 // LD1_PIN                          PB0  // green
-// LD2_PIN                          PB7  // blue
+// LD2_PIN                          PE1  // yellow
 // LD3_PIN                          PB14  // red
+
+
 
 //#define WORK_LED_Pin GPIO_PIN_2
 //#define WORK_LED_GPIO_Port GPIOB
@@ -77,7 +79,7 @@ void Error_Handler(void);
 
 /* LD2 */
 #define LED_G2_Port GPIOB
-#define LED_G2_Pin  GPIO_PIN_7
+#define LED_G2_Pin  GPIO_PIN_14
 
 /* Enumerations --------------------------------------------------------------*/
 /* Error codes */

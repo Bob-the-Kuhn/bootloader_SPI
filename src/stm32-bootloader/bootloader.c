@@ -5,7 +5,7 @@
  * @author Akos Pasztor
  * @file   bootloader.c
  * @brief  This file contains the functions of the bootloader. The bootloader
- *	       implementation uses the official HAL library of ST.
+ *         implementation uses the official HAL library of ST.
  *
  * @see    Please refer to README for detailed information.
  *******************************************************************************
@@ -75,7 +75,8 @@ uint8_t Bootloader_Init(void)
 
     /* Clear flash flags */
     HAL_FLASH_Unlock();
-//    __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_ALL_ERRORS);
+    FLASH->CCR1 = 0xFFFFFFFF;  // clear all FLASH flags bank 1
+    FLASH->CCR2 = 0xFFFFFFFF;  // clear all FLASH flags bank 2
     HAL_FLASH_Lock();
 
     APP_first_sector = 0;
@@ -135,7 +136,7 @@ uint8_t Bootloader_Init(void)
     return BL_OK;
 }
 
-#if 0
+
 /**
  * @brief  This function erases the user application area in flash
  * @return Bootloader error code ::eBootloaderErrorCodes
@@ -145,22 +146,45 @@ uint8_t Bootloader_Init(void)
 uint8_t Bootloader_Erase(void)
 {
     HAL_StatusTypeDef status = HAL_OK;
-    __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_ALL_ERRORS);
+    FLASH->CCR1 = 0xFFFFFFFF;  // clear all FLASH flags bank 1
+    FLASH->CCR2 = 0xFFFFFFFF;  // clear all FLASH flags bank 2
+    uint32_t Sector_num;
+    uint32_t Bank_num;
     HAL_FLASH_Unlock();  
     for (uint32_t i =  APP_first_sector; i <= LAST_SECTOR; i++) {
       sprintf(msg, " Erasing sector: %d\n",(uint16_t)i);
-	  print(msg);
-	  
-//      __disable_irq();
-      FLASH_Erase_Sector(i, FLASH_VOLTAGE_RANGE_3);
-      while(FLASH->SR & FLASH_FLAG_BSY){};   // wait for completion
- //     __enable_irq();
-      if (FLASH->SR) {
-        sprintf(msg, " FLASH status register: : %08lX\n",FLASH->SR);
-		print(msg);
-        __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_ALL_ERRORS);
-	  }
-//      HAL_Delay(100);
+      print(msg);
+      if (i < 8) {
+        Sector_num = i;
+        Bank_num = FLASH_BANK_1;
+      }
+      else {
+        Sector_num = i - 8;
+        Bank_num = FLASH_BANK_2;
+      }
+    
+      __disable_irq();
+      FLASH_Erase_Sector(Sector_num, Bank_num, FLASH_VOLTAGE_RANGE_4);
+      while(FLASH->SR1 & FLASH_FLAG_BSY){};   // wait for completion
+      while(FLASH->SR2 & FLASH_FLAG_BSY){};   // wait for completion
+      __enable_irq();
+      if (Bank_num == FLASH_BANK_1) {
+        if (FLASH->SR1 & (FLASH_SR_OPERR | FLASH_SR_INCERR | FLASH_SR_PGSERR | FLASH_SR_WRPERR)) {
+          sprintf(msg, " FLASH status register 1: : %08lX\n",FLASH->SR1);
+          print(msg);
+          FLASH->CCR1 = (FLASH_CCR_CLR_OPERR | FLASH_CCR_CLR_INCERR | FLASH_CCR_CLR_PGSERR | FLASH_CCR_CLR_WRPERR);
+          status = HAL_ERROR;
+        }
+        else {
+          if (FLASH->SR2 & (FLASH_SR_OPERR | FLASH_SR_INCERR | FLASH_SR_PGSERR | FLASH_SR_WRPERR)) {
+            sprintf(msg, " FLASH status register 2: : %08lX\n",FLASH->SR2);
+            print(msg);
+            FLASH->CCR2 = (FLASH_CCR_CLR_OPERR | FLASH_CCR_CLR_INCERR | FLASH_CCR_CLR_PGSERR | FLASH_CCR_CLR_WRPERR);
+            status = HAL_ERROR;
+          }
+        } 
+    }
+      HAL_Delay(100);
       /* Toggle green LED during erasing */
       LED_G1_TG();
     }
@@ -182,9 +206,12 @@ uint8_t Bootloader_FlashBegin(void)
     /* Reset flash destination address */
     flash_ptr = APP_ADDRESS;
 
+    FLASH->CCR1 = 0xFFFFFFFF;  // clear all FLASH flags bank 1
+    FLASH->CCR2 = 0xFFFFFFFF;  // clear all FLASH flags bank 2
+    
     /* Unlock flash */
     HAL_FLASH_Unlock();
-    __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_ALL_ERRORS);
+  
 
     return BL_OK;
 }
@@ -198,7 +225,7 @@ uint8_t Bootloader_FlashBegin(void)
  * @retval BL_OK: upon success
  * @retval BL_WRITE_ERROR: upon failure
  */
-uint8_t Bootloader_FlashNext(uint64_t data)
+uint8_t Bootloader_FlashNext(uint32_t data)
 {
     uint32_t read_data;
     HAL_StatusTypeDef status = HAL_OK; //debug
@@ -209,7 +236,7 @@ uint8_t Bootloader_FlashNext(uint64_t data)
         return BL_WRITE_ERROR;
     }
  
-    status = HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, flash_ptr, data);  // DOUBLEWORD fails
+    status = HAL_FLASH_Program(FLASH_TYPEPROGRAM_FLASHWORD, flash_ptr, data);  
     if(status == HAL_OK)
     {
         /* Check the written value */
@@ -254,11 +281,10 @@ uint8_t Bootloader_FlashNext(uint64_t data)
 uint8_t Bootloader_FlashEnd(void)
 {
     /* Lock flash */
-    HAL_FLASH_Lock();
+//    HAL_FLASH_Lock();
 
     return BL_OK;
 }
-#endif
 
 /**
  * @brief  This function returns the protection status of flash.
@@ -266,13 +292,21 @@ uint8_t Bootloader_FlashEnd(void)
  */
 uint32_t Bootloader_GetProtectionStatus(void)
   {
-    FLASH_OBProgramInitTypeDef OBStruct = {0};
+  //  FLASH_OBProgramInitTypeDef OBStruct = {0};
 
+ //   OBStruct.Banks = FLASH_BANK_BOTH;
+    
     HAL_FLASH_Unlock();
  
-    HAL_FLASHEx_OBGetConfig(&OBStruct);
-	HAL_FLASH_Lock();
-    return (OBStruct.WRPSector >> 16);  // Write protect bits are in bits 16-23 on F746
+    //HAL_FLASHEx_OBGetConfig(&OBStruct);
+    
+    uint32_t WP_bank_1 = FLASH->WPSN_CUR1;
+    uint32_t WP_bank_2 = FLASH->WPSN_CUR2;
+    
+    HAL_FLASH_Lock();
+//    return (OBStruct.WRPSector >> 16);  // Write protect bits are in bits 16-23 on F746
+//     return (OBStruct.WRPSector); 
+    return (WP_bank_1 | (WP_bank_2 << 8) | 0xFFFF0000UL);  
 }
 
 // debug helper routine
@@ -293,74 +327,41 @@ const char *byte_to_binary (uint32_t x)
 
 /**
  * @brief  This function configures the write protection of flash.
- * @param  protection: protection type ::eFlashProtectionTypes
+ * @param  protection: desired protection - 1: not protected, 0: protected
+           mask ; which sectors to ignore - 1: change this sector, 0: keep current sector protection
+           save: 
  * @return Bootloader error code ::eBootloaderErrorCodes
  * @retval BL_OK: upon success
  * @retval BL_OBP_ERROR: upon failure
  *
- * Setting the protection is a five step process
- *   1) Determine final proection
- *   2) Disable protection on desired sectors
- *   3) Enable protection on all other sectors
- *   4) Invoke HAL_FLASH_OB_Launch()
- *   5) Send the system through reset so that the new settings take effect
+ * Setting the protection is a four step process
+ *   1) enable access to OPTCR register
+ *   2) Write protection bits to WPSN_PRGx registers
+ *   3) Write 1 to OPTSTART bit in OPTCR register to start programming sequence 
+ *         H7 CPUs don't need to go through reset to program option bytes
+ *   4) Wait for OPT_BUSY bit to go inactive in OPTSR_CUR register
+ *
+ * Protection bits 0-7 are bank 1 sectors 0-7
+ * Protection bits 8-15 are bank 2 sectors 0-7
  * 
  */
 uint8_t Bootloader_ConfigProtection(uint32_t protection, uint32_t mask, uint8_t save) {  
-  FLASH_OBProgramInitTypeDef OBStruct = {0};
+  //FLASH_OBProgramInitTypeDef OBStruct = {0};
   HAL_StatusTypeDef status            = HAL_ERROR;
 
   status = HAL_FLASH_Unlock();
   status |= HAL_FLASH_OB_Unlock();
   
-  HAL_FLASHEx_OBGetConfig(&OBStruct);  // get current FLASH config
-  
-  uint32_t WRPSector_save = OBStruct.WRPSector >> 16;
+  uint32_t WRPSector_save = Bootloader_GetProtectionStatus();
   if (save) Write_Prot_Old = WRPSector_save;   // save current FLASH protect incase we do a restore later
   
-  uint32_t final_protection; 
-  
-  
-  //sprintf(msg,"\nsave flag: %0u\n", save);
-  //print(msg);
-  //sprintf(msg,"requested protection:  %08lX\n", protection);
-  //print(msg);
-  //
-  //sprintf(msg,"mask:                  %08lX\n", mask);
-  //print(msg);
-  //
-  //sprintf(msg,"final protection:      %08lX\n", final_protection);
-  //print(msg);
-  //
-  //sprintf(msg,"reported protection:   %08lX\n", WRPSector_save);
-  //print(msg);
-  
-  
-  if (save) {  // only removing write protection
+  uint32_t final_protection = (protection & mask) | (WRPSector_save & ~mask); // keep protection of bootloader area
+ 
+  FLASH->WPSN_PRG1 = final_protection & 0x000000ffUL;
+  FLASH->WPSN_PRG2 = (final_protection >> 8) & 0x000000ffUL;
+  FLASH->OPTCR |= 0x02UL;  //set OPTSTART bit to 1 to start programming sequence
+  while(FLASH->OPTSR_CUR & 0x01UL);  // wait for OPT_BUSY to go inactive (programming sequence to finish)
 
-	OBStruct.WRPState = OB_WRPSTATE_DISABLE;    //  disable write protection
-	
-	final_protection = (protection & mask) << 16; // keep protection of bootloader area
-	OBStruct.WRPSector = final_protection;            // '1' - remove protection, '0' - don't change
-	status = HAL_FLASHEx_OBProgram(&OBStruct);  // write 
-
-	//HAL_FLASHEx_OBGetConfig(&OBStruct);  // get current FLASH config
-	//sprintf(msg,"after disable:         %08lX\n", OBStruct.WRPSector);
-	//print(msg);
-    
-  }
-  else {
-
-    OBStruct.WRPState = OB_WRPSTATE_ENABLE;      //  enable write protection
-	final_protection = (~protection & mask) << 16; // keep protection of bootloader area
-    OBStruct.WRPSector = final_protection;       // '1' - enable protection, '0' - don't change
-    status |= HAL_FLASHEx_OBProgram(&OBStruct);  // write 
-    
-    //HAL_FLASHEx_OBGetConfig(&OBStruct);  // get current FLASH config
-    //sprintf(msg,"after enable:          %08lX\n", OBStruct.WRPSector);
-    //print(msg);
-    
-  }
   if(status == HAL_OK)
   {
     if (save) {
@@ -380,7 +381,7 @@ uint8_t Bootloader_ConfigProtection(uint32_t protection, uint32_t mask, uint8_t 
       //print(msg);
       
       
-      NVIC_System_Reset();                  // send the system through reset so Flash Option Bytes get loaded
+      //NVIC_System_Reset();                  // send the system through reset so Flash Option Bytes get loaded
   }
 
   status |= HAL_FLASH_OB_Lock();
