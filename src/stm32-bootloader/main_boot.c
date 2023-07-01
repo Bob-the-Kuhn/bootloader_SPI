@@ -621,14 +621,6 @@ void Error_Handler_boot(void)
    
   while (1)
   {
-
-  /**SPI1 GPIO Configuration
-    PD14     ------> SPI1_NSS
-    PA5     ------> SPI1_SCK
-    PA6     ------> SPI1_MISO
-    PB5     ------> SPI1_MOSI
-  */
-    
     LED_G1_ON();
     HAL_Delay(250);
     LED_G1_OFF();
