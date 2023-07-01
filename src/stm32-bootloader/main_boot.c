@@ -354,7 +354,7 @@ uint8_t Enter_Bootloader(void)
   
   
   /* Check for flash write protection of application area*/
-  if(~Bootloader_GetProtectionStatus() & WRITE_protection & APP_sector_mask) {  // F407 high bit says sector is protected
+  if(~Bootloader_GetProtectionStatus() & WRITE_protection & APP_sector_mask) {  
     print("Application space in flash is write protected.\n");
     if (IGNORE_WRITE_PROTECTION) {                              
       //        print("Press button to disable flash write protection...\n");
@@ -373,12 +373,10 @@ uint8_t Enter_Bootloader(void)
       //        LED_ALL_OFF();
       //        print("Button was not pressed, write protection is still active.\n");
       if (!(WRITE_Prot_Old_Flag == WRITE_Prot_Old_Flag_Restored_flag)) {   // already restored original protection so don't initiate the process again                             
-      print("Disabling write protection and generating system reset...\n"); 
+      print("Disabling write protection\n"); 
       /* Eject SD card */
       SD_Eject();
-      Magic_Location = Magic_BootLoader;  // flag that we should load the bootloader
-                                          // after the next reset
-      if (Bootloader_ConfigProtection(WRITE_protection, APP_sector_mask, WP_SAVE) != BL_OK)   // sends system though reset - no more code executed unless there's an error 
+      if (Bootloader_ConfigProtection(WRITE_protection, APP_sector_mask, WP_SAVE) != BL_OK)  
         {
           print("Failed to set write protection.\n");
           print("Exiting Bootloader.\n");
@@ -388,11 +386,7 @@ uint8_t Enter_Bootloader(void)
         print("write protection removed\n");
 
         WRITE_Prot_Old_Flag = WRITE_Prot_Original_flag;  // flag that protection was removed so can
-                                                       // restore write protection after next reset)
 
-        Magic_Location = Magic_BootLoader;  // flag that we should load the bootloader
-                                            // after the next reset
-        // NVIC_System_Reset();  // send system through reset
       }
       else {
         return ERR_OK;  // already programmed FLASH & protection restored so it's time to launch the application
@@ -525,7 +519,7 @@ uint8_t Enter_Bootloader(void)
 #endif          
                    
   LED_G1_OFF();
-
+#if 0
   #if defined(FILE_EXT_CHANGE) && (_LFN_UNICODE == 0)   // rename file if using ANSI/OEM strings
     TCHAR new_filename[strlen(CONF_FILENAME) + 1];
     new_filename[strlen(CONF_FILENAME)] = '\0';  // terminate the string
@@ -563,15 +557,15 @@ uint8_t Enter_Bootloader(void)
                                            // after the next reset
     }
   #endif
-
+#endif
   /* Eject SD card */
   SD_Eject();
   print("SD ejected.\n");
   
   /* Enable flash write protection on application area */
 #if(USE_WRITE_PROTECTION && !RESTORE_WRITE_PROTECTION)
-    print("Enabling flash write protection and generating system reset...\n");
-    if(Bootloader_ConfigProtection(BL_PROTECTION_WRP, APP_sector_mask, WP_DONT_SAVE) != BL_OK)   // sends system though reset - no more code executed unless there's an error
+    print("Enabling flash write protection\n");
+    if(Bootloader_ConfigProtection(BL_PROTECTION_WRP, APP_sector_mask, WP_DONT_SAVE) != BL_OK) 
     {
       print("Failed to enable write protection.\n");
 
@@ -582,10 +576,10 @@ uint8_t Enter_Bootloader(void)
   #if(!USE_WRITE_PROTECTION && RESTORE_WRITE_PROTECTION && IGNORE_WRITE_PROTECTION)
     if (WRITE_Prot_Old_Flag == WRITE_Prot_Original_flag) {
       WRITE_Prot_Old_Flag = WRITE_Prot_Old_Flag_Restored_flag;  // indicate we've restored the protection
-      print("Restoring flash write protection and generating system reset...\n");
+      print("Restoring flash write protection\n");
       //print("  May require power cycle to recover.\n");
 
-      if (Bootloader_ConfigProtection(Write_Prot_Old, APP_sector_mask, WP_DONT_SAVE) != BL_OK)  // sends system though reset - no more code executed unless there's an error
+      if (Bootloader_ConfigProtection(Write_Prot_Old, APP_sector_mask, WP_DONT_SAVE) != BL_OK) 
       {
         print("Failed to restore write protection.\n");
       }

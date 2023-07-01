@@ -470,6 +470,17 @@ uint8_t Bootloader_ConfigProtection(uint32_t protection, uint32_t mask, uint8_t 
   //FLASH_OBProgramInitTypeDef OBStruct = {0};
   HAL_StatusTypeDef status            = HAL_ERROR;
 
+
+  //sprintf(msg,"current protection:    %08lX\n", Bootloader_GetProtectionStatus());
+  //print(msg);
+  //sprintf(msg,"requested protection:  %08lX\n", protection);
+  //print(msg);
+  //sprintf(msg,"mask:                  %08lX\n", mask);
+  //print(msg);
+  //sprintf(msg,"save:                  %0X\n", save);
+  //print(msg);
+
+
   status = HAL_FLASH_Unlock();
   status |= HAL_FLASH_OB_Unlock();
   
@@ -494,16 +505,15 @@ uint8_t Bootloader_ConfigProtection(uint32_t protection, uint32_t mask, uint8_t 
       WRITE_Prot_Old_Flag = WRITE_Prot_Old_Flag_Restored_flag;  // flag that protection was restored so won't 
                                                                 // try to save write protection after next reset)
     }                                       
-      /* Loading Flash Option Bytes - this generates a system reset. */    // apparently not on a STM32F407
-      status |= HAL_FLASH_OB_Launch();        //  this is needed plus still need to go through reset  
-      
-      //HAL_FLASHEx_OBGetConfig(&OBStruct);  // get current FLASH config
-      //sprintf(msg,"after OB_Launch:       %08lX\n", OBStruct.WRPSector);
-      //print(msg);
+      /* Loading Flash Option Bytes. */    
+      status |= HAL_FLASH_OB_Launch();        //  H753 -  changes option bytes, reset not needed.
       
       
-      NVIC_System_Reset();                  // send the system through reset so Flash Option Bytes get loaded
+     // NVIC_System_Reset();                  // send the system through reset so Flash Option Bytes get loaded
   }
+
+  //sprintf(msg,"new protection:        %08lX\n", Bootloader_GetProtectionStatus());
+  //print(msg);
 
   status |= HAL_FLASH_OB_Lock();
   status |= HAL_FLASH_Lock();
