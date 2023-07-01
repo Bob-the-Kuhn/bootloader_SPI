@@ -54,6 +54,8 @@ uint32_t MagicBootLoader = Magic_BootLoader;
 uint32_t MagicApplication = Magic_Application;
 uint32_t APP_ADDR = APP_ADDRESS;
 
+void Error_Handler_boot(void);
+
 char msg[64];             
 
 void NVIC_System_Reset(void);
@@ -87,7 +89,7 @@ uint8_t Bootloader_Init(void)
 
     
     uint32_t mask = 1;  // mask for clearing write protect bits
-    for (uint16_t counter = 0; counter < FLASH_SIZE/FLASH_SECTOR_SIZE; counter++) {   // find 
+    for (uint16_t counter = 0; counter < LAST_SECTOR; counter++) {   // find 
       
       APP_first_addr = ((counter * FLASH_SECTOR_SIZE) + FLASH_BASE);
       if (BOOT_LOADER_END <= APP_first_addr) {
@@ -103,11 +105,6 @@ uint8_t Bootloader_Init(void)
     APP_sector_mask = ~APP_sector_mask;  // don't touch write protection on sectors with bootloader in it
     
     sprintf(msg, "\nAPP_sector_mask %08lX\n", APP_sector_mask);
-    print(msg);
-     
-    sprintf(msg, "\nBOOT_LOADER_END %08lX\n", BOOT_LOADER_END);
-    print(msg);
-    sprintf(msg, "Lowest possible APP_ADDRESS is %08lX\n", APP_first_addr);
     print(msg);
     
 
@@ -216,50 +213,170 @@ uint8_t Bootloader_FlashBegin(void)
     return BL_OK;
 }
 
+
 /**
- * @brief  Program 32 bit data into flash: this function writes an 4 byte (32bit)
+  * @brief  Program a flash word at a specified address
+  * @param  TypeProgram Indicate the way to program at a specified address.
+  *         This parameter can be a value of @ref FLASH_Type_Program
+  * @param  FlashAddress specifies the address to be programmed.
+  *         This parameter shall be aligned to the Flash word:
+  *          - 256 bits for STM32H74x/5X devices (8x 32bits words)
+  *          - 128 bits for STM32H7Ax/BX devices (4x 32bits words)
+  *          - 256 bits for STM32H72x/3X devices (8x 32bits words)
+  * @param  DataAddress specifies the address of data to be programmed.
+  *         This parameter shall be 32-bit aligned
+  *
+  * @retval HAL_StatusTypeDef HAL Status
+  */
+HAL_StatusTypeDef HAL_FLASH_Program_local(uint32_t TypeProgram, uint32_t FlashAddress, uint32_t DataAddress)
+{
+  HAL_StatusTypeDef status;
+  __IO uint32_t *dest_addr = (__IO uint32_t *)FlashAddress;
+  __IO uint32_t *src_addr = (__IO uint32_t*)DataAddress;
+  
+  //uint32_t *dest_addr;
+  //dest_addr = FlashAddress;
+  //uint32_t *src_addr;
+  //src_addr = DataAddress;
+  uint32_t bank;
+  uint8_t row_index = FLASH_NB_32BITWORD_IN_FLASHWORD;
+
+  /* Check the parameters */
+  assert_param(IS_FLASH_TYPEPROGRAM(TypeProgram));
+  assert_param(IS_FLASH_PROGRAM_ADDRESS(FlashAddress));
+
+  /* Process Locked */
+  __HAL_LOCK(&pFlash);
+
+  if(IS_FLASH_PROGRAM_ADDRESS_BANK1(FlashAddress))
+  {
+    bank = FLASH_BANK_1;
+  }
+  else if(IS_FLASH_PROGRAM_ADDRESS_BANK2(FlashAddress))
+  {
+    bank = FLASH_BANK_2;
+  }
+  else
+  {
+    return HAL_ERROR;
+  }
+
+  /* Reset error code */
+  pFlash.ErrorCode = HAL_FLASH_ERROR_NONE;
+
+  /* Wait for last operation to be completed */
+  //status = FLASH_WaitForLastOperation((uint32_t)FLASH_TIMEOUT_VALUE, bank);
+  status = FLASH_WaitForLastOperation((uint32_t)50000, bank);
+
+  if(status == HAL_OK)
+  {
+    if(bank == FLASH_BANK_1)
+    {
+      {
+        /* Set PG bit */
+        SET_BIT(FLASH->CR1, FLASH_CR_PG);
+      }
+    }
+    else
+    {
+      /* Set PG bit */
+      SET_BIT(FLASH->CR2, FLASH_CR_PG);
+    }
+
+    __ISB();
+    __DSB();
+
+    {
+      /* Program the flash word */
+      do
+      {
+        // *dest_addr = *src_addr;
+        uint32_t temp = *src_addr;
+        src_addr++;
+        *dest_addr = temp;
+        dest_addr++;
+        row_index--;
+     } while (row_index != 0U);
+    }
+
+    __ISB();
+    __DSB();
+
+    /* Wait for last operation to be completed */
+    //status = FLASH_WaitForLastOperation((uint32_t)FLASH_TIMEOUT_VALUE, bank);
+    status = FLASH_WaitForLastOperation((uint32_t)50000, bank);
+
+
+    {
+      if(bank == FLASH_BANK_1)
+      {
+        /* If the program operation is completed, disable the PG */
+        CLEAR_BIT(FLASH->CR1, FLASH_CR_PG);
+      }
+      else
+      {
+        /* If the program operation is completed, disable the PG */
+        CLEAR_BIT(FLASH->CR2, FLASH_CR_PG);
+      }
+    }
+
+
+  }
+
+  /* Process Unlocked */
+  __HAL_UNLOCK(&pFlash);
+
+  return status;
+}
+
+
+//volatile uint32_t pointer_to_flash_ptr;
+
+/**
+ * @brief  Program 256 bit data into flash: this function writes an 32 byte
  *         data chunk into the flash and increments the data pointer.
  * @see    README for futher information
- * @param  data: 32bit data chunk to be written into flash
+ * @param  data_address: address of 256 bit data chunk to be written into flash
  * @return Bootloader error code ::eBootloaderErrorCodes
  * @retval BL_OK: upon success
  * @retval BL_WRITE_ERROR: upon failure
  */
-uint8_t Bootloader_FlashNext(uint32_t data)
+uint8_t Bootloader_FlashNext(uint8_t *data)
 {
-    uint32_t read_data;
+    uint8_t read_data[NUM_BYTES_PER_PASS];
     HAL_StatusTypeDef status = HAL_OK; //debug
-    if(!(flash_ptr <= (FLASH_BASE + FLASH_SIZE - 4)) ||
+    if(!(flash_ptr <= (FLASH_BASE + FLASH_SIZE - NUM_BYTES_PER_PASS)) ||
        (flash_ptr < APP_ADDRESS))
     {
         HAL_FLASH_Lock();
         return BL_WRITE_ERROR;
     }
  
-    status = HAL_FLASH_Program(FLASH_TYPEPROGRAM_FLASHWORD, flash_ptr, data);  
+    //pointer_to_flash_ptr = (uint32_t)flash_ptr;  // ?? HAL wants a pointer to a pointer to the FLASH destination address??
+    status = HAL_FLASH_Program_local(FLASH_TYPEPROGRAM_FLASHWORD, (uint32_t)flash_ptr, (uint32_t)data);  
     if(status == HAL_OK)
     {
         /* Check the written value */
-        read_data = *(uint32_t*)flash_ptr; 
-        if(read_data != (uint32_t)data)
-        {
-            /* Flash content doesn't match source content */
-            HAL_FLASH_Lock();
-            print("Programming error\n");
-            sprintf(msg, "  expected data (32 bit): %08lX\n", (uint32_t) data);
-            print(msg);
-            sprintf(msg, "  actual data (32 bit)  : %08lX\n", read_data);
-            print(msg);
-            sprintf(msg, "  absolute address (byte): %08lX\n", flash_ptr);
-            print(msg);
-                     
-            
-            
-            return BL_WRITE_ERROR;
+        uint8_t count;
+        for (count = 0; count < NUM_BYTES_PER_PASS; count++) {
+          read_data[count]  = *(uint8_t*)(flash_ptr + count); 
+          if(read_data[count] != data[count])
+          {
+              /* Flash content doesn't match source content */
+              HAL_FLASH_Lock();
+              print("Programming error\n");
+              sprintf(msg, "  expected data (8 bit): %02X\n", data[count]);
+              print(msg);
+              sprintf(msg, "  actual data (8 bit)  : %02X\n", read_data[count]);
+              print(msg);
+              sprintf(msg, "  absolute address (byte): %08lX\n", flash_ptr + count);
+              print(msg);
+              return BL_WRITE_ERROR;
+          }
         }
         /* Increment Flash destination address */
         //flash_ptr += 8;
-        flash_ptr += 4;
+        flash_ptr += NUM_BYTES_PER_PASS;
     }
     else
     {
@@ -281,7 +398,7 @@ uint8_t Bootloader_FlashNext(uint32_t data)
 uint8_t Bootloader_FlashEnd(void)
 {
     /* Lock flash */
-//    HAL_FLASH_Lock();
+    HAL_FLASH_Lock();
 
     return BL_OK;
 }
@@ -381,7 +498,7 @@ uint8_t Bootloader_ConfigProtection(uint32_t protection, uint32_t mask, uint8_t 
       //print(msg);
       
       
-      //NVIC_System_Reset();                  // send the system through reset so Flash Option Bytes get loaded
+      NVIC_System_Reset();                  // send the system through reset so Flash Option Bytes get loaded
   }
 
   status |= HAL_FLASH_OB_Lock();
@@ -399,6 +516,12 @@ uint8_t Bootloader_ConfigProtection(uint32_t protection, uint32_t mask, uint8_t 
  */
 uint8_t Bootloader_CheckSize(uint32_t appsize)
 {
+  
+  sprintf(msg,"application size:      %08lX\n", appsize);
+  print(msg);
+  sprintf(msg,"end of application:    %08lX\n", appsize + APP_ADDRESS);
+  print(msg);
+  
     return ((FLASH_BASE + FLASH_SIZE - APP_ADDRESS) >= appsize) ? BL_OK
                                                                 : BL_SIZE_ERROR;
 }

@@ -88,13 +88,15 @@ extern uint32_t APP_sector_mask;   // mask used to determine if any application 
 //#define FLASH_SIZE            ((uint32_t)0x80000)  // 512K bytes
 //#define FLASH_SIZE            ((uint32_t)0x40000)  // 256K bytes
 //#define LAST_SECTOR           11  // 1024K bytes STM32F407 has FLASH sectors 0-11
-#define LAST_SECTOR            7  // 1024K bytes STM32F746ZG has FLASH sectors 0-7
+//#define LAST_SECTOR            7  // 1024K bytes STM32F746ZG has FLASH sectors 0-7
 //#define LAST_SECTOR            7  // 512K bytes STM32F407VE has FLASH sectors 0-7
-#define FLASH_SECTOR_NBPERBANK  (1)
+//#define FLASH_SECTOR_NBPERBANK  (1)
 //#define FLASH_SECTOR_SIZE       ((uint32_t)0x4000)  // 16K bytes  
 //#define FLASH_SECTOR_SIZE       ((uint32_t)0x20000)  // 128K bytes   H753 platform provides this
 //#define FLASH_BASE            ((uint32_t)0x08000000) // FLASH(up to 1 MB) base address in the alias region
 //#define SRAM1_BASE            ((uint32_t)0x20000000) // SRAM1(112 KB) base address in the alias region
+#define LAST_SECTOR             (FLASH_SIZE/FLASH_SECTOR_SIZE - 1)  // H753 definition, sectors 0 ...
+#define NUM_BYTES_PER_PASS      32  // H753 has 256 bit internal FLASH bus
 
 
 //#define SRAM1_SIZE_MAX        ((uint32_t)0x1BFFF)
@@ -152,7 +154,7 @@ uint8_t Bootloader_Init(void);
 uint8_t Bootloader_Erase(void);
 
 uint8_t Bootloader_FlashBegin(void);
-uint8_t Bootloader_FlashNext(uint32_t data);
+uint8_t Bootloader_FlashNext(uint8_t *data);
 uint8_t Bootloader_FlashEnd(void);
 
 uint32_t Bootloader_GetProtectionStatus(void);

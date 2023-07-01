@@ -85,7 +85,7 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef* hspi)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
   RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
-  if(hspi->Instance==SPI1)
+  if(hspi->Instance==SPI3)
   {
   /* USER CODE BEGIN SPI1_MspInit 0 */
 
@@ -101,29 +101,66 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef* hspi)
     }
 
     /* Peripheral clock enable */
-    __HAL_RCC_SPI1_CLK_ENABLE();
+    //__HAL_RCC_SPI1_CLK_ENABLE();
+    __HAL_RCC_SPI3_CLK_ENABLE();
 
     __HAL_RCC_GPIOA_CLK_ENABLE();
     __HAL_RCC_GPIOB_CLK_ENABLE();
+    __HAL_RCC_GPIOD_CLK_ENABLE();
+
     /**SPI1 GPIO Configuration
-    PA4     ------> SPI1_NSS
-    PB3 (JTDO/TRACESWO)     ------> SPI1_SCK
-    PB4 (NJTRST)     ------> SPI1_MISO
-    PB5     ------> SPI1_MOSI
+    PA4     ------> SPI1_NSS  AF5
+    PA5     ------> SPI1_SCK  AF5
+    PA6     ------> SPI1_MISO AF5
+    PB5     ------> SPI1_MOSI AF5
     */
+    
+    /**SPI3 GPIO Configuration
+    PA4     ------> SPI3_NSS  AF6
+    PB3     ------> SPI3_SCK  AF6
+    PB4     ------> SPI3_MISO AF6
+    PB5     ------> SPI3_MOSI AF7
+    */
+
+ //SPI1
+  //  GPIO_InitStruct.Pin = GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6;
+  //  //GPIO_InitStruct.Pin = GPIO_PIN_5|GPIO_PIN_6;  // drive NSS via software
+  //  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  //  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  //  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  //  GPIO_InitStruct.Alternate = GPIO_AF5_SPI1;
+  //  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  //
+  //  GPIO_InitStruct.Pin = GPIO_PIN_5;
+  //  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  //  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  //  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  //  GPIO_InitStruct.Alternate = GPIO_AF5_SPI1;
+  //  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+    
+ //SPI3
     GPIO_InitStruct.Pin = GPIO_PIN_4;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.Alternate = GPIO_AF5_SPI1;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStruct.Alternate = GPIO_AF6_SPI3;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-    GPIO_InitStruct.Pin = GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5;
+ 
+    GPIO_InitStruct.Pin = GPIO_PIN_3|GPIO_PIN_4;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.Alternate = GPIO_AF5_SPI1;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStruct.Alternate = GPIO_AF6_SPI3;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+    
+    GPIO_InitStruct.Pin = GPIO_PIN_5;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStruct.Alternate = GPIO_AF7_SPI3;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+ 
+
 
   /* USER CODE BEGIN SPI1_MspInit 1 */
 
@@ -150,13 +187,13 @@ void HAL_SPI_MspDeInit(SPI_HandleTypeDef* hspi)
 
     /**SPI1 GPIO Configuration
     PA4     ------> SPI1_NSS
-    PB3 (JTDO/TRACESWO)     ------> SPI1_SCK
-    PB4 (NJTRST)     ------> SPI1_MISO
+    PA5     ------> SPI1_SCK
+    PA6     ------> SPI1_MISO
     PB5     ------> SPI1_MOSI
     */
-    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_4);
+    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6);
 
-    HAL_GPIO_DeInit(GPIOB, GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5);
+    HAL_GPIO_DeInit(GPIOB, GPIO_PIN_5);
 
   /* USER CODE BEGIN SPI1_MspDeInit 1 */
 
@@ -200,6 +237,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
 
     /* Peripheral clock enable */
     __HAL_RCC_USART3_CLK_ENABLE();
+    __HAL_RCC_USART2_CLK_ENABLE();
 
     __HAL_RCC_GPIOD_CLK_ENABLE();
     /**USART3 GPIO Configuration
@@ -211,6 +249,17 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     GPIO_InitStruct.Alternate = GPIO_AF7_USART3;
+    HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+    
+    /**USART2 GPIO Configuration
+    PD6     ------> USART2_RX
+    PD5     ------> USART2_TX
+    */
+    GPIO_InitStruct.Pin = GPIO_PIN_5|GPIO_PIN_6;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStruct.Alternate = GPIO_AF7_USART2;
     HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
   /* USER CODE BEGIN USART3_MspInit 1 */
