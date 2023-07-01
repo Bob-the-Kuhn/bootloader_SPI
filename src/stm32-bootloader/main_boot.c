@@ -67,6 +67,7 @@ void SD_Eject(void) {};
 void Error_Handler_boot(void);
 void GPIO_Init(void);
 void print(const char* str);   // debug
+uint32_t App_Size;
 
 #define PGM_READ_WORD(x) *(x)
 
@@ -108,13 +109,13 @@ void main_boot_init(void)
   LED_G1_OFF();
   LED_G2_OFF();             
 
-  sprintf(msg, "\nSYSCLK_Frequency %09lu\n", HAL_RCC_GetSysClockFreq());
-  print(msg);
-  sprintf(msg, "HCLK_Frequency   %09lu\n", HAL_RCC_GetHCLKFreq());
-  print(msg);
-  
-  sprintf(msg, "\ncurrent protection: %08lX\n", Bootloader_GetProtectionStatus());
-  print(msg);
+  //sprintf(msg, "\nSYSCLK_Frequency %09lu\n", HAL_RCC_GetSysClockFreq());
+  //print(msg);
+  //sprintf(msg, "HCLK_Frequency   %09lu\n", HAL_RCC_GetHCLKFreq());
+  //print(msg);
+  //
+  //sprintf(msg, "\ncurrent protection: %08lX\n", Bootloader_GetProtectionStatus());
+  //print(msg);
 
   //print("debug test\n");  
 
@@ -209,7 +210,7 @@ static void main_boot(void)
     #endif
   }
   
-  print("Entering Bootloader...\n");
+  //print("Entering Bootloader...\n");
   Bootloader_Init();
   uint8_t temp_stat = Enter_Bootloader();
   if((temp_stat == ERR_FLASH) || (temp_stat == ERR_VERIFY)) Error_Handler_boot();
@@ -315,7 +316,8 @@ uint8_t Enter_Bootloader(void)
   print("Software found on SD.\n");
   
   /* Check size of application found on SD card */
-  if(Bootloader_CheckSize(f_size(&SDFile)) != BL_OK)
+  App_Size = f_size(&SDFile);
+  if(Bootloader_CheckSize(App_Size) != BL_OK)
   {
     print("Error: app on SD card is too large.\n");
     
@@ -324,7 +326,7 @@ uint8_t Enter_Bootloader(void)
     print("SD ejected.\n");
     return ERR_APP_LARGE;
   }
-  print("App size OK.\n");
+  //print("App size OK.\n");
   
   /* Step 1: Init Bootloader and Flash */
   
@@ -400,7 +402,7 @@ uint8_t Enter_Bootloader(void)
   }
 
   /* Step 2: Erase Flash */
-  print("Erasing flash...\n");
+  print("Erasing application area of flash...\n");
   LED_G2_ON();
   Bootloader_Erase();
   LED_G2_OFF();
@@ -463,7 +465,7 @@ uint8_t Enter_Bootloader(void)
   f_close(&SDFile);
   LED_ALL_OFF();
   print("Programming finished.\n");
-  sprintf(msg, "Flashed: %ld  (%08lX) bytes.\n", (cntr * NUM_BYTES_PER_PASS), (cntr * NUM_BYTES_PER_PASS));
+  sprintf(msg, "Flashed: %ld  (0x%08lX) bytes.\n", (cntr * NUM_BYTES_PER_PASS), (cntr * NUM_BYTES_PER_PASS));
   print(msg);
   
   
@@ -523,7 +525,7 @@ uint8_t Enter_Bootloader(void)
 #endif          
                    
   LED_G1_OFF();
- 
+
   #if defined(FILE_EXT_CHANGE) && (_LFN_UNICODE == 0)   // rename file if using ANSI/OEM strings
     TCHAR new_filename[strlen(CONF_FILENAME) + 1];
     new_filename[strlen(CONF_FILENAME)] = '\0';  // terminate the string
@@ -606,17 +608,7 @@ uint8_t Enter_Bootloader(void)
 
 /* USER CODE END 4 */
 
-HAL_StatusTypeDef HAL_SPI_Transmit(SPI_HandleTypeDef *hspi, const uint8_t *pData, uint16_t Size, uint32_t Timeout);
-//HAL_StatusTypeDef HAL_UART_Receive(UART_HandleTypeDef *huart, uint8_t *pData, uint16_t Size, uint32_t Timeout);
-extern SPI_HandleTypeDef hspi1;
-//extern UART_HandleTypeDef huart3;
-//// #include<iostream>    
-//// #include<array> 
-//
-//void GPIO_WritePin(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin, GPIO_PinState PinState) {
-  
-  
-
+ 
 /**
   * @brief  This function is executed in case of error occurrence.
   * @retval None
@@ -626,107 +618,7 @@ void Error_Handler_boot(void)
   /* USER CODE BEGIN Error_Handler_boot_Debug */
   /* User can add his own implementation to report the HAL error return state */
   //__disable_irq();   //  HAL_Delay doesn't work if IRQs are disabled  
-  
-//  const uint8_t msg2[64];
-
- #if 0 
-  
-  uint8_t D14_state = 0;
-  uint8_t A5_state = 0;
-  uint8_t A6_state = 0;
-  uint8_t B5_state = 0;
-  uint8_t A4_state = 0;
-  uint8_t B4_state = 0;
-  
-  uint16_t scan_pin[]  = {GPIO_PIN_0,GPIO_PIN_1,GPIO_PIN_2,GPIO_PIN_3,GPIO_PIN_4,GPIO_PIN_5,GPIO_PIN_6,GPIO_PIN_7,GPIO_PIN_8,GPIO_PIN_9,GPIO_PIN_10,GPIO_PIN_11,GPIO_PIN_12,GPIO_PIN_13,GPIO_PIN_14,GPIO_PIN_15,   \
-                          GPIO_PIN_0,GPIO_PIN_1,GPIO_PIN_2,GPIO_PIN_3,GPIO_PIN_4,GPIO_PIN_5,GPIO_PIN_6,GPIO_PIN_7,GPIO_PIN_8,GPIO_PIN_9,GPIO_PIN_10,GPIO_PIN_11,GPIO_PIN_12,GPIO_PIN_13,GPIO_PIN_14,GPIO_PIN_15,   \
-                          GPIO_PIN_0,GPIO_PIN_1,GPIO_PIN_2,GPIO_PIN_3,GPIO_PIN_4,GPIO_PIN_5,GPIO_PIN_6,GPIO_PIN_7,GPIO_PIN_8,GPIO_PIN_9,GPIO_PIN_10,GPIO_PIN_11,GPIO_PIN_12,GPIO_PIN_13,GPIO_PIN_14,GPIO_PIN_15,   \
-                          GPIO_PIN_0,GPIO_PIN_1,GPIO_PIN_2,GPIO_PIN_3,GPIO_PIN_4,GPIO_PIN_5,GPIO_PIN_6,GPIO_PIN_7,GPIO_PIN_8,GPIO_PIN_9,GPIO_PIN_10,GPIO_PIN_11,GPIO_PIN_12,GPIO_PIN_13,GPIO_PIN_14,GPIO_PIN_15,   \
-                          GPIO_PIN_0,GPIO_PIN_1,GPIO_PIN_2,GPIO_PIN_3,GPIO_PIN_4,GPIO_PIN_5,GPIO_PIN_6,GPIO_PIN_7,GPIO_PIN_8,GPIO_PIN_9,GPIO_PIN_10,GPIO_PIN_11,GPIO_PIN_12,GPIO_PIN_13,GPIO_PIN_14,GPIO_PIN_15,   \
-                          GPIO_PIN_0,GPIO_PIN_1,GPIO_PIN_2,GPIO_PIN_3,GPIO_PIN_4,GPIO_PIN_5,GPIO_PIN_6,GPIO_PIN_7,GPIO_PIN_8,GPIO_PIN_9,GPIO_PIN_10,GPIO_PIN_11,GPIO_PIN_12,GPIO_PIN_13,GPIO_PIN_14,GPIO_PIN_15,   \
-                          GPIO_PIN_0,GPIO_PIN_1,GPIO_PIN_2,GPIO_PIN_3,GPIO_PIN_4,GPIO_PIN_5,GPIO_PIN_6,GPIO_PIN_7,GPIO_PIN_8,GPIO_PIN_9,GPIO_PIN_10,GPIO_PIN_11,GPIO_PIN_12,GPIO_PIN_13,GPIO_PIN_14,GPIO_PIN_15,   \
-                          GPIO_PIN_0,GPIO_PIN_1,GPIO_PIN_2,GPIO_PIN_3,GPIO_PIN_4,GPIO_PIN_5,GPIO_PIN_6,GPIO_PIN_7,GPIO_PIN_8,GPIO_PIN_9,GPIO_PIN_10,GPIO_PIN_11,GPIO_PIN_12,GPIO_PIN_13,GPIO_PIN_14,GPIO_PIN_15,   \
-                          GPIO_PIN_0,GPIO_PIN_1,GPIO_PIN_2,GPIO_PIN_3,GPIO_PIN_4,GPIO_PIN_5,GPIO_PIN_6,GPIO_PIN_7,GPIO_PIN_8,GPIO_PIN_9,GPIO_PIN_10,GPIO_PIN_11,GPIO_PIN_12,GPIO_PIN_13,GPIO_PIN_14,GPIO_PIN_15,   \
-                          GPIO_PIN_0,GPIO_PIN_1,GPIO_PIN_2,GPIO_PIN_3,GPIO_PIN_4,GPIO_PIN_5,GPIO_PIN_6,GPIO_PIN_7,GPIO_PIN_8,GPIO_PIN_9,GPIO_PIN_10,GPIO_PIN_11,GPIO_PIN_12,GPIO_PIN_13,GPIO_PIN_14,GPIO_PIN_15,   \
-                          GPIO_PIN_0,GPIO_PIN_1,GPIO_PIN_2,GPIO_PIN_3,GPIO_PIN_4,GPIO_PIN_5,GPIO_PIN_6,GPIO_PIN_7,GPIO_PIN_8,GPIO_PIN_9,GPIO_PIN_10,GPIO_PIN_11,GPIO_PIN_12,GPIO_PIN_13,GPIO_PIN_14,GPIO_PIN_15};
-  uint8_t scan_port[] = {0,0,0,0,0,0,0,0,0,0,0 ,0 ,0 ,0 ,0 ,0 ,1,1,1,1,1,1,1,1,1,1,1 ,1 ,1 ,1 ,1 ,1 ,2,2,2,2,2,2,2,2,2,2,2 ,2 ,2 ,2 ,2, 2,  \
-                         3,3,3,3,3,3,3,3,3,3,3 ,3 ,3 ,3 ,3 ,3 ,4,4,4,4,4,4,4,4,4,4,4 ,4 ,4 ,4 ,4 ,4 ,5,5,5,5,5,5,5,5,5,5,5 ,5 ,5 ,5 ,5 ,5 ,  \
-                         6,6,6,6,6,6,6,6,6,6,6 ,6 ,6 ,6 ,6, 6 ,7,7,7,7,7,7,7,7,7,7,7 ,7 ,7 ,7 ,7 ,7 ,8,8,8,8,8,8,8,8,8,8,8 ,8 ,8 ,8 ,8 ,8 ,  \
-                         9,9,9,9,9,9,9,9,9,9,9 ,9 ,9 ,9 ,9, 9 ,9,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10};
-  uint8_t no_scan[]  = {1,1,1,1,1,1,1,1,1,1,1 ,1 ,1 ,1 ,1 ,1 ,1,1,1,1,1,1,1,1,1,1,1 ,1 ,1 ,1 ,1 ,1 ,1,1,1,1,1,1,1,1,1,1,1 ,1 ,1 ,1 ,1 ,1 , \
-                        1,1,1,1,1,1,1,1,0,0,1 ,1 ,1 ,1 ,1 ,1 ,1,1,1,1,1,1,1,1,1,1,1 ,1 ,1 ,1 ,1 ,1 ,1,1,1,1,1,1,1,1,1,1,1 ,1 ,1 ,1 ,1 ,1 , \
-                        1,1,1,1,1,1,1,1,1,1,1 ,1 ,1 ,1 ,1 ,1 ,1,1,1,1,1,1,1,1,1,1,1 ,1 ,1 ,1 ,1 ,1 ,1,1,1,1,1,1,1,1,1,1,1 ,1 ,1 ,1 ,1 ,1 , \
-                        1,1,1,1,1,1,1,1,1,1,1 ,1 ,1 ,1 ,1 ,1 ,1,1,1,1,1,1,1,1,1,1,1 ,1 ,1 ,1 ,1 ,1 };
-  GPIO_TypeDef *  PORT_XLAT[] = { GPIOA, GPIOB, GPIOC, GPIOD, GPIOE, GPIOF, GPIOG, GPIOH, GPIOI, GPIOJ, GPIOK };                
-                        
-  
- //uint8_t scan_length = end(scan_pin)-begin(scan_pin);
- //uint8_t scan_length1 = 0;
- //for(auto i; scan_port) {scan_length1++;}
- 
- 
- uint8_t scan_length  = sizeof(scan_pin)/sizeof(scan_pin[0]);
- uint8_t scan_length1 = sizeof(scan_port)/sizeof(scan_port[0]);
- uint8_t scan_length3 = sizeof(no_scan)/sizeof(no_scan[0]);
- 
- #if ((scan_length != scan_length2) || (scan_length2 !=scan_length3))
-   #error " array lengths don't mathc"
- #endif 
    
- 
-  /* GPIO Ports Clock Enable */
-
-  __HAL_RCC_GPIOA_CLK_ENABLE();
-  __HAL_RCC_GPIOB_CLK_ENABLE();
-  __HAL_RCC_GPIOC_CLK_ENABLE();
-  __HAL_RCC_GPIOD_CLK_ENABLE();
-  __HAL_RCC_GPIOE_CLK_ENABLE();
-  __HAL_RCC_GPIOF_CLK_ENABLE();
-  __HAL_RCC_GPIOG_CLK_ENABLE();
-  __HAL_RCC_GPIOH_CLK_ENABLE();
-  __HAL_RCC_GPIOI_CLK_ENABLE();
-  __HAL_RCC_GPIOJ_CLK_ENABLE();
-  __HAL_RCC_GPIOK_CLK_ENABLE();
-  
- GPIO_InitTypeDef GPIO_InitStruct = {0};
- /*Configure GPIO pins : LD1_Pin LD3_Pin */
-  
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-
-  uint16_t pin_pos;
-  uint8_t pin_counter;
-    
-  for (uint8_t i= 0; i < scan_length; i++) {  // scan entire array
-    if (no_scan[i]) {                           // scan only approved pins
-      GPIO_InitStruct.Pin = scan_pin[i];        // set pin as output
-      HAL_GPIO_Init(PORT_XLAT[scan_port[i]], &GPIO_InitStruct);
-      pin_pos = scan_pin[i];
-      for (pin_counter = 0; pin_pos !=1; pin_counter++) {pin_pos = pin_pos >> 1;}
-      sprintf(msg, "pulsing port %1c pin %d\n", (char)(scan_port[i] + 'A'), pin_counter);
-      print(msg);
-      for (uint8_t j = 0; j < 5; j++) {         // toggle pin
-        HAL_GPIO_WritePin(PORT_XLAT[scan_port[i]], scan_pin[i], GPIO_PIN_RESET);
-        HAL_Delay(125);
-        HAL_GPIO_WritePin(PORT_XLAT[scan_port[i]], scan_pin[i], GPIO_PIN_SET);
-        HAL_Delay(125);
-      }
-    }
-    else {
-      pin_pos = scan_pin[i];
-      for (pin_counter = 0; pin_pos !=1; pin_counter++) {pin_pos = pin_pos >> 1;}
-      sprintf(msg, "skipping port %1c pin %d\n", (scan_port[i] + 'A'), pin_counter);
-      print(msg);
-    }
-    uint8_t temp_data;
-    if (HAL_TIMEOUT != HAL_UART_Receive(&huart3, &temp_data, 1, 1)) break;  // quit if receive anything over serial port
-  }
-    
-#endif
- 
- 
- 
   while (1)
   {
 
@@ -738,34 +630,9 @@ void Error_Handler_boot(void)
   */
     
     LED_G1_ON();
-   // if (HAL_GPIO_ReadPin(GPIOD, 14) != D14_state) { D14_state = D14_state ? 0 :1 ; print("D14\n");}
-   // if (HAL_GPIO_ReadPin(GPIOA,  4) != A4_state) { A4_state = A4_state ? 0 :1 ; print("A4\n");}
-   // if (HAL_GPIO_ReadPin(GPIOA,  5) != A5_state) { A5_state = A5_state ? 0 :1 ; print("A5\n");}
-   // if (HAL_GPIO_ReadPin(GPIOA,  6) != A6_state) { A6_state = A6_state ? 0 :1 ; print("A6\n");}
-   // if (HAL_GPIO_ReadPin(GPIOB,  4) != B4_state) { B4_state = B4_state ? 0 :1 ; print("B4\n");}
-   // if (HAL_GPIO_ReadPin(GPIOB,  5) != B5_state) { B5_state = B5_state ? 0 :1 ; print("B5\n");}
-    //print("Hello world\n");
-  
-    //HAL_GPIO_WritePin(GPIOD, GPIO_PIN_14, GPIO_PIN_RESET);  // NCSS PA4
-    //sprintf(msg2, "NCSS low");
-    //HAL_GPIO_WritePin(GPIOA, 5, GPIO_PIN_RESET);  // SCK
-    //HAL_SPI_Transmit(&hspi1, msg2, (uint16_t)30,  10); 
-    //HAL_GPIO_WritePin(GPIOA, 6, GPIO_PIN_RESET);  // MISO
-    //HAL_GPIO_WritePin(GPIOB, 5, GPIO_PIN_SET);  // MOSI
-    //HAL_GPIO_WritePin(GPIOA, 4, GPIO_PIN_SET);  // 
-    //HAL_GPIO_WritePin(GPIOB, 4, GPIO_PIN_SET);  // 
     HAL_Delay(250);
     LED_G1_OFF();
-    //HAL_GPIO_WritePin(GPIOD, GPIO_PIN_14, GPIO_PIN_SET);  // NCSS PA4
-    //sprintf(msg2, "NCSS high");
-    //HAL_GPIO_WritePin(GPIOA, 5, GPIO_PIN_SET);  // SCK
-    //HAL_SPI_Transmit(&hspi1, msg2, (uint16_t)30,  10);
     LED_G2_ON();
-    //HAL_GPIO_WritePin(GPIOA, 6, GPIO_PIN_SET);  // MISO
-    //HAL_GPIO_WritePin(GPIOB, 5, GPIO_PIN_RESET);  // MOSI
-    //HAL_GPIO_WritePin(GPIOA, 4, GPIO_PIN_RESET);  // 
-    //HAL_GPIO_WritePin(GPIOB, 4, GPIO_PIN_RESET);  // 
-
     HAL_Delay(250);
     LED_G2_OFF();
   }           

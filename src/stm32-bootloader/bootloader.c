@@ -104,8 +104,8 @@ uint8_t Bootloader_Init(void)
     
     APP_sector_mask = ~APP_sector_mask;  // don't touch write protection on sectors with bootloader in it
     
-    sprintf(msg, "\nAPP_sector_mask %08lX\n", APP_sector_mask);
-    print(msg);
+    //sprintf(msg, "\nAPP_sector_mask %08lX\n", APP_sector_mask);
+    //print(msg);
     
 
     /* check APP_ADDRESS */
@@ -130,6 +130,9 @@ uint8_t Bootloader_Init(void)
     //sprintf(msg, "APP_sector_mask: %08lX\n", APP_sector_mask);
     //print(msg);
     
+    //sprintf(msg, "BOOT_LOADER_END: %08lX\n", BOOT_LOADER_END);
+    //print(msg);
+    
     return BL_OK;
 }
 
@@ -149,6 +152,7 @@ uint8_t Bootloader_Erase(void)
     uint32_t Bank_num;
     HAL_FLASH_Unlock();  
     for (uint32_t i =  APP_first_sector; i <= LAST_SECTOR; i++) {
+      if ((App_Size + APP_ADDRESS) < ((i * FLASH_SECTOR_SIZE) + FLASH_BASE)) break;  // quit if sector doesn't contain the application
       sprintf(msg, " Erasing sector: %d\n",(uint16_t)i);
       print(msg);
       if (i < 8) {
@@ -517,10 +521,10 @@ uint8_t Bootloader_ConfigProtection(uint32_t protection, uint32_t mask, uint8_t 
 uint8_t Bootloader_CheckSize(uint32_t appsize)
 {
   
-  sprintf(msg,"application size:      %08lX\n", appsize);
-  print(msg);
-  sprintf(msg,"end of application:    %08lX\n", appsize + APP_ADDRESS);
-  print(msg);
+  //sprintf(msg,"application size:      %08lX\n", appsize);
+  //print(msg);
+  //sprintf(msg,"end of application:    %08lX\n", appsize + APP_ADDRESS);
+  //print(msg);
   
     return ((FLASH_BASE + FLASH_SIZE - APP_ADDRESS) >= appsize) ? BL_OK
                                                                 : BL_SIZE_ERROR;
@@ -594,7 +598,7 @@ uint8_t Bootloader_CheckForApplication(void)
  */
 void Bootloader_JumpToApplication(void)
 {
-  
+  Error_Handler_boot();
   Magic_Location = Magic_Application;  // flag that we should load application 
                                        // after the next reset
   NVIC_System_Reset();                  // send the system through reset

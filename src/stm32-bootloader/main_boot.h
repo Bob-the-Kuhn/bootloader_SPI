@@ -49,6 +49,7 @@ extern "C" {
 /* USER CODE BEGIN EM */
 
 void Error_Handler(void);
+extern uint32_t App_Size;
 
 /*** Application-Specific Configuration ***************************************/
 /* File name of application located on SD card */
