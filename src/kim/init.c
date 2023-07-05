@@ -8,13 +8,13 @@
 #include <basic.h>
 #include <log.h>
 #include <gpio.h>
-#include <stm32f407x_defines.h>
+#include "stm32g0b1x_defines.h"
 #include <string.h>
 #include <string.h>
 
 #define STACK_TOP ((void*)(0x20004000))
 
-#define CPU_FREQ      168000000
+#define CPU_FREQ      48000000
 #define AHB_PRESCALER         4
 #define HCLCK (CPU_FREQ / AHB_PRESCALER)
 #define SYSTICKS_FREQ      1000
@@ -80,112 +80,66 @@ void attr_weak isr_systick(void)
   ticks++;
 }
 
-// STM405/407 vector table
+void SysTick_Handler(void)
+{
+  ticks++;
+}
+// STM32G0B1 vector table
 static const void *attr_sect("isrv_sys") _isrv_sys[] = {
-  /* Cortex-M0 system interrupts */
+  /* Cortex-M0 system exceptions */
   STACK_TOP,    /* Stack top */
   isr_reset,    /* Reset_Handler */
   isr_nmi,      /* NMI_Handler */
   isr_hf,       /* HardFault_Handler */
-  isr_none,     /* MemManage_Handler */
-  isr_none,     /* BusFault_Handler */
-  isr_none,     /* UsageFault_Handler */
+  0,            /* Reserved */
+  0,            /* Reserved */
+  0,            /* Reserved */
   0,            /* Reserved */
   0,            /* Reserved */
   0,            /* Reserved */
   0,            /* Reserved */
   isr_none,     /* SVC_Handler */
-  isr_none,     /* DebugMon_Handler */
+  0,            /* Reserved */
   0,            /* Reserved */
   isr_none,     /* PendSV_Handler */
   isr_systick,  /* SysTick_Handler */
 };
 
-// STM405/407 vector table
+// STM32G0B1 vector table
 static const void *attr_sect("isrv_irq") _isrv_irq[] = {
   /* Peripheral interrupts */
-  isr_none, /* Window WatchDog              */             
-  isr_none, /* PVD through EXTI Line detection */          
-  isr_none, /* Tamper and TimeStamps through the EXTI line */ 
-  isr_none, /* RTC Wakeup through the EXTI line */         
-  isr_none, /* FLASH                        */             
-  isr_none, /* RCC                          */             
-  isr_none, /* EXTI Line0                   */             
-  isr_none, /* EXTI Line1                   */             
-  isr_none, /* EXTI Line2                   */             
-  isr_none, /* EXTI Line3                   */             
-  isr_none, /* EXTI Line4                   */             
-  isr_none, /* DMA1 Stream 0                */             
-  isr_none, /* DMA1 Stream 1                */             
-  isr_none, /* DMA1 Stream 2                */             
-  isr_none, /* DMA1 Stream 3                */             
-  isr_none, /* DMA1 Stream 4                */             
-  isr_none, /* DMA1 Stream 5                */             
-  isr_none, /* DMA1 Stream 6                */             
-  isr_none, /* ADC1, ADC2 and ADC3s         */             
-  isr_none, /* CAN1 TX                      */             
-  isr_none, /* CAN1 RX0                     */             
-  isr_none, /* CAN1 RX1                     */             
-  isr_none, /* CAN1 SCE                     */             
-  isr_none, /* External Line[9:5]s          */             
-  isr_none, /* TIM1 Break and TIM9          */         
-  isr_none, /* TIM1 Update and TIM10        */         
-  isr_none, /* TIM1 Trigger and Commutation and TIM11 */
-  isr_none, /* TIM1 Capture Compare         */             
-  isr_none, /* TIM2                         */             
-  isr_none, /* TIM3                         */             
-  isr_none, /* TIM4                         */             
-  isr_none, /* I2C1 Event                   */             
-  isr_none, /* I2C1 Error                   */             
-  isr_none, /* I2C2 Event                   */             
-  isr_none, /* I2C2 Error                   */             
-  isr_none, /* SPI1                         */             
-  isr_none, /* SPI2                         */             
-  isr_none, /* USART1                       */             
-  isr_none, /* USART2                       */             
-  isr_none, /* USART3                       */             
-  isr_none, /* External Line[15:10]s        */             
-  isr_none, /* RTC Alarm (A and B) through EXTI Line */    
-  isr_none, /* USB OTG FS Wakeup through EXTI line */      
-  isr_none, /* TIM8 Break and TIM12         */         
-  isr_none, /* TIM8 Update and TIM13        */         
-  isr_none, /* TIM8 Trigger and Commutation and TIM14 */
-  isr_none, /* TIM8 Capture Compare         */             
-  isr_none, /* DMA1 Stream7                 */             
-  isr_none, /* FSMC                         */             
-  isr_none, /* SDIO                         */             
-  isr_none, /* TIM5                         */             
-  isr_none, /* SPI3                         */             
-  isr_none, /* UART4                        */             
-  isr_none, /* UART5                        */             
-  isr_none, /* TIM6 and DAC1&2 underrun errors */          
-  isr_none, /* TIM7                         */
-  isr_none, /* DMA2 Stream 0                */             
-  isr_none, /* DMA2 Stream 1                */             
-  isr_none, /* DMA2 Stream 2                */             
-  isr_none, /* DMA2 Stream 3                */             
-  isr_none, /* DMA2 Stream 4                */             
-  isr_none, /* Ethernet                     */             
-  isr_none, /* Ethernet Wakeup through EXTI line */        
-  isr_none, /* CAN2 TX                      */             
-  isr_none, /* CAN2 RX0                     */             
-  isr_none, /* CAN2 RX1                     */             
-  isr_none, /* CAN2 SCE                     */             
-  isr_none, /* USB OTG FS                   */             
-  isr_none, /* DMA2 Stream 5                */             
-  isr_none, /* DMA2 Stream 6                */             
-  isr_none, /* DMA2 Stream 7                */             
-  isr_none, /* USART6                       */             
-  isr_none, /* I2C3 event                   */             
-  isr_none, /* I2C3 error                   */             
-  isr_none, /* USB OTG HS End Point 1 Out   */             
-  isr_none, /* USB OTG HS End Point 1 In    */             
-  isr_none, /* USB OTG HS Wakeup through EXTI */           
-  isr_none, /* USB OTG HS                   */             
-  isr_none, /* DCMI                         */             
-  isr_none, /* CRYP crypto                  */             
-  isr_none, /* Hash and Rng                 */
-  isr_none, /* FPU                          */
+  isr_none,
+  isr_none,
+  isr_none,
+  isr_none,
+  isr_none,
+  isr_none,
+  isr_none,
+  isr_none,
+  isr_none,
+  isr_none,
+  isr_none,
+  isr_none,
+  isr_none,
+  isr_none,
+  isr_none,
+  isr_none,
+  isr_none,
+  isr_none,
+  isr_none,
+  isr_none,
+  isr_none,
+  isr_none,
+  isr_none,
+  isr_none,
+  isr_none,
+  isr_none,
+  isr_none,
+  isr_none,
+  isr_none,
+  isr_none,
+  isr_none,
+  isr_none,
 };
 
 uint32_t systicks_freq(void)
@@ -208,44 +162,43 @@ u32 k_ticks_freq(void) attr_alias("systicks_freq");
 
 void init_clock(void)
 {
-  /* Enable HSE (8MHz external oscillator) */
-  or32(RCC_CR, BIT16);
-  while (!(rd32(RCC_CR) & BIT17));
-
-  /* PLLM=8 PLLN=336, PLLP=00 (2), PLLQ=7; f_PLL=168MHz, f_USB=48MHz */
-  // STMcubeIDE says this is impossible, SYSCLK reports 525MHz
-  and32(RCC_PLLCFGR, ~0x0f037fff);
-  or32(RCC_PLLCFGR, BIT22 | (7 << 24) | (336 << 6) | 8);
-  or32(RCC_CR, BIT24);
-  while (!(rd32(RCC_CR) & BIT25));
   
-  ///* PLLM=4 PLLN=96, PLLP=00 (2), PLLQ=4; f_PLL=96MHz, AHB=2, f_USB=48MHz */
-  //and32(RCC_PLLCFGR, ~0x0f037fff);
-  //or32(RCC_PLLCFGR, BIT22 | (4 << 24) | (96 << 6) | 4);
-  ////or32(RCC_PLLCFGR, (4 << 24) | (96 << 6) | 4); // use HSI clock - dead CPU
-  //or32(RCC_CR, BIT24);
-  //while (!(rd32(RCC_CR) & BIT25));
-
   /* Configure flash */
-  wr32(R_FLASH_ACR, BIT10 | BIT9 | BIT8 | 1);
-
-  /* Use PLL as system clock, with AHB prescaler set to 4 */
-  wr32(RCC_CFGR, (0x9 << 4) | 0x2); // APB1 & APB2 set to 1
+  // G0x  must set FLASH latency before switching to higher speed
+  or32(R_FLASH_ACR, 0x00000102UL);  // 2 wait states, prefetch enabled.
+  while ((rd32(R_FLASH_ACR) & 0x00000102U) != 0x00000102U);  // wait until the bits update
   
-  /* Use PLL as system clock, with AHB prescaler set to 2 */
-  //wr32(RCC_CFGR, (0x8 << 4) | 4 << 10 | 0x2);   // APB1 set to 2, APB2 to 1
-  //while (((rd32(RCC_CFGR) >> 2) & 0x3) != 0x2);
+  and32(RCC_CR, ~(BIT24 | BIT18 | BIT16) ); // turn off PLL so can update RCC_CFGR, turn HSE off
+  while ((rd32(RCC_CR) & BIT25));  // wait for PLL to stop
+  
+  // G0x
+  /* SYSCLOCK=48MHz, f_USB=48MHz */
+  
+  /* use PLL, AHB (HPRE): /1 , APB (PPRE): /1 ,  MCO:none */
+  and32(RCC_CFGR, ~0xffff7f07UL);  // set all bits to zero except reserved and hardware controlled
+  or32(RCC_CFGR, 2); // use PLL as SYSCLK source
+  
+  and32(RCC_PLLCFGR, ~0xff3f7f73UL);  // set all bits to zero except reserved and hardware controlled
+  // R: /4, PLLRCLK enabled, Q: /2, PLLQCLK enabled, P: /2, PLLPCLK enabled, N: x12, M: /1 , HSI16 is the input
+  or32(RCC_PLLCFGR, (3 << 29)  | (1 << 28) | (1 << 25) | (1 << 24) | (1 << 17) |  (1 << 16) | (12 << 8) | 2);  
+  or32(RCC_CR, BIT24);  // turn on PLL
+  while (!(rd32(RCC_CR) & BIT25)); 
+  
+  
+  // set USART2 & 3 clocks to sysclk 
+  and32(RCC_CCIPR, ~0b111100);  //clear out bits
+  or32(RCC_CCIPR,   0b010100);    //select sysclk
 
-  /* Enable clock on AHB and APB peripherals */
-  wr32(RCC_AHB1ENR, BIT7 | BIT4 | BIT3 | BIT2 | BIT1 | BIT0); /* GPIO A,B,C,D,E,H*/
-  wr32(RCC_APB1ENR, BIT1 | BIT2 | BIT17| BIT18); /* TIM3, TIM4, USART2 and USART3 */
-  wr32(RCC_APB2ENR, BIT0 | BIT4 | BIT8 | BIT12| BIT18); /* TIM1/11, ADC1, SPI1, USART1 */
+  /* Enable clocks on AHB and APB peripherals */
+  wr32(RCC_APBENR1, (BIT18 | BIT17 | BIT15 | BIT14 | BIT5 | BIT4 | BIT2 | BIT1 | BIT0)); /* USART3, USART2, SPI3, SPI2, TIM7, TIM6, TIM2-4*/
+  wr32(RCC_APBENR2, (BIT14 | BIT11 | BIT1)); /* SPI1, TIM1, SYSCFGEN: */
+  wr32(RCC_IOPENR, 0x3f); /* GPIOA-GPIOF */
 }
 
 void init_systick(void)
 {
   ticks = 0;
-  wr32(R_SYST_RVR, HCLCK / SYSTICKS_FREQ);
+  wr32(R_SYST_RVR, ((HCLCK / SYSTICKS_FREQ) * 4));
   wr32(R_SYST_CVR, 0);
   wr32(R_SYST_CSR, BIT0 | BIT1 | BIT2);
 }
@@ -254,40 +207,39 @@ int putchar(int c)
 {
   if (c == '\n')
     putchar('\r');
-  wr32(R_USART1_DR, c);
-  wr32(R_USART3_DR, c);  // echo out USART 3
-  while (!(rd32(R_USART1_SR) & BIT6));
-  while (!(rd32(R_USART3_SR) & BIT6));
+  wr32(R_USART2_TDR, c);
+  while (!(rd32(R_USART2_ISR) & BIT6));
+  wr32(R_USART1_TDR, c);
+  while (!(rd32(R_USART1_ISR) & BIT6));
   return c;
 }
 
+void k_delay(const uint32_t ms);
+
 void init_uart(void)
 {
-  /* USART3 on PD8/PD9 */                       
-  /* USART2 on PD5/PD6 */
-  /* USART1 on PA9/PA10 */
-  gpio_func(IO(PORTD, 8), 7);
-  gpio_func(IO(PORTD, 9), 7);
-  gpio_mode(IO(PORTD, 8), PULL_NO);
-  gpio_mode(IO(PORTD, 9), PULL_NO);
-  /* fPCLK=42MHz, br=115.2KBps, USARTDIV=22.8125, see table 80 pag. 519 */
-  wr32(R_USART3_BRR, (22 << 4) | 13);
-  or32(R_USART3_CR1, BIT13 | BIT5 | BIT3 | BIT2);
-  or32(R_NVIC_ISER(1), BIT7); /* USART3 is irq 39 */
-  //or32(R_NVIC_ISER(1), BIT6); /* USART2 is irq 38 */
+ 
+ 
+ /* USART2 on PA2/PA3 */
+ 
+  GPIO_CONFIG_ALT(PORTA, 2, 1, GPIO_NO_PULL_UP_DOWN, GPIO_OUTPUT_PUSH_PULL, GPIO_OUTPUT_VERY_HIGH_SPEED);
+  GPIO_CONFIG_ALT(PORTA, 3, 1, GPIO_NO_PULL_UP_DOWN, GPIO_OUTPUT_PUSH_PULL, GPIO_OUTPUT_VERY_HIGH_SPEED);
+  /* fPCLK=48MHz, br=115.2KBps, USARTDIV=22.8125, see table 80 pag. 519 */
+  wr32(R_USART2_BRR, 0x19f);
+  or32(R_USART2_CR1, BIT13 | BIT5 | BIT3 | BIT2 | BIT0);
+  //or32(R_NVIC_ISER(1), BIT7); /* USART3 is irq 39 */
+  or32(R_NVIC_ISER(1), BIT6); /* USART2 is irq 38 */
   //or32(R_NVIC_ISER(1), BIT5); /* USART1 is irq 37 */
   
-  /* USART3 on PD8/PD9 */
-  /* USART2 on PD5/PD6 */
-  /* USART1 on PA9/PA10 */
-  gpio_func(IO(PORTA, 9), 7);
-  gpio_func(IO(PORTA, 10), 7);
-  gpio_mode(IO(PORTA, 9), PULL_NO);
-  gpio_mode(IO(PORTA, 10), PULL_NO);
-  /* fPCLK=42MHz, br=115.2KBps, USARTDIV=22.8125, see table 80 pag. 519 */
-  wr32(R_USART1_BRR, (22 << 4) | 13);
-  or32(R_USART1_CR1, BIT13 | BIT5 | BIT3 | BIT2);
-  //or32(R_NVIC_ISER(1), BIT7); /* USART3 is irq 39 */                                                    
+ 
+ /* USART1 on PA9/PA10 */
+ 
+  GPIO_CONFIG_ALT(PORTA, 9, 1, GPIO_NO_PULL_UP_DOWN, GPIO_OUTPUT_PUSH_PULL, GPIO_OUTPUT_VERY_HIGH_SPEED);
+  GPIO_CONFIG_ALT(PORTA,10, 1, GPIO_NO_PULL_UP_DOWN, GPIO_OUTPUT_PUSH_PULL, GPIO_OUTPUT_VERY_HIGH_SPEED);
+  /* fPCLK=48MHz, br=115.2KBps, USARTDIV=22.8125, see table 80 pag. 519 */
+  wr32(R_USART1_BRR, 0x19f);
+  or32(R_USART1_CR1, BIT13 | BIT5 | BIT3 | BIT2 | BIT0);
+  //or32(R_NVIC_ISER(1), BIT7); /* USART3 is irq 39 */
   //or32(R_NVIC_ISER(1), BIT6); /* USART2 is irq 38 */
   or32(R_NVIC_ISER(1), BIT5); /* USART1 is irq 37 */
 }

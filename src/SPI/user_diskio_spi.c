@@ -31,6 +31,7 @@
 #include <stdint.h>
 #include "user_diskio.h"
 #include "SPI_defines.h"
+#include "main.h"
 
 
 typedef BYTE	DSTATUS;

@@ -1,8 +1,12 @@
 // https://controllerstech.com/spi-using-registers-in-stm32/
 
 #include "integer.h" //from FatFs middleware library
-#include "SPI_register_level_defines.h"
-#include "stm32f407x_defines.h"
+//#include "SPI_register_level_defines.h"
+#include "stm32g0b1x_defines.h"
+#include "basic.h"
+#include "gpio.h"
+#include "main.h"
+
 //#include "RccConfig_F446.h"
 
 void SPIConfig (void)
@@ -12,34 +16,50 @@ void SPIConfig (void)
 	2. Configure the Control Register 1
 	3. Configure the CR2
 	************************************************/	
-  //RCC_APB2ENR |= (1<<12);  // Enable SPI1 CLock  (already done in init.c)
-  //SPI1_CR1 |= (1<<0)|(1<<1);   // CPOL=1, CPHA=1 - SD cards are usually 0,0
-  SPI1_CR1 |= (1<<2);  // Master Mode
-  SPI1_CR1 |= (3<<3);  // BR[2:0] = 011: fPCLK/16, PCLK2 = 80MHz, SPI clk = 5MHz
-  SPI1_CR1 &= ~(1<<7);  // LSBFIRST = 0, MSB first
-  SPI1_CR1 |= (1<<8) | (1<<9);  // SSM=1, SSi=1 _ Software Slave Management
-  SPI1_CR1 &= ~(1<<10);  // RXONLY = 0, full-duplex
-  SPI1_CR1 &= ~(1<<11);  // DFF=0, 8 bit data
-  SPI1_CR2 = 0;
+  //RCC_APB2ENR |= (1<<12);  // Enable SPI3 CLock  (already done in init.c)
+  //SPI3_CR1 |= (1<<0)|(1<<1);   // CPOL=1, CPHA=1 - SD cards are usually 0,0
+  or16(RSPI3_CR1, (1<<2));  // Master Mode
+  or16(RSPI3_CR1, (3<<3));  // BR[2:0] = 011: fPCLK/16, PCLK2 = 80MHz, SPI clk = 5MHz
+  and16(RSPI3_CR1, ~(1<<7));  // LSBFIRST = 0, MSB first
+  or16(RSPI3_CR1, (1<<8) | (1<<9));  // SSM=1, SSi=1 _ Software Slave Management
+  and16(RSPI3_CR1, ~(1<<10));  // RXONLY = 0, full-duplex
+  and16(RSPI3_CR1, ~(1<<11));  // DFF=0, 8 bit data
+  //or16(RSPI3_CR1, (1<<14));  // BIDIOE output enable
+  wr16(RSPI3_CR2, (7<<8));   // 8 bit transfer, Motorola format
 }
 
+
+void k_delay(const uint32_t ms);;
+
 void SPI_GPIOConfig (void)
-{
+{ 
+  
+  // SPI 3
   // PA4 SS
-  // PA5 CLK
-  // PA6 MISO
-  // PB5 MOSI
+  // PC10 CLK
+  // PC11 MISO
+  // PC12 MOSI
   // PB11 SD_detect
 	//RCC_AHB1ENR |= (1<<0);  // Enable GPIO Clock (already done in init.c)
 	
-  GPIOA_MODER |= ((1<< 8|2<<10)|(2<<12));  // Output for PA4, Alternate functions for PA5 & PA6
-  GPIOB_MODER |= ((2<<10)|(1<<22));        // Alternate functions for PB5, Output for PB11
-	
-	GPIOA_OSPEEDR |= ((3<<8)|(3<<10)|(3<<12));  // Very HIGH Speed for PA4, PA5, PA6
-  GPIOB_OSPEEDR |= (3<<10);                // Very HIGH Speed for PB5
-	
-	GPIOA_AFRL |= ((5<<20)|(5<<24));         // AF5(SPI1) for PA5, PA6
-  GPIOB_AFRL |= (5<<20);                   // AF5(SPI1) for PB5
+  GPIO_CONFIG_OUTPUT(PORTA, 4,  GPIO_NO_PULL_UP_DOWN, GPIO_OUTPUT_PUSH_PULL, GPIO_OUTPUT_VERY_HIGH_SPEED);
+  GPIO_CONFIG_ALT(PORTC, 10, 4, GPIO_NO_PULL_UP_DOWN, GPIO_OUTPUT_PUSH_PULL, GPIO_OUTPUT_VERY_HIGH_SPEED);
+  GPIO_CONFIG_ALT(PORTC, 11, 4, GPIO_PULL_DOWN, GPIO_OUTPUT_PUSH_PULL, GPIO_OUTPUT_VERY_HIGH_SPEED);
+  GPIO_CONFIG_ALT(PORTC, 12, 4, GPIO_NO_PULL_UP_DOWN, GPIO_OUTPUT_PUSH_PULL, GPIO_OUTPUT_VERY_HIGH_SPEED);
+  GPIO_CONFIG_INPUT(PORTB, 11,  GPIO_NO_PULL_UP_DOWN)
+  
+  
+  gpio_wr(PORTA, 4,  0);
+  k_delay(5);
+
+  gpio_wr(PORTA, 4,  1);
+  k_delay(5);
+  CS_HIGH();
+  k_delay(10);
+  CS_LOW();
+  k_delay(10);
+  
+  
 }
 
 // void GPIOConfig (void)  // F103
@@ -56,22 +76,22 @@ void SPI_GPIOConfig (void)
 
 void SPI_Enable (void)
 {
-	SPI1_CR1 |= (1<<6);   // SPE=1, Peripheral enabled
+	or16(RSPI3_CR1, (1<<6));   // SPE=1, Peripheral enabled
 }
 
 void SPI_Disable (void)
 {
-	SPI1_CR1 &= ~(1<<6);   // SPE=0, Peripheral Disabled
+	and16(RSPI3_CR1,  ~(1<<6));   // SPE=0, Peripheral Disabled
 }
 
 void CS_Enable (void)
 {
-	GPIOA_BSRR |= (1<<9)<<16;
+  or32(R_GPIOA_BSRR, (1<<9)<<16);
 }
 
 void CS_Disable (void)
 {
-	GPIOA_BSRR |= (1<<9);
+  or32(R_GPIOA_BSRR, (1<<9));
 }
 
 
@@ -88,8 +108,8 @@ void SPI_Transmit (BYTE *data, UINT size)
 	UINT i=0;
 	while (i<size)
 	{
-	   while (!((SPI1_SR)&(1<<1))) {};  // wait for TXE bit to set _ This will indicate that the buffer is empty
-	   SPI1_DR = data[i];  // load the data into the Data Register
+	   while (!((rd16(RSPI3_SR)&(1<<1)))) {};  // wait for TXE bit to set _ This will indicate that the buffer is empty
+	   wr16(RSPI3_DR, data[i]);  // load the data into the Data Register
 	   i++;
 	}	
 	
@@ -99,12 +119,12 @@ write operation to the SPI_DR register and BSY bit setting. As a consequence it 
 mandatory to wait first until TXE is set and then until BSY is cleared after writing the last
 data.
 */
-	while (!((SPI1_SR)&(1<<1))) {};  // wait for TXE bit to set _ This will indicate that the buffer is empty
-	while (((SPI1_SR)&(1<<7))) {};  // wait for BSY bit to Reset _ This will indicate that SPI is not busy in communication	
+	while (!((rd16(RSPI3_SR)&(1<<1)))) {};  // wait for TXE bit to set _ This will indicate that the buffer is empty
+	while ((rd16(RSPI3_SR)&(1<<7))) {};  // wait for BSY bit to Reset _ This will indicate that SPI is not busy in communication	
 	
 	//  Clear the Overrun flag by reading DR and SR
-	BYTE temp = SPI1_DR;
-					temp = SPI1_SR;
+	BYTE temp = rd16(RSPI3_DR);
+					temp = rd16(RSPI3_SR);
 	
 }
 
@@ -120,19 +140,19 @@ void SPI_Receive (BYTE *data, UINT size)
 
 	while (size)
 	{
-		while (((SPI1_SR)&(1<<7))) {};  // wait for BSY bit to Reset _ This will indicate that SPI is not busy in communication
-		SPI1_DR = 0;  // send dummy data
-		while (!((SPI1_SR) &(1<<0))){};  // Wait for RXNE to set _ This will indicate that the Rx buffer is not empty
-	  *data++ = (SPI1_DR);
+		while (((rd16(RSPI3_SR))&(1<<7))) {};  // wait for BSY bit to Reset _ This will indicate that SPI is not busy in communication
+		wr16(RSPI3_DR, 0);  // send dummy data
+		while (!((rd16(RSPI3_SR)) &(1<<0))){};  // Wait for RXNE to set _ This will indicate that the Rx buffer is not empty
+	  *data++ = (rd16(RSPI3_DR));
 		size--;
 	}	
 }
 
 BYTE SPI_Transfer(BYTE data) {
-  while (!((SPI1_SR)&(1<<1))) {};  // wait for TXE bit to set _ This will indicate that the buffer is empty
-	SPI1_DR = data;  // load the data into the Data Register
-  while (!((SPI1_SR) &(1<<0))){};  // Wait for RXNE to set _ This will indicate that the Rx buffer is not empty
-  return SPI1_DR;
+  while (!((rd16(RSPI3_SR))&(1<<1))) {};  // wait for TXE bit to set _ This will indicate that the buffer is empty
+	wr16(RSPI3_DR, data);  // load the data into the Data Register
+  while (!((rd16(RSPI3_SR)) &(1<<0))){};  // Wait for RXNE to set _ This will indicate that the Rx buffer is not empty
+  return rd16(RSPI3_DR);
 }
  
   

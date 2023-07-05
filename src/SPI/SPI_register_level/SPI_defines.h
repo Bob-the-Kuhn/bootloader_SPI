@@ -27,8 +27,8 @@ volatile uint16_t* BASE_SPI1 = (uint16_t*)0x40013000UL;
 // SPI_1_CR1 |= (7<<3);  // BR[2:0] = 111: fPCLK/16, PCLK2 = 80MHz, SPI clk = 0.3125MHz       0.164MHz
 
 
-#define FCLK_SLOW() { SPI_1_CR1 |= (6<<3); }	/* Set SCLK = slow, approx 300 KBits/s*/
-#define FCLK_FAST() { SPI_1_CR1 |= (3<<3); }	/* Set SCLK = fast, approx 2.5 MBits/s */
-
-#define CS_HIGH()	{gpio_wr(  IO(PORTA, 4), 1);}
-#define CS_LOW()	{gpio_wr(  IO(PORTA, 4), 0);}
+//#define FCLK_SLOW() { SPI_1_CR1 |= (6<<3); }	/* Set SCLK = slow, approx 300 KBits/s*/
+//#define FCLK_FAST() { SPI_1_CR1 |= (3<<3); }	/* Set SCLK = fast, approx 2.5 MBits/s */
+//
+//#define CS_HIGH()	{gpio_wr(  IO(PORTA, 4), 1);}
+//#define CS_LOW()	{gpio_wr(  IO(PORTA, 4), 0);}

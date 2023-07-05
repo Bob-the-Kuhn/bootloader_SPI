@@ -11,6 +11,7 @@
 
 #include <intdefs.h>
 
+
 /* Some useful macros */
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define min(a, b) ((a) < (b) ? (a) : (b))
@@ -21,7 +22,7 @@
 
 #define array_size(x) (sizeof((x)) / sizeof((x)[0]))
 
-#define uint unsigned int
+//#define uint unsigned int
 
 static inline u32 abs(i32 a)
 {
@@ -112,8 +113,8 @@ static inline void and32(volatile u32 *reg, u32 val) {*reg &= val;}
 
 
 /* 16 bits registers */
-//static inline void wr16(volatile u16 *reg, u16 val) {*reg = val;}
-//static inline u16 rd16(volatile u16 *reg) {return *reg;}
+static inline void wr16(volatile u16 *reg, u16 val) {*reg = val;}
+static inline u16 rd16(volatile u16 *reg) {return *reg;}
 static inline void or16(volatile u16 *reg, u16 val) {*reg |= val;}
 static inline void and16(volatile u16 *reg, u16 val) {*reg &= val;}
 //static inline void clr16(volatile u16 *reg, int nbit) {and16(reg, ~(1 << nbit));}

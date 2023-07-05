@@ -76,7 +76,7 @@
            
  
   .syntax unified
-  .cpu cortex-m4
+  .cpu cortex-m3
   .fpu softvfp
   .thumb
                     
