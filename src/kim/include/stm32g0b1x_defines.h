@@ -414,6 +414,7 @@
 #define RSPI1_CR2       reg16(0x40013004) /*!< SPI control register 2,                             Address offset: 0x04 */
 #define RSPI1_SR        reg16(0x40013008) /*!< SPI status register,                                Address offset: 0x08 */
 #define RSPI1_DR        reg16(0x4001300C) /*!< SPI data register,                                  Address offset: 0x0C */
+#define RSPI1_DR_8      0x4001300CUL      /*!< SPI data register,    (8 bit access)                Address offset: 0x0C */
 #define RSPI1_CRCPR     reg16(0x40013010) /*!< SPI CRC polynomial register (not used in I2S mode), Address offset: 0x10 */
 #define RSPI1_RXCRCR    reg16(0x40013014) /*!< SPI RX CRC register (not used in I2S mode),         Address offset: 0x14 */
 #define RSPI1_TXCRCR    reg16(0x40013018) /*!< SPI TX CRC register (not used in I2S mode),         Address offset: 0x18 */
@@ -424,6 +425,7 @@
 #define RSPI2_CR2       reg16(0x40003804) /*!< SPI control register 2,                             Address offset: 0x04 */
 #define RSPI2_SR        reg16(0x40003808) /*!< SPI status register,                                Address offset: 0x08 */
 #define RSPI2_DR        reg16(0x4000380C) /*!< SPI data register,                                  Address offset: 0x0C */
+#define RSPI2_DR_8      0x4000380CUL      /*!< SPI data register, (8 bit access)                   Address offset: 0x0C */
 #define RSPI2_CRCPR     reg16(0x40003810) /*!< SPI CRC polynomial register (not used in I2S mode), Address offset: 0x10 */
 #define RSPI2_RXCRCR    reg16(0x40003814) /*!< SPI RX CRC register (not used in I2S mode),         Address offset: 0x14 */
 #define RSPI2_TXCRCR    reg16(0x40003818) /*!< SPI TX CRC register (not used in I2S mode),         Address offset: 0x18 */
@@ -434,6 +436,7 @@
 #define RSPI3_CR2       reg16(0x40003c04) /*!< SPI control register 2,                             Address offset: 0x04 */
 #define RSPI3_SR        reg16(0x40003c08) /*!< SPI status register,                                Address offset: 0x08 */
 #define RSPI3_DR        reg16(0x40003c0C) /*!< SPI data register,                                  Address offset: 0x0C */
+#define RSPI3_DR_8      0x40003c0CUL      /*!< SPI data register, (8 bit access)                   Address offset: 0x0C */
 #define RSPI3_CRCPR     reg16(0x40003c10) /*!< SPI CRC polynomial register (not used in I2S mode), Address offset: 0x10 */
 #define RSPI3_RXCRCR    reg16(0x40003c14) /*!< SPI RX CRC register (not used in I2S mode),         Address offset: 0x14 */
 #define RSPI3_TXCRCR    reg16(0x40003c18) /*!< SPI TX CRC register (not used in I2S mode),         Address offset: 0x18 */

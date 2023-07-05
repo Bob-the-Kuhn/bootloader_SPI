@@ -121,8 +121,8 @@ static inline void and16(volatile u16 *reg, u16 val) {*reg &= val;}
 //static inline void set16(volatile u16 *reg, int nbit) {or16(reg, 1 << nbit);}
 
 /* 8 bits registers */
-//static inline void wr8(volatile u8 *reg, u8 val) {*reg = val;}
-//static inline u8 rd8(volatile u8 *reg) {return *reg;}
+static inline void wr8(volatile u8 *reg, u8 val) {*reg = val;}
+static inline u8 rd8(volatile u8 *reg) {return *reg;}
 static inline void or8(volatile u8 *reg, u8 val) {*reg |= val;}
 static inline void and8(volatile u8 *reg, u8 val) {*reg &= val;}
 //static inline void clr8(volatile u8 *reg, int nbit) {and8(reg, ~(1 << nbit));}

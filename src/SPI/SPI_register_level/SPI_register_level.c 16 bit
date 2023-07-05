@@ -94,18 +94,32 @@ void SPI_Transmit (BYTE *data, UINT size)
 	3. After the data has been transmitted, wait for the BSY bit to reset in Status Register
 	4. Clear the Overrun flag by reading DR and SR
 	************************************************/		
-	
+	//  SPI data register is 16 bits but incoming data is 8 bit
+  
+  wr16(RSPI3_CR2,  (7<<8));   // 16 bit transfer, Motorola format
+  
 	UINT i=0;
+  uint16_t* RD_pointer = (uint16_t*)RSPI3_DR_8;  // pointer to SPI data register
+  uint16_t data_16;
 	while (i<size)
-	{
-	   while (!((rd16(RSPI3_SR)&(1<<1)))) {};  // wait for TXE bit to set _ This will indicate that the buffer is empty
-	   wr16(RSPI3_DR, data[i]);  // load the data into the Data Register
-	   i++;
+	{ 
+     if (i == (size - 1)) {
+       data_16 = 0;
+       data_16 = data[i];
+     }
+     else {
+       data_16 = 0;
+       data_16 = (data[i] | (data[i+1] << 8));
+       i += 2;
+     }
+     
+     while (!((rd16(RSPI3_SR)&(1<<1)))) {};  // wait for TXE bit to set _ This will indicate that the buffer is empty
+     *RD_pointer = data_16;  // send the data
 	}	
 	
 	
 /*During discontinuous communications, there is a 2 APB clock period delay between the
-write operation to the SPI_DR register and BSY bit setting. As a consequence it is
+write operation to the SPI_DR_8 register and BSY bit setting. As a consequence it is
 mandatory to wait first until TXE is set and then until BSY is cleared after writing the last
 data.
 */
@@ -113,8 +127,10 @@ data.
 	while ((rd16(RSPI3_SR)&(1<<7))) {};  // wait for BSY bit to Reset _ This will indicate that SPI is not busy in communication	
 	
 	//  Clear the Overrun flag by reading DR and SR
-	BYTE temp = rd16(RSPI3_DR);
-					temp = rd16(RSPI3_SR);
+	data_16 = *RD_pointer;
+	data_16 = rd16(RSPI3_SR);
+  
+  wr16(RSPI3_CR2, ((1 << 12) | (7<<8)));   // back to 8 bit transfer mode, Motorola format
 	
 }
 
@@ -127,22 +143,31 @@ void SPI_Receive (BYTE *data, UINT size)
 	3. Wait for the RXNE bit to Set in the status Register
 	4. Read data from Data Register
 	************************************************/		
-
+  wr16(RSPI3_CR2,  (7<<8));   // 16 bit transfer, Motorola format
+  uint8_t* RD_pointer = (uint8_t*)RSPI3_DR_8;
+  // input array is data[0] ... data[size-1]
 	while (size)
 	{
 		while (((rd16(RSPI3_SR))&(1<<7))) {};  // wait for BSY bit to Reset _ This will indicate that SPI is not busy in communication
-		wr16(RSPI3_DR, 0);  // send dummy data
+		*RD_pointer = 0;  // send dummy data
 		while (!((rd16(RSPI3_SR)) &(1<<0))){};  // Wait for RXNE to set _ This will indicate that the Rx buffer is not empty
-	  *data++ = (rd16(RSPI3_DR));
-		size--;
+	  data[size - 1] = RD_pointer[0];
+    size--;
+    if (size != 0) {
+      data[size - 1] = RD_pointer[1];  // move MSB into data buffer if past the end
+      size--;
+    }
+    
 	}	
+  wr16(RSPI3_CR2, ((1 << 12) | (7<<8)));   // back to 8 bit transfer mode, Motorola format
 }
 
 BYTE SPI_Transfer(BYTE data) {
+  uint8_t* RD_pointer = (uint8_t*)RSPI3_DR_8;
   while (!((rd16(RSPI3_SR))&(1<<1))) {};  // wait for TXE bit to set _ This will indicate that the buffer is empty
-	wr16(RSPI3_DR, data);  // load the data into the Data Register
+  *RD_pointer =  data;  // load the data into the Data Register
   while (!((rd16(RSPI3_SR)) &(1<<0))){};  // Wait for RXNE to set _ This will indicate that the Rx buffer is not empty
-  return rd16(RSPI3_DR);
+  return *RD_pointer ;
 }
  
   
