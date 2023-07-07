@@ -36,7 +36,7 @@
 
 typedef BYTE	DSTATUS;
 
-BYTE SPI_Transfer(BYTE data);
+BYTE SPI_Transfer(uint16_t data);
 
 extern uint32_t k_ticks(void);
 
@@ -126,7 +126,7 @@ BYTE xchg_spi (
 
 
 /* Receive multiple byte */
-static
+__attribute__((weak))
 void rcvr_spi_multi (
 	BYTE *buff,		/* Pointer to data buffer */
 	UINT btr		/* Number of bytes to receive (even number) */
@@ -139,7 +139,7 @@ void rcvr_spi_multi (
 
 
 /* Send multiple byte */
-static
+__attribute__((weak))
 void xmit_spi_multi (
 	const BYTE *buff,	/* Pointer to the data */
 	UINT btx			/* Number of bytes to send (even number) */
@@ -201,10 +201,12 @@ int spiselect (void)	/* 1:OK, 0:Timeout */
 {
 	CS_LOW();		/* Set CS# low */
 	xchg_spi(0xFF);	/* Dummy clock (force DO enabled) */
-	if (wait_ready(500)) return 1;	/* Wait for card ready */
+//	if (wait_ready(500)) return 1;	/* Wait for card ready */
+//
+//	despiselect();
+//	return 0;	/* Timeout */
 
-	despiselect();
-	return 0;	/* Timeout */
+return 1;
 }
 
 
@@ -341,7 +343,17 @@ inline DSTATUS USER_SPI_initialize (
 
 	FCLK_SLOW();
 	for (n = 10; n; n--) xchg_spi(0xFF);	/* Send 80 dummy clocks */
-
+  //CS_LOW();
+  //WRITE_SD_SS_PIN(GPIO_PIN_RESET);
+  //uint8_t rcv_data[256];
+  //for (n = 255; n; n--) rcv_data[n] = xchg_spi(n);
+  //for (n = 255; n; n--) {
+  //  kprint("index: %2x   ", n);
+  //  kprint("rcv_data: %2x \n", rcv_data[n]);
+  //}
+  //while(1);
+  
+  
 	ty = 0;
 	if (send_cmd(CMD0, 0) == 1) {			/* Put the card SPI/Idle state */
 		SPI_Timer_On(1000);					/* Initialization timeout = 1 sec */

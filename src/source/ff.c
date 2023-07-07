@@ -34,7 +34,7 @@
 #error Wrong include file (ff.h).
 #endif
 
-//void kprint(const char *fmt, ...);  print routine for debug commands.
+void kprint(const char *fmt, ...);  //print routine for debug commands.
 
 /* ASCII code support macros */
 #define IsUpper(c)	((c) >= 'A' && (c) <= 'Z')
@@ -3026,7 +3026,7 @@ BYTE check_fs (	/* 0:FAT, 1:exFAT, 2:Valid BS but not FAT, 3:Not a BS, 4:Disk er
 #if FF_FS_EXFAT
 	if (!mem_cmp(fs->win + BS_JmpBoot, "\xEB\x76\x90" "EXFAT   ", 11)) {  	/* Check if exFAT VBR */
     SS(fs) = 1 << ld_word(fs->win + BPB_BytsPerSecEx);  // init sector size
-    //kprint("exFAT SS(fs): %d\n", SS(fs));
+    kprint("exFAT SS(fs): %d\n", SS(fs));
     // make sure sector size is valid
     if (!((SS(fs) == 512) | (SS(fs) == 1024) | (SS(fs) == 2048) | (SS(fs) == 4096) )) SS(fs) = 512;
     return 1; 	/* Check if exFAT VBR */
@@ -3111,7 +3111,7 @@ FRESULT find_volume (	/* FR_OK(0): successful, !=0: any error occurred */
 	/* Find an FAT partition on the drive. Supports only generic partitioning rules, FDISK and SFD. */
 	bsect = 0;
 	fmt = check_fs(fs, bsect);			/* Load sector 0 and check if it is an FAT-VBR as SFD */
-  //kprint("fmt_1: %d\n", fmt);  // debug
+  kprint("fmt_1: %d\n", fmt);  // debug
 	if (fmt == 2 || (fmt < 2 && LD2PT(vol) != 0)) {	/* Not an FAT-VBR or forced partition number */
 		for (i = 0; i < 4; i++) {		/* Get partition offset */
 			pt = fs->win + (MBR_Table + i * SZ_PTE);
@@ -3124,10 +3124,13 @@ FRESULT find_volume (	/* FR_OK(0): successful, !=0: any error occurred */
 			fmt = bsect ? check_fs(fs, bsect) : 3;	/* Check the partition */
 		} while (LD2PT(vol) == 0 && fmt >= 2 && ++i < 4);
     
-    //kprint("fmt_2: %d\n", fmt);  // debug
+    kprint("fmt_2: %d\n", fmt);  // debug
 	}
-	if (fmt == 4) return FR_DISK_ERR;		/* An error occured in the disk I/O layer */
-  //kprint("fmt_3: %d\n", fmt);  // debug
+	if (fmt == 4) {
+    kprint("fmt_4: %d\n", fmt);
+    return FR_DISK_ERR;		/* An error occured in the disk I/O layer */
+  }
+  kprint("fmt_3: %d\n", fmt);  // debug
 	//if (fmt >= 2) return FR_NO_FILESYSTEM;	/* No FAT volume is found */
 
 	/* An FAT volume is found (bsect). Following code initializes the filesystem object */
@@ -3180,16 +3183,16 @@ FRESULT find_volume (	/* FR_OK(0): successful, !=0: any error occurred */
 	} else
 #endif	/* FF_FS_EXFAT */
     {
-	  //kprint("ld_word(fs->win + BPB_BytsPerSec: %x\n", ld_word(fs->win + BPB_BytsPerSec));
-    //kprint("SS(fs): %x\n", SS(fs));
+	  kprint("ld_word(fs->win + BPB_BytsPerSec: %x\n", ld_word(fs->win + BPB_BytsPerSec));
+    kprint("SS(fs): %x\n", SS(fs));
     SS(fs) = ld_word(fs->win + BPB_BytsPerSec);
     // make sure sector size is valid
     if (!((SS(fs) == 512) | (SS(fs) == 1024) | (SS(fs) == 2048) | (SS(fs) == 4096) )) 
     {
-      //kprint("2 - invalid sector size, settings to 512, was %x\n", SS(fs));
+      kprint("2 - invalid sector size, settings to 512, was %x\n", SS(fs));
       SS(fs) = 512;
     }
-    //kprint("final SS(fs): %x\n", SS(fs));
+    kprint("final SS(fs): %x\n", SS(fs));
 
     
     if (ld_word(fs->win + BPB_BytsPerSec) != SS(fs)) return FR_NO_FILESYSTEM;	/* (BPB_BytsPerSec must be equal to the physical sector size) */

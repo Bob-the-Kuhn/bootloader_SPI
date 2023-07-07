@@ -77,6 +77,8 @@ void report_WP_ConfigProtection(void);
 
 void SPI_Transmit (BYTE *data, UINT size);
 
+void spiBegin(void);
+
 
 #define PGM_READ_WORD(x) *(x)
 
@@ -119,9 +121,11 @@ int main(void)
   LED_G1_ON();
   LED_G2_OFF(); 
   
-  SPIConfig();
-  SPI_GPIOConfig();
-  SPI_Enable();
+  //SPIConfig();
+  //SPI_GPIOConfig();
+  //SPI_Enable();
+  
+  spiBegin();  //softSPI
   
   sprintf(msg, "\nSYSCLK_Frequency %08lu\n", HAL_RCC_GetSysClockFreq());
   kprint(msg);
