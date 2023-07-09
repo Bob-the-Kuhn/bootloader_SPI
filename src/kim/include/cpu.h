@@ -33,15 +33,15 @@
 //#define R_FLASH_ACR     reg32(0x40023c00)
 
 /* disable interrupts */
-static inline void cpsid(void)
-{
-  __asm volatile ("cpsid i");
-}
+//static inline void cpsid(void)
+//{
+//  __asm volatile ("cpsid i");
+//}
 
 /* enable interrupts */
-static inline void cpsie(void)
-{
-  __asm volatile ("cpsie i");
-}
+//static inline void cpsie(void)
+//{
+//  __asm volatile ("cpsie i");
+//}
 
 #endif /* _CPU_H_ */

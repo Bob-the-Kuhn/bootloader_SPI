@@ -9,7 +9,7 @@
 #ifndef _KPRINT_H_
 #define _KPRINT_H_
 
-extern int putchar(int c);
+int putchar(int c);
 
 /* printf-like function */
 void kprint(const char *fmt, ...) __attribute__((format(printf,1,2)));

@@ -211,7 +211,7 @@ void GPIO_Init(void)
 static void main_boot(void)
 {
   
-  //report_WP_ConfigProtection();  
+  
   
   kprint("\nPower up, Boot started.\n");
   
@@ -228,6 +228,9 @@ static void main_boot(void)
   
   kprint("Entering Bootloader...\n");
   Bootloader_Init();
+  
+  report_WP_ConfigProtection();  
+  
   uint8_t temp_stat = Enter_Bootloader();
   if((temp_stat == ERR_FLASH) || (temp_stat == ERR_VERIFY)) Error_Handler();
   
@@ -322,7 +325,12 @@ uint8_t Enter_Bootloader(void)
   kprint("Software found on SD.\n");
   
   /* Check size of application found on SD card */
-  if(Bootloader_CheckSize(f_size(&SDFile)) != BL_OK)
+  app_size = f_size(&SDFile);
+  
+  sprintf(msg, "Application size: %8lX\nApplication end:  %8lX\n", app_size, app_size + APP_ADDRESS);
+  kprint(msg);
+  
+  if(Bootloader_CheckSize(app_size) != BL_OK)
   {
     kprint("Error: app on SD card is too large.\n");
     
@@ -357,7 +365,7 @@ uint8_t Enter_Bootloader(void)
       //}  
   
   /* Check for flash write protection of application area*/
-  if(~Bootloader_GetProtectionStatus() & WRITE_protection & APP_sector_mask) {  // F407 high bit says sector is protected
+  if(Bootloader_GetProtectionStatus()) {  
     kprint("Application space in flash is write protected.\n");
     if (IGNORE_WRITE_PROTECTION) {                              
       //        kprint("Press button to disable flash write protection...\n");
@@ -381,8 +389,9 @@ uint8_t Enter_Bootloader(void)
       SD_Eject();
       Magic_Location = Magic_BootLoader;  // flag that we should load the bootloader
                                           // after the next reset
+      WRITE_Prot_Old_Flag = WRITE_Prot_Original_flag;  // flag that protection was saved                                    
       save_WRP_state();  // save WRP state and set flag so can be restored later                                                                                  
-      if (Bootloader_ConfigProtection(WRITE_protection, APP_sector_mask, WP_SAVE) != BL_OK)   // sends system though reset - no more code executed unless there's an error 
+      if (Bootloader_ConfigProtection_Keep_Boot() != HAL_OK)   // sends system though reset - no more code executed unless there's an error 
         {
           kprint("Failed to set write protection.\n");
           kprint("Exiting Bootloader.\n");
@@ -444,7 +453,7 @@ uint8_t Enter_Bootloader(void)
       {
         //                kprint("Programming error at: %lu byte\n", (cntr * 8));
         char cmd[64];
-        sprintf(cmd, "  offset in file (byte):   %08lX\n", (cntr * 4));
+        sprintf(cmd, "  offset in file (byte):   %08lX\n", (cntr * 8));
         kprint(cmd);
         
         f_close(&SDFile);
@@ -467,7 +476,7 @@ uint8_t Enter_Bootloader(void)
   f_close(&SDFile);
   LED_ALL_OFF();
   kprint("Programming finished.\n");
-  sprintf(msg, "Flashed: %ld bytes.\n", (cntr * 4));
+  sprintf(msg, "Flashed: %ld bytes.\n", (cntr * 8));
   kprint(msg);
   
   
@@ -527,7 +536,7 @@ uint8_t Enter_Bootloader(void)
   f_close(&SDFile);
 #endif  
 #endif
-                   
+ #if 0                  
   LED_G1_OFF();
 
   #if defined(FILE_EXT_CHANGE) && (_LFN_UNICODE == 0)   // rename file if using ANSI/OEM strings
@@ -566,20 +575,20 @@ uint8_t Enter_Bootloader(void)
                                            // after the next reset
     }
   #endif
-
+#endif
  
   /* Eject SD card */
   SD_Eject();
   kprint("SD ejected.\n");
   
   /* Enable flash write protection on application area */
-#if(USE_WRITE_PROTECTION && !RESTORE_WRITE_PROTECTION)
-    kprint("Enabling flash write protection and generating system reset...\n");
-    if(Bootloader_ConfigProtection(BL_PROTECTION_WRP, APP_sector_mask, WP_DONT_SAVE) != BL_OK)   // sends system though reset - no more code executed unless there's an error
-    {
-      kprint("Failed to enable write protection.\n");
-
-    }
+  #if(USE_WRITE_PROTECTION && !RESTORE_WRITE_PROTECTION)
+    //kprint("Enabling flash write protection and generating system reset...\n");
+    //if(Bootloader_ConfigProtection(temp_wrp) != BL_OK)   // sends system though reset - no more code executed unless there's an error
+    //{
+    //  kprint("Failed to enable write protection.\n");
+    //
+    //}
   #endif
 
   /* Restore flash write protection */
@@ -589,7 +598,7 @@ uint8_t Enter_Bootloader(void)
       kprint("Restoring flash write protection and generating system reset...\n");
       //print("  May require power cycle to recover.\n");
 
-      if (Bootloader_ConfigProtection(Write_Prot_Old, APP_sector_mask, WP_DONT_SAVE) != BL_OK)  // sends system though reset - no more code executed unless there's an error
+      if (Bootloader_ConfigProtection_Set(wrp_old) != BL_OK)  // sends system though reset - no more code executed unless there's an error
       {
         kprint("Failed to restore write protection.\n");
       }

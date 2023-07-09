@@ -45,16 +45,54 @@ uint16_t APP_first_sector = 0; // first FLASH sector an application can be loade
 uint32_t APP_first_addr = 0;  // beginning address of first FLASH sector an application can be loaded into
 uint32_t APP_sector_mask = 0xFFFFFFFF;  // mask to not affect bootloader sectors,  defaults to removing write protection from all pages 
 uint32_t WRITE_protection = 0xFFFFFFFF;  // default to removing write protection from all pages 
+
 // force the following unintialized variables into a seperate section so they don't get overwritten
 // when the reset routine zeroes out the bss section       
 uint32_t __attribute__((section("no_init"))) WRITE_Prot_Old_Flag;  // flag if protection was removed (in case need to restore write protection)
 uint32_t __attribute__((section("no_init"))) Write_Prot_Old;
-// back to normal                 
+uint32_t __attribute__((section("no_init"))) wrp_old[4];  // array to hold original write protect settings
+uint8_t __attribute__((section("no_init"))) wrp1a_strt;
+uint8_t __attribute__((section("no_init"))) wrp1a_end;
+uint8_t __attribute__((section("no_init"))) wrp2a_strt;
+uint8_t __attribute__((section("no_init"))) wrp2a_end; 
+uint8_t __attribute__((section("no_init"))) wrp1b_strt;
+uint8_t __attribute__((section("no_init"))) wrp1b_end;
+uint8_t __attribute__((section("no_init"))) wrp2b_strt;
+uint8_t __attribute__((section("no_init"))) wrp2b_end; 
+uint8_t __attribute__((section("no_init"))) wrp1a_strt_original;
+uint8_t __attribute__((section("no_init"))) wrp1a_end_original;
+uint8_t __attribute__((section("no_init"))) wrp2a_strt_original;
+uint8_t __attribute__((section("no_init"))) wrp2a_end_original; 
+uint8_t __attribute__((section("no_init"))) wrp1b_strt_original;
+uint8_t __attribute__((section("no_init"))) wrp1b_end_original;
+uint8_t __attribute__((section("no_init"))) wrp2b_strt_original;
+uint8_t __attribute__((section("no_init"))) wrp2b_end_original; 
+// back to normal     
+
 uint32_t Magic_Location = Magic_BootLoader;  // flag to tell if to boot into bootloader or the application
 // provide method for assembly file to access #define values
 uint32_t MagicBootLoader = Magic_BootLoader;
 uint32_t MagicApplication = Magic_Application;
 uint32_t APP_ADDR = APP_ADDRESS;
+
+uint8_t last_boot_page;
+uint32_t app_size;
+
+
+
+uint32_t Bank1a_prot_start;
+uint32_t Bank1a_prot_end;
+uint32_t Bank2a_prot_start;
+uint32_t Bank2a_prot_end;
+uint32_t Bank1b_prot_start;
+uint32_t Bank1b_prot_end;
+uint32_t Bank2b_prot_start;
+uint32_t Bank2b_prot_end;
+
+//uint32_t temp_wrp[4] = { (1 | (2 << FLASH_WRP1AR_WRP1A_END_Pos)),  (3 | (4 << FLASH_WRP1BR_WRP1B_END_Pos)), 
+//                         (5 | (6 << FLASH_WRP2AR_WRP2A_END_Pos)),  (7 | (8 << FLASH_WRP2BR_WRP2B_END_Pos))};
+//
+uint32_t wrp_save[4]; 
 
 char msg[64];             
 
@@ -77,51 +115,99 @@ uint8_t Bootloader_Init(void)
     __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_ALL_SR_ERRORS);
     HAL_FLASH_Lock();
 
-    // STM32F103ZE has 256 pages of 2K bytes each
-    // pages 0-61 are write protected as pairs
-    // pages 62-251 are protected as a block
+    // STM32G0B1RE has 256 pages of 2K bytes each
     
-    // The protection is not affected if a page pair/block only has the bootloader in it.
-    // The protection is cleared if a page pair/block has only the application space in it
-    // The protection is cleared if a page pair/block has both the bootloader the application space in it
- 
-    
-    uint32_t mask = 1;  // mask for clearing write protect bits
-    for (uint16_t counter = 1; counter < FLASH_SIZE/FLASH_SECTOR_SIZE; counter++) {   // find 
-      if (!(counter % 2) && (counter <= 62)) mask = mask << 1; // move mask to left every 2 pages until past 62
-      APP_first_addr = ((counter * FLASH_SECTOR_SIZE) + FLASH_BASE);
-      if (BOOT_LOADER_END <= APP_first_addr) {
-        APP_first_sector = counter; 
-        APP_sector_mask |= mask;   // remove write protection on this page pair 
-        break;
-      }
-      else {
-        APP_sector_mask &= ~mask;  // don't touch write protection on pages with bootloader in it
-      }
-    }
-    
-    //sprintf(msg, "\nAPP_sector_mask %08lX\n", APP_sector_mask);
-    //kprint(msg);
-    // 
-    sprintf(msg, "\nBOOT_LOADER_END %08lX\n", BOOT_LOADER_END);
-    kprint(msg);
-    //sprintf(msg, "Lowest possible APP_ADDRESS is %08lX\n", APP_first_addr);
-    //kprint(msg);
- 
-    /* check APP_ADDRESS */
-    if (APP_ADDRESS & 0x1ff) {
-      kprint("ERROR - application address not on 512 byte boundary\n");
-      Error_Handler();
-    }
-    if (APP_ADDRESS < APP_first_addr) {
-      kprint("ERROR - application address within same sector as boot loader\n");
-      Error_Handler();
-    } 
-    
-    if (APP_OFFSET == 0) return BL_ERASE_ERROR;   // start of boot program
-    if (APP_first_sector == 0) return BL_ERASE_ERROR;   // application is within same sector as bootloader
+  // 512K bytes of FLASH in two banks
+  // 256 sectors/pages of 2K bytes each
+  // FLASH start 0800 0000
+  // bank1 - 0800 0000 - 0803 FFFF (sectors   0-127)
+  // bank2 - 0804 0000 - 0807 FFFF (sectors 128-255)
 
-    return BL_OK;
+  // Three sector/page lists:
+  //   boot: 0 through last_boot_page
+  //   wrp_bank1
+  //   wrp_bank2
+
+    
+  for (uint16_t counter = 0; counter < FLASH_SIZE/FLASH_SECTOR_SIZE; counter++) {   // find 
+    APP_first_addr = ((counter * FLASH_SECTOR_SIZE) + FLASH_BASE);
+    if (BOOT_LOADER_END <= APP_first_addr) {
+      APP_first_sector = counter; 
+      break;
+    }
+    else {
+       last_boot_page = counter;
+    }
+  }
+  
+  //sprintf(msg, "\nAPP_sector_mask %08lX\n", APP_sector_mask);
+  //kprint(msg);
+  // 
+  sprintf(msg, "\nBOOT_LOADER_END %08lX\n", BOOT_LOADER_END);
+  kprint(msg);
+  sprintf(msg, "Lowest possible APP_ADDRESS is %08lX\n", APP_first_addr);
+  kprint(msg);
+
+  /* check APP_ADDRESS */
+  if (APP_ADDRESS & 0x1ff) {
+    kprint("ERROR - application address not on 512 byte boundary\n");
+    Error_Handler();
+  }
+  if (APP_ADDRESS < APP_first_addr) {
+    kprint("ERROR - application address within same sector as boot loader\n");
+    Error_Handler();
+  } 
+  
+  if (APP_OFFSET == 0) return BL_ERASE_ERROR;   // start of boot program
+  if (APP_first_sector == 0) return BL_ERASE_ERROR;   // application is within same sector as bootloader
+
+  wrp1a_strt = (uint8_t)(rd32(R_FLASH_WRP1AR) & 0x03ff);
+  wrp1a_end  = (uint8_t)((rd32(R_FLASH_WRP1AR) >> 16) & 0x03ff);
+  wrp2a_strt = (uint8_t)(rd32(R_FLASH_WRP2AR) & 0x03ff);
+  wrp2a_end  = (uint8_t)((rd32(R_FLASH_WRP2AR) >> 16) & 0x03ff);
+  wrp1b_strt = (uint8_t)(rd32(R_FLASH_WRP1BR) & 0x03ff);
+  wrp1b_end  = (uint8_t)((rd32(R_FLASH_WRP1BR) >> 16) & 0x03ff);
+  wrp2b_strt = (uint8_t)(rd32(R_FLASH_WRP2BR) & 0x03ff);
+  wrp2b_end  = (uint8_t)((rd32(R_FLASH_WRP2BR) >> 16) & 0x03ff);
+
+  if (wrp1a_end < wrp1a_strt) {
+    Bank1a_prot_start = 0;
+    Bank1a_prot_end   = 0;
+  }
+  else {
+    Bank1a_prot_start = FLASH_BASE + (wrp1a_strt * FLASH_SECTOR_SIZE) ;
+    Bank1a_prot_end   =  FLASH_BASE + ((wrp1a_end + 1) * FLASH_SECTOR_SIZE) -1; 
+  }
+    
+  if (wrp2a_end < wrp2a_strt) {
+    Bank2a_prot_start = 0;
+    Bank2a_prot_end   = 0;
+  }
+  else {
+    Bank2a_prot_start = FLASH_BASE + ((wrp2a_strt + 128) * FLASH_SECTOR_SIZE);
+    Bank2a_prot_end   = FLASH_BASE + ((wrp2a_end + 128 + 1) * FLASH_SECTOR_SIZE) -1 ;
+  }  
+  
+  
+  if (wrp1b_end < wrp1b_strt) {
+    Bank1b_prot_start = 0;
+    Bank1b_prot_end   = 0;
+  }
+  else {
+    Bank1b_prot_start = FLASH_BASE + (wrp1b_strt * FLASH_SECTOR_SIZE) ;
+    Bank1b_prot_end   =  FLASH_BASE + ((wrp1b_end + 1) * FLASH_SECTOR_SIZE) -1; 
+  }
+    
+  if (wrp2b_end < wrp2b_strt) {
+    Bank2b_prot_start = 0;
+    Bank2b_prot_end   = 0;
+  }
+  else {
+    Bank2b_prot_start = FLASH_BASE + ((wrp2b_strt + 128) * FLASH_SECTOR_SIZE);
+    Bank2b_prot_end   = FLASH_BASE + ((wrp2b_end + 128 + 1) * FLASH_SECTOR_SIZE) -1 ;
+  } 
+  
+  return BL_OK;
 }
 
 /**
@@ -129,34 +215,103 @@ uint8_t Bootloader_Init(void)
  * @return Bootloader error code ::eBootloaderErrorCodes
  * @retval BL_OK: upon success
  * @retval BL_ERR: upon failure
+ *
+ * Each bank is erased seperately.
+ * 
  */
 uint8_t Bootloader_Erase(void)
 {
     uint32_t PageError;
     FLASH_EraseInitTypeDef pEraseInit;
     pEraseInit.TypeErase = FLASH_TYPEERASE_PAGES;  // erase pages mode
-    pEraseInit.Banks = 0;                          // don't care in erase pages mode    
-//    pEraseInit.PageAddress = APP_first_addr;       // address within first page to erase
-//    pEraseInit.NbPages =  FLASH_SIZE/FLASH_SECTOR_SIZE - APP_first_sector + 1;
-
+     
+    
+    uint8_t start_page = (APP_ADDRESS - FLASH_BASE)/FLASH_SECTOR_SIZE;
+    uint8_t nbpages = app_size/FLASH_SECTOR_SIZE; // number full pages occupied by application
+    if (app_size % FLASH_SECTOR_SIZE) nbpages++; // + 1 if have a partial page used
+    
+    sprintf(msg, "start_page       : %2X\n", start_page);
+    kprint(msg);
+    sprintf(msg, "nbpages          : %2X\n", nbpages);
+    kprint(msg);
+    
+    uint8_t start_page_bank_1;
+    uint8_t start_page_bank_2;
+    uint8_t nbpages_bank_1;
+    uint8_t nbpages_bank_2;
+    
+    if (start_page < 128) {
+      start_page_bank_1 = start_page;
+      if ((start_page + nbpages) <128) {  // application entirely within bank 1
+        start_page_bank_2 = 0;
+        nbpages_bank_1 = nbpages;
+        nbpages_bank_2 = 0;
+      }
+      else {                              // application in both banks 1 & 2
+        start_page_bank_2 = 0;
+        nbpages_bank_1 = 128 - start_page;
+        nbpages_bank_2 = nbpages - nbpages_bank_1 ;
+      }
+    }
+    else {                                // application only in bank 2
+      start_page_bank_1 = 0;
+      nbpages_bank_1 = 0;
+      start_page_bank_2 = start_page - 128;
+      nbpages_bank_2 = nbpages;
+    }
+    
+    sprintf(msg, "start_page_bank_1: %2X\nstart_page_bank_2: %2X\n", start_page_bank_1, start_page_bank_2);
+    kprint(msg);
+    sprintf(msg, "nbpages_bank_1:    %2X\nnbpages_bank_2:    %2X\n", nbpages_bank_1, nbpages_bank_2);
+    kprint(msg);
+    
     HAL_FLASH_Unlock();  
     
     LED_G1_ON(); 
     LED_G2_OFF();
-    #define NBPAGES (FLASH_SIZE/FLASH_SECTOR_SIZE - APP_first_sector)
-    #define FLASH_INCR 25  // number of pages to erase before reporting status
-    for (uint16_t count = 0; count < NBPAGES; count += FLASH_INCR) {
-      pEraseInit.Page = APP_first_addr + count * FLASH_SECTOR_SIZE;       // address within first page to erase
-      pEraseInit.NbPages = ((count + FLASH_INCR) < NBPAGES) ? 25 : (NBPAGES - count); // number pages to erase this loop
-      sprintf(msg, "Erasing page: %u\n", APP_first_sector + count);
-      LED_ALL_TG();
-      kprint(msg);
-      HAL_StatusTypeDef status = HAL_FLASHEx_Erase(&pEraseInit, &PageError);
-      if ((status != HAL_OK) | (PageError != 0xFFFFFFFF)) {
-        sprintf(msg, "ERROR: status:    %u\n", status);
+    
+    #define FLASH_INCR 1  // number of pages to erase before reporting status
+    
+    if (nbpages_bank_1) {
+     for (uint16_t count = 0; count <= nbpages_bank_1; count += FLASH_INCR) {
+        pEraseInit.Banks = FLASH_BANK_1;            
+        pEraseInit.Page = start_page_bank_1 + count;       // first page # to erase
+        pEraseInit.NbPages = ((count + FLASH_INCR) < nbpages_bank_1) ? FLASH_INCR : (nbpages_bank_1 - count); // number pages to erase this loop
+        sprintf(msg, "Erasing bank 1, page: %02X\n", start_page_bank_1 + count);
+        LED_ALL_TG();
         kprint(msg);
-        sprintf(msg, "ERROR: PageError: %08lX\n", PageError);
+        HAL_StatusTypeDef status = HAL_FLASHEx_Erase(&pEraseInit, &PageError);
+     uint32_t* flash_addr = (uint32_t *)(((start_page_bank_1 + count) *FLASH_SECTOR_SIZE) + FLASH_BASE);
+     uint32_t flash_data = *flash_addr; // read first word of just erased page
+     sprintf(msg, "count: %02X  flash_addr: %08lX  flash_data: %08lX\n", count, flash_addr, flash_data);
+     kprint(msg);
+     //sprintf(msg, "FLASH_SECTOR_SIZE: %08lX\n", FLASH_SECTOR_SIZE);
+     //kprint(msg);
+        
+        if ((status != HAL_OK) | (PageError != 0xFFFFFFFF)) {
+          sprintf(msg, "ERROR: status:    %u\n", status);
+          kprint(msg);
+          sprintf(msg, "ERROR: PageError: %08lX\n", PageError);
+          kprint(msg);
+        }
+      }
+    }
+    
+    if (nbpages_bank_2) {
+     for (uint16_t count = 0; count <= nbpages_bank_2; count += FLASH_INCR) {
+       pEraseInit.Banks = FLASH_BANK_2; 
+        pEraseInit.Page = start_page_bank_2 + count;       // first page # to erase
+        pEraseInit.NbPages = ((count + FLASH_INCR) < nbpages_bank_2) ? FLASH_INCR : (nbpages_bank_2 - count); // number pages to erase this loop
+        sprintf(msg, "Erasing bank 2, page: %u\n", start_page_bank_2 + count);
+        LED_ALL_TG();
         kprint(msg);
+        HAL_StatusTypeDef status = HAL_FLASHEx_Erase(&pEraseInit, &PageError);
+        if ((status != HAL_OK) | (PageError != 0xFFFFFFFF)) {
+          sprintf(msg, "ERROR: status:    %u\n", status);
+          kprint(msg);
+          sprintf(msg, "ERROR: PageError: %08lX\n", PageError);
+          kprint(msg);
+        }
       }
     }
     
@@ -340,19 +495,83 @@ uint8_t Bootloader_FlashEnd(void)
 }
 
 /**
- * @brief  This function returns the protection status of flash.
- * @return Flash protection status ::eFlashProtectionTypes
+ * @brief  This function returns the protection status of the application area flash.
+ * @return true if application area is protected
  */
-uint32_t Bootloader_GetProtectionStatus(void)
+uint8_t Bootloader_GetProtectionStatus(void)
   {
-    FLASH_OBProgramInitTypeDef OBStruct = {0};
+  #define WITHIN(N,L,H)       ((N) >= (L) && (N) <= (H))
+  
+  if (app_size) {
+    
+    uint8_t last_app_page = ((app_size/FLASH_SECTOR_SIZE) + last_boot_page);
+    if (app_size % FLASH_SECTOR_SIZE) last_app_page++;  // include partial page
+    
+    if (wrp1a_end >= wrp1a_strt) {
+      // CASE A - wrp1a starts in app area
+      if (WITHIN(wrp1a_strt, last_boot_page + 1, last_app_page)) {
+        return 1;
+      }
+      // CASE B - wrp1a ends in application area
+      if (WITHIN(wrp1a_end, last_boot_page + 1, last_app_page)) {
+        return 1;
+      }
+      // CASE C - application entirely within wrp1a
+      if (WITHIN(last_app_page, wrp1a_strt, wrp1a_end)) {
+        return 1;
+      }
+    }  // end wrp1a
 
-    HAL_FLASH_Unlock();
+    
+    if (wrp1b_end >= wrp1b_strt) {
+      // CASE A - wrp1b starts in app area
+      if (WITHIN(wrp1b_strt, last_boot_page + 1, last_app_page)) {
+        return 1;
+      }
+      // CASE B - wrp1b ends in application area
+      if (WITHIN(wrp1b_end, last_boot_page + 1, last_app_page)) {
+        return 1;
+      }
+      // CASE C - application entirely within wrp1b
+      if (WITHIN(last_app_page, wrp1b_strt, wrp1b_end)) {
+        return 1;
+      }
+    }  // end wrp1b
 
-    HAL_FLASHEx_OBGetConfig(&OBStruct);
-    HAL_FLASH_Lock();
- //   return OBStruct.WRPPage;  // 1 means NOT write protected
-    return  0;
+      
+    if (wrp2a_end >= wrp2a_strt) {
+      // CASE A - wrp2a starts in app area
+      if (WITHIN(wrp2a_strt + 128, last_boot_page + 1, last_app_page)) {
+        return 1;
+      }
+      // CASE B - wrp2a ends in application area
+      if (WITHIN(wrp2a_end + 128, last_boot_page + 1, last_app_page)) {
+        return 1;
+      }
+      // CASE C - application entirely within wrp2a
+      if (WITHIN(last_app_page, wrp2a_strt + 128, wrp2a_end + 128)) {
+        return 1;
+      }
+    }  // end wrp2a
+   
+      
+    if (wrp2b_end >= wrp2b_strt) {
+      // CASE A - wrp2b starts in app area
+      if (WITHIN(wrp2b_strt + 128, last_boot_page + 1, last_app_page)) {
+        return 1;
+      }
+      // CASE B - wrp2b ends in application area
+      if (WITHIN(wrp2b_end + 128, last_boot_page + 1, last_app_page)) {
+        return 1;
+      }
+      // CASE C - application entirely within wrp2b
+      if (WITHIN(last_app_page, wrp2b_strt + 128, wrp2b_end + 128)) {
+        return 1;
+      }
+    }  // end wrp2b
+
+  }  // app size
+  return 0;
 }
 
 // debug helper routine
@@ -370,267 +589,12 @@ const char *byte_to_binary (uint32_t x)
     return b;
 }
 
-#if 0
-/********************************************************************
- * The following code is based on ST's STM32 library.
- * 
- * It has been modified so that setting and clearing the write protect
- * option bits is done in a single pass.
- * 
- * Process overview:
- *   1) save existing DATA and USER bytes
- *   2) erase option bytes
- *        This routine saves & restores the RDP byte.
- *   3) restore the DATA and USER bytes
- *   4) program the WRP bytes
- * 
- *  It does NOT save the compliments of the bytes.
- * 
- */
-
-
-static HAL_StatusTypeDef FLASH_OB_ProgramOB_byte(uint32_t Address, uint8_t Data)
-{
-  HAL_StatusTypeDef status = HAL_ERROR;
-  
-  /* Wait for last operation to be completed */
-  status = FLASH_WaitForLastOperation((uint32_t)FLASH_TIMEOUT_VALUE);
-  
-  if(status == HAL_OK)
-  {
-    /* Clean the error context */
-    //pFlash.ErrorCode = HAL_FLASH_ERROR_NONE;
-
-    /* Enables the Option Bytes Programming operation */
-    SET_BIT(FLASH->CR, FLASH_CR_OPTPG); 
-    *(__IO uint16_t*)Address = Data;
-    
-    /* Wait for last operation to be completed */
-    status = FLASH_WaitForLastOperation((uint32_t)FLASH_TIMEOUT_VALUE);
-    
-    /* If the program operation is completed, disable the OPTPG Bit */
-    CLEAR_BIT(FLASH->CR, FLASH_CR_OPTPG);
-  }
-  /* Return the Option Byte Data Program Status */
-  return status;
-}
-
- 
-HAL_StatusTypeDef _HAL_FLASHEx_OBProgram_WRP(uint32_t WRP_bits) { 
-  
-//  sprintf(msg,"WRP_bits               %08lX\n", WRP_bits);
-                                                                    
-//  kprint(msg);
-  
-  
-  HAL_StatusTypeDef status = HAL_OK;
-
-  status = HAL_FLASH_Unlock();
-  status |= HAL_FLASH_OB_Unlock();  // unlock option bytes
-                                                         
-  
-  if (status != HAL_OK) {kprint("unlock error\n"); goto QUIT;}
-                                                                      
-                 
-  
-  volatile uint8_t* OB_BLOCK = (uint8_t*)0x1FFFF800UL; // pointer to option byte block
-        
-  
-  // save option bytes we won't be messing with
-  //uint8_t RDP   = *OB_BLOCK;  // don't mess with RDP - erase routine saves & stores it
-  uint8_t USER  = *(OB_BLOCK + 2);
-  uint8_t Data0 = *(OB_BLOCK + 4);
-  uint8_t Data1 = *(OB_BLOCK + 6);
-  
-  // breakup WRP into bytes
-  uint8_t WRP0 = (uint8_t) WRP_bits;
-  uint8_t WRP1 = (uint8_t) (WRP_bits >> 8);
-  uint8_t WRP2 = (uint8_t) (WRP_bits >> 16);
-  uint8_t WRP3 = (uint8_t) (WRP_bits >> 24);
-
-  status |= FLASH_WaitForLastOperation((uint32_t)FLASH_TIMEOUT_VALUE);
-  
-  if (status != HAL_OK) {
-    kprint("FLASH_TIMEOUT error\n"); 
-    // goto QUIT;  // try to restore the OB block no matter what
-  }
-  
- 
-  if(FLASH->CR & 1) {
-    FLASH->CR &= 0xFFFFFFFE;  // clear out the PE bit
-                                                                                                  
-  }
-  
-  status |= HAL_FLASHEx_OBErase();  // erase OB block
-  
-  if (status != HAL_OK) {
-    kprint("erase OB block error\n"); 
-//    FLASH_WaitForLastOperation((uint32_t)FLASH_TIMEOUT_VALUE);
-//    status = HAL_FLASHEx_OBErase();  // erase OB block
-//    if (status != HAL_OK) {
-//      kprint("erase OB block error 2\n");
-//    }
-//    else {
-//      status = HAL_OK;
-//    }
-//    
-    // goto QUIT;  // try to restore the OB block no matter what
-  }
-  
-  status |= FLASH_WaitForLastOperation((uint32_t)FLASH_TIMEOUT_VALUE);
-  
-  
-  if (status != HAL_OK) {
-    kprint("WaitForLastOperation error\n"); 
-    sprintf(msg,"erase error - HAL status:          %02X\n", status);
-    kprint(msg);
-    sprintf(msg,"FLASH status register:          %08lX\n", FLASH->SR);
-    kprint(msg);
-    // goto QUIT;  // try to restore the OB block no matter what
-  }   
-  
-  uint32_t timeout = FLASH_TIMEOUT_VALUE;
-
-  status |= FLASH_OB_ProgramOB_byte(0x1FFFF802, USER);
-  status |= FLASH_WaitForLastOperation((uint32_t)FLASH_TIMEOUT_VALUE);
-  k_delay(10);
-
-  status |= FLASH_OB_ProgramOB_byte(0x1FFFF804, Data0);
-  status |= FLASH_WaitForLastOperation((uint32_t)FLASH_TIMEOUT_VALUE);
-  k_delay(10);
-
-  status |= FLASH_OB_ProgramOB_byte(0x1FFFF806, Data1);
-  status |= FLASH_WaitForLastOperation((uint32_t)FLASH_TIMEOUT_VALUE);
-  k_delay(10);
-
-  status |= FLASH_OB_ProgramOB_byte(0x1FFFF808, WRP0);
-  status |= FLASH_WaitForLastOperation((uint32_t)FLASH_TIMEOUT_VALUE);
-  k_delay(10);
-
-  status |= FLASH_OB_ProgramOB_byte(0x1FFFF80A, WRP1);
-  status |= FLASH_WaitForLastOperation((uint32_t)FLASH_TIMEOUT_VALUE);
-  k_delay(10);
-
-  status |= FLASH_OB_ProgramOB_byte(0x1FFFF80C, WRP2);
-  status |= FLASH_WaitForLastOperation((uint32_t)FLASH_TIMEOUT_VALUE);
-  k_delay(10);
-
-  status |= FLASH_OB_ProgramOB_byte(0x1FFFF80E, WRP3);
-  status |= FLASH_WaitForLastOperation((uint32_t)FLASH_TIMEOUT_VALUE);
-
-
-  if (HAL_GetTick() >= timeout) {kprint("timeout - WRP3\n"); goto QUIT;}
-  
-  if (status != HAL_OK) kprint("program byte error\n"); 
-  
-  status |= HAL_FLASH_OB_Lock();
-  status |= HAL_FLASH_Lock();
-  
-  if (status != HAL_OK) kprint("lock error\n");
-  
-  ////uint8_t _RDP   = *OB_BLOCK;
-  //uint8_t _USER  = *(OB_BLOCK + 2);
-  //uint8_t _Data0 = *(OB_BLOCK + 4);
-  //uint8_t _Data1 = *(OB_BLOCK + 6);
-  //uint8_t _WRP0  = *(OB_BLOCK + 8);
-  //uint8_t _WRP1  = *(OB_BLOCK + 10);
-  //uint8_t _WRP2  = *(OB_BLOCK + 12);
-  //uint8_t _WRP3  = *(OB_BLOCK + 14);
-  
-  //sprintf(msg,"WRP read back          %02X%02X%02X%02X\n", _WRP3, _WRP2, _WRP1, _WRP0);
-  //kprint(msg);
-  
-  //////if (RDP   != _RDP)   while(1){};
-  //if (USER  != _USER)  FLASH_OB_ProgramOB_byte(0x1FFFF802, USER);
-  //if (Data0 != _Data0) FLASH_OB_ProgramOB_byte(0x1FFFF804, Data0);
-  //if (Data1 != _Data1) FLASH_OB_ProgramOB_byte(0x1FFFF806, Data1);
-  //if (WRP0  != _WRP0)  FLASH_OB_ProgramOB_byte(0x1FFFF808, WRP0);
-  //if (WRP1  != _WRP1)  FLASH_OB_ProgramOB_byte(0x1FFFF80A, WRP1);
-  //if (WRP2  != _WRP2)  FLASH_OB_ProgramOB_byte(0x1FFFF80C, WRP2);
-  //if (WRP3  != _WRP3)  FLASH_OB_ProgramOB_byte(0x1FFFF80E, WRP3);
-  //
-  //_WRP0  = *(OB_BLOCK + 8);
-  //_WRP1  = *(OB_BLOCK + 10);
-  //_WRP2  = *(OB_BLOCK + 12);
-  //_WRP3  = *(OB_BLOCK + 14);
-  //
-  //
-  //sprintf(msg,"WRP read back          %02X%02X%02X%02X\n", _WRP3, _WRP2, _WRP1, _WRP0);
-  //kprint(msg);
-  
- QUIT: 
-  status |= HAL_FLASH_OB_Lock();
-  status |= HAL_FLASH_Lock();
-  
-  return status;
-}
-    
-  #endif
-  
-/**
- * @brief  This function configures the write protection of flash.
- * @param  protection: desired protection: '1' - no protection, '0' write protect
- *         mask: '1' - program per protection , '0' don't touch this bit
- *         set: unused
- * @return Bootloader error code ::eBootloaderErrorCodes
- * @retval BL_OK: upon success
- * @retval BL_OBP_ERROR: upon failure
- *
- * 
- * Setting the protection is a three step process
- *   1) Determine final protection
- *   2) Invoke _HAL_FLASH_OB_Launch()
- *   3) Send the system through reset so that the new settings take effect
- * 
- */
-
-uint8_t Bootloader_ConfigProtection(uint32_t protection, uint32_t mask, uint8_t set)
-{
-#if 0  
-  FLASH_OBProgramInitTypeDef OBStruct = {0};
-  HAL_StatusTypeDef status = HAL_ERROR;
-
-  status = HAL_FLASH_Unlock();
-  status |= HAL_FLASH_OB_Unlock();
-  
-  //sprintf(msg,"requested protection:  %08lX\n", protection);
-  //kprint(msg);
-  //
-  //sprintf(msg,"mask:                  %08lX\n", mask);
-  //kprint(msg);
-  
-  HAL_FLASHEx_OBGetConfig(&OBStruct);  // get current FLASH config
-  uint32_t WRPSector_save = OBStruct.WRPPage;
-  uint32_t final_protection = (protection & mask) | (WRPSector_save & ~mask);
-  
-  //sprintf(msg,"final_protection:      %08lX\n", final_protection);
-  //kprint(msg);
-  //
-  //
-  //sprintf(msg,"reported protection:   %08lX\n", WRPSector_save);
-  //kprint(msg);
-  
-  status |= HAL_FLASH_OB_Lock();
-  status |= HAL_FLASH_Lock();
-  
-  status = _HAL_FLASHEx_OBProgram_WRP(final_protection );  // set protection of affected sectors
-  
-
-  HAL_FLASH_OB_Launch();      // sends system through reset which loads the OB bytes into the registers  
-
-  return (status == HAL_OK) ? BL_OK : BL_OBP_ERROR;
-#endif
-return BL_OK;
-}
-
-#if 0   //  standard library
 
 /**
  * @brief  This function configures the write protection of flash.
  * @param  protection: protection type ::eFlashProtectionTypes
- * @return Bootloader error code ::eBootloaderErrorCodes
- * @retval BL_OK: upon success
- * @retval BL_OBP_ERROR: upon failure
+ * @retval BL_OK: 
+
  *
  * Setting the protection is a five step process
  *   1) Determine final proection
@@ -640,108 +604,332 @@ return BL_OK;
  *   5) Send the system through reset so that the new settings take effect
  * 
  */
-uint8_t Bootloader_ConfigProtection(uint32_t protection, uint32_t mask, uint8_t save) {  
-  FLASH_OBProgramInitTypeDef OBStruct = {0};
-  HAL_StatusTypeDef status            = HAL_ERROR;
+ 
+uint8_t Bootloader_ConfigProtection_Set(uint32_t *data) {  
+   /*           @arg @ref OB_WRPAREA_ZONE_A Flash Zone A
+  *           @arg @ref OB_WRPAREA_ZONE_B Flash Zone B
+  *           @arg @ref OB_WRPAREA_ZONE2_A Flash Bank 2 Zone A (*)
+  *           @arg @ref OB_WRPAREA_ZONE2_B Flash Bank 2 Zone B (*)
+  * @note  (*) availability depends on devices
+  * @param  WRPStartOffset  Specifies the start page of the write protected area
+  *         This parameter can be page number between 0 and (max number of pages in the Flash Bank - 1)
+  * @param  WRDPEndOffset  Specifies the end page of the write protected area
+  *         This parameter can be page number between WRPStartOffset and (max number of pages in the Flash Bank - 1)
+  * @retval None
+  */
+//FLASH_OB_WRPConfig(OB_WRPAREA_ZONE_A, 5, 20);
+//FLASH_OB_WRPConfig(OB_WRPAREA_ZONE_B, 45, 90);
 
-  status = HAL_FLASH_Unlock();
-  status |= HAL_FLASH_OB_Unlock();
+//FLASH_OBProgramInitTypeDef pOBInit ={0};
+//HAL_FLASHEx_OBGetConfig(&pOBInit);
+//
+//pOBInit.OptionType = OPTIONBYTE_WRP;
+//pOBInit.WRPArea = OB_WRPAREA_ZONE_A; // OB_WRPAREA_ZONE_A, OB_WRPAREA_ZONE_B , OB_WRPAREA_ZONE2_A, OB_WRPAREA_ZONE2_B
+//pOBInit.WRPStartOffset = 0x7f;  //  zero based sector/page number
+//pOBInit.WRPEndOffset = 0; 
+
+ HAL_FLASH_Unlock();
+ HAL_FLASH_OB_Unlock();
+ while( rd32(R_FLASH_SR) & FLASH_SR_BSY1);  // wait until BSY1 is inactive before programming
+ 
+// #define FLASH_WRP_START_MSK 0x7F
+// #define FLASH_WRP_END_MSK   (0x7F << 16)
+// 
+//and32(R_FLASH_WRP1AR, ~(FLASH_WRP_START_MSK | FLASH_WRP_END_MSK));          // clear out start & end bits (but leave others unaffected)
+//or32(R_FLASH_WRP1AR , data[0] & (FLASH_WRP_START_MSK | FLASH_WRP_END_MSK)); // write new start & end bits (but leave others unaffected)
+//and32(R_FLASH_WRP1BR , ~(FLASH_WRP_START_MSK | FLASH_WRP_END_MSK));         // clear out start & end bits (but leave others unaffected)
+//or32(R_FLASH_WRP1BR , data[1] & (FLASH_WRP_START_MSK | FLASH_WRP_END_MSK)); // write new start & end bits (but leave others unaffected)
+//and32(R_FLASH_WRP2AR , ~(FLASH_WRP_START_MSK | FLASH_WRP_END_MSK));         // clear out start & end bits (but leave others unaffected)
+//or32(R_FLASH_WRP2AR , data[2] & (FLASH_WRP_START_MSK | FLASH_WRP_END_MSK)); // write new start & end bits (but leave others unaffected)
+//and32(R_FLASH_WRP2BR , ~(FLASH_WRP_START_MSK | FLASH_WRP_END_MSK));         // clear out start & end bits (but leave others unaffected)
+//or32(R_FLASH_WRP2BR , data[3] & (FLASH_WRP_START_MSK | FLASH_WRP_END_MSK)); // write new start & end bits (but leave others unaffected)
+ 
+ //and32(R_FLASH_WRP1AR, ~(FLASH_WRP1AR_WRP1A_STRT | FLASH_WRP1AR_WRP1A_END));          // clear out start & end bits (but leave others unaffected)
+ //or32(R_FLASH_WRP1AR , data[0] & (FLASH_WRP1AR_WRP1A_STRT | FLASH_WRP1AR_WRP1A_END)); // write new start & end bits (but leave others unaffected)
+ //and32(R_FLASH_WRP1BR , ~(FLASH_WRP1BR_WRP1B_STRT | FLASH_WRP1BR_WRP1B_END));          // clear out start & end bits (but leave others unaffected)
+ //or32(R_FLASH_WRP1BR , data[1] & (FLASH_WRP1BR_WRP1B_STRT | FLASH_WRP1BR_WRP1B_END)); // write new start & end bits (but leave others unaffected)
+ //and32(R_FLASH_WRP2AR , ~(FLASH_WRP2AR_WRP2A_STRT | FLASH_WRP2AR_WRP2A_END));          // clear out start & end bits (but leave others unaffected)
+ //or32(R_FLASH_WRP2AR , data[2] & (FLASH_WRP2AR_WRP2A_STRT | FLASH_WRP2AR_WRP2A_END)); // write new start & end bits (but leave others unaffected)
+ //and32(R_FLASH_WRP2BR , ~(FLASH_WRP2BR_WRP2B_STRT | FLASH_WRP2BR_WRP2B_END));          // clear out start & end bits (but leave others unaffected)
+ //or32(R_FLASH_WRP2BR , data[3] & (FLASH_WRP2BR_WRP2B_STRT | FLASH_WRP2BR_WRP2B_END)); // write new start & end bits (but leave others unaffected)
+ 
+ // TRY 16 BIT ACCESS
   
-  HAL_FLASHEx_OBGetConfig(&OBStruct);  // get current FLASH config
-  
-  uint32_t WRPSector_save = OBStruct.WRPPage;
-  OBStruct.OptionType = OPTIONBYTE_WRP;       //  enable changing write protection
-  if (save) Write_Prot_Old = WRPSector_save;   // save current FLASH protect incase we do a restore later
-    
-    uint32_t final_protection = (protection & mask) | (WRPSector_save & ~mask); // keep protection of bootloader area
-    
-    //sprintf(msg,"\nsave flag: %0u\n", save);
-    //kprint(msg);
-    //sprintf(msg,"requested protection:  %08lX\n", protection);
-    //kprint(msg);
-    //
-    //sprintf(msg,"mask:                  %08lX\n", mask);
-    //kprint(msg);
-    //
-    //sprintf(msg,"final protection:      %08lX\n", final_protection);
-    //kprint(msg);
-    //
-    //sprintf(msg,"reported protection:   %08lX\n", WRPSector_save);
-    //kprint(msg);
-    
-    
-    if (save) {  // only removing write protection
-    
-    OBStruct.WRPState = OB_WRPSTATE_DISABLE;    // clear/disable write protection
-    OBStruct.WRPPage = final_protection;            // select affected sectors
-    status = HAL_FLASHEx_OBProgram(&OBStruct);  // write 
-    
-    //HAL_FLASHEx_OBGetConfig(&OBStruct);  // get current FLASH config
-    //sprintf(msg,"after disable:         %08lX\n", OBStruct.WRPPage);
-    //kprint(msg);
-    
-  }
-  else {
+ //and16(R_FLASH_WRP1AR_STRT, (uint16_t)~(FLASH_WRP1AR_WRP1A_STRT));                    // clear out start bits (but leave others unaffected)
+ //or16(R_FLASH_WRP1AR_STRT , (uint16_t)(data[0] & (FLASH_WRP1AR_WRP1A_STRT)));         // write new start bits (but leave others unaffected)
+ //and16(R_FLASH_WRP1BR_STRT , (uint16_t)~(FLASH_WRP1BR_WRP1B_STRT ));                  // clear out start bits (but leave others unaffected)
+ //or16(R_FLASH_WRP1BR_STRT , (uint16_t)(data[1] & (FLASH_WRP1BR_WRP1B_STRT)));         // write new start bits (but leave others unaffected)
+ //and16(R_FLASH_WRP2AR_STRT , (uint16_t)~(FLASH_WRP2AR_WRP2A_STRT));                   // clear out start bits (but leave others unaffected)
+ //or16(R_FLASH_WRP2AR_STRT , (uint16_t)(data[2] & (FLASH_WRP2AR_WRP2A_STRT)));         // write new start bits (but leave others unaffected)
+ //and16(R_FLASH_WRP2BR_STRT , (uint16_t)~(FLASH_WRP2BR_WRP2B_STRT));                   // clear out start bits (but leave others unaffected)
+ //or16(R_FLASH_WRP2BR_STRT , (uint16_t)(data[3] & (FLASH_WRP2BR_WRP2B_STRT)));         // write new start bits (but leave others unaffected)
+ 
+ // wr16(R_FLASH_WRP1AR_STRT , (uint16_t)(data[0] & (FLASH_WRP1AR_WRP1A_STRT)));         // write new start bits (but leave others unaffected)
+ // wr16(R_FLASH_WRP1BR_STRT , (uint16_t)(data[1] & (FLASH_WRP1BR_WRP1B_STRT)));         // write new start bits (but leave others unaffected)
+ // wr16(R_FLASH_WRP2AR_STRT , (uint16_t)(data[2] & (FLASH_WRP2AR_WRP2A_STRT)));         // write new start bits (but leave others unaffected)
+ // wr16(R_FLASH_WRP2BR_STRT , (uint16_t)(data[3] & (FLASH_WRP2BR_WRP2B_STRT)));         // write new start bits (but leave others unaffected)
 
-    OBStruct.WRPState = OB_WRPSTATE_ENABLE;     // set/activate write protection;
-    OBStruct.WRPPage = ~final_protection;       // select affected sectors
-    status |= HAL_FLASHEx_OBProgram(&OBStruct);  // write 
-    
-    //HAL_FLASHEx_OBGetConfig(&OBStruct);  // get current FLASH config
-    //sprintf(msg,"after enable:          %08lX\n", OBStruct.WRPPage);
-    //kprint(msg);
-    
-  }
-  if(status == HAL_OK)
-  {
-    if (save) {
-      kprint("write protection removed\n");
-      WRITE_Prot_Old_Flag = WRITE_Prot_Original_flag;  // flag that protection was removed so can 
-    }  
-    else {
-      kprint("write protection restored\n");
-      WRITE_Prot_Old_Flag = WRITE_Prot_Old_Flag_Restored_flag;  // flag that protection was restored so won't 
-                                                                // try to save write protection after next reset)
-    }                                       
+//FLASH->WRP1AR = 0;  // neither changed
+// works!
+uint8_t* wrp1ar_strt_ptr = (uint8_t*)0x4002202C;
+uint8_t* wrp1ar_end_ptr  = (uint8_t*)0x4002202E;
+uint8_t* wrp1br_strt_ptr = (uint8_t*)0x40022030;
+uint8_t* wrp1br_end_ptr  = (uint8_t*)0x40022032;
+uint8_t* wrp2ar_strt_ptr = (uint8_t*)0x4002204C;
+uint8_t* wrp2ar_end_ptr  = (uint8_t*)0x4002204E;
+uint8_t* wrp2br_strt_ptr = (uint8_t*)0x40022050;
+uint8_t* wrp2br_end_ptr  = (uint8_t*)0x40022052;
 
-      HAL_FLASH_OB_Launch();        //  this is needed plus still need to go through reset  
-      
-      //HAL_FLASHEx_OBGetConfig(&OBStruct);  // get current FLASH config
-      //sprintf(msg,"after OB_Launch:       %08lX\n", OBStruct.WRPPage);
-      //kprint(msg);
-      
-      
-      //NVIC_System_Reset();                  // send the system through reset so Flash Option Bytes get loaded
-      HAL_FLASH_OB_Launch();      // sends system through reset which loads the OB bytes into the registers 
-  }
+#define FLASH_WRP_MSK 0x0000007F   
 
-  status |= HAL_FLASH_OB_Lock();
-  status |= HAL_FLASH_Lock();
+*wrp1ar_strt_ptr = (uint8_t)(data[0] & FLASH_WRP_MSK); 
+*wrp1ar_end_ptr  = (uint8_t)((data[0] >> 16) & FLASH_WRP_MSK); 
+*wrp1br_strt_ptr = (uint8_t)(data[1] & FLASH_WRP_MSK); 
+*wrp1br_end_ptr  = (uint8_t)((data[1] >> 16) & FLASH_WRP_MSK);
+*wrp2ar_strt_ptr = (uint8_t)(data[2] & FLASH_WRP_MSK); 
+*wrp2ar_end_ptr  = (uint8_t)((data[2] >> 16) & FLASH_WRP_MSK);
+*wrp2br_strt_ptr = (uint8_t)(data[3] & FLASH_WRP_MSK); 
+*wrp2br_end_ptr  = (uint8_t)((data[3] >> 16) & FLASH_WRP_MSK);
 
-  return (status == HAL_OK) ? BL_OK : BL_OBP_ERROR;
+
+//FLASH_OBProgramInitTypeDef pOBInit ={0};
+//HAL_FLASHEx_OBGetConfig(&pOBInit);
+//
+//pOBInit.OptionType = OPTIONBYTE_WRP;
+//pOBInit.WRPArea = OB_WRPAREA_ZONE_A; // OB_WRPAREA_ZONE_A, OB_WRPAREA_ZONE_B , OB_WRPAREA_ZONE2_A, OB_WRPAREA_ZONE2_B
+//pOBInit.WRPStartOffset = 0x2;  //  zero based sector/page number
+//pOBInit.WRPEndOffset = 0x4; 
+//
+//HAL_FLASHEx_OBProgram(&pOBInit);
+//
+ or32(R_FLASH_CR , FLASH_CR_OPTSTRT);   //starts option byte programming
+ while( rd32(R_FLASH_SR) & FLASH_SR_BSY1);  // wait until BSY1 is inactive
+ or32(R_FLASH_CR , FLASH_CR_OBL_LAUNCH);  //sends system through reset which makes the new option bytes active.
+ HAL_FLASH_OB_Lock();   // should never be executed
+ HAL_FLASH_Lock();   // should never be executed
+
+ return BL_OK;
 }
-#endif  // standard library
+
+void Bootloader_ConfigProtection_Save(uint32_t *data) {  
+   /*           @arg @ref OB_WRPAREA_ZONE_A Flash Zone A
+  *           @arg @ref OB_WRPAREA_ZONE_B Flash Zone B
+  *           @arg @ref OB_WRPAREA_ZONE2_A Flash Bank 2 Zone A (*)
+  *           @arg @ref OB_WRPAREA_ZONE2_B Flash Bank 2 Zone B (*)
+  * @note  (*) availability depends on devices
+  * @param  WRPStartOffset  Specifies the start page of the write protected area
+  *         This parameter can be page number between 0 and (max number of pages in the Flash Bank - 1)
+  * @param  WRDPEndOffset  Specifies the end page of the write protected area
+  *         This parameter can be page number between WRPStartOffset and (max number of pages in the Flash Bank - 1)
+  * @retval None
+  */
+
+  data[0] = rd32(R_FLASH_WRP1AR);
+  data[1] = rd32(R_FLASH_WRP1BR);
+  data[2] = rd32(R_FLASH_WRP2AR);
+  data[3] = rd32(R_FLASH_WRP2BR);
+
+}
+
+void Bootloader_ConfigProtection_Clear(uint32_t *data) {  
+
+  data[0] = 0x0000007F; // start > end so no protection
+  data[1] = 0x0000007F; // start > end so no protection
+  data[2] = 0x0000007F; // start > end so no protection
+  data[3] = 0x0000007F; // start > end so no protection
+
+}
+
+
+// remove protection from application area
+// protection of area before application is not changed
+// protection of area beyond application not changed
+//
+// always returns success
+uint8_t Bootloader_ConfigProtection_Keep_Boot(void) {  
+
+  #define WITHIN(N,L,H)       ((N) >= (L) && (N) <= (H))
+  uint32_t temp_wrp[4] = {0};
+  
+  if (app_size) {
+    
+    uint8_t first_app_page = (APP_ADDRESS - FLASH_BASE)/ FLASH_SECTOR_SIZE;
+    uint8_t last_app_page = ((app_size/FLASH_SECTOR_SIZE) + first_app_page);
+    if (app_size % FLASH_SECTOR_SIZE) last_app_page++;  // include partial page
+    
+    if (wrp1a_end >= wrp1a_strt) {
+      // CASE A - wrp1a starts in app area
+      if (WITHIN(wrp1a_strt, first_app_page, last_app_page)) {
+        if ( wrp1a_end <= last_app_page) {  
+      // CASE A1 - wrp1a entirely within application area
+          temp_wrp[0] = 0x0000007F;         // disable wrp1a (set last < start)
+        }
+        else {
+      // CASE A2 - wrp1a extends beyond application
+          temp_wrp[0] = (last_app_page | (wrp1a_end << 16));  // application is partially within wrp1a
+        }
+      }  
+      // CASE B - wrp1a starts before application
+      else if (WITHIN(wrp1a_strt, 0, first_app_page -1)) {
+        if (WITHIN(wrp1a_end, 0, first_app_page -1)) {
+      // CASE B1 - wrp1a entirely before application area
+           temp_wrp[0] = rd32(R_FLASH_WRP1AR);  // no change to wrp1a
+           }
+           else {
+      // CASE B2 - wrp1a starts before application area but extends into application area
+           temp_wrp[0] = wrp1a_strt | ((first_app_page - 1) << 16);  // wrp1a end to end of area before application
+           }
+         }
+         else {
+      // CASE C - wrp1a starts beyond the application so no changes needed
+           temp_wrp[0] = rd32(R_FLASH_WRP1AR);  // no change to wrp1a
+         }
+    }  // end wrp1a
+
+    
+    if (wrp1b_end >= wrp1b_strt) {
+      // CASE A - wrp1b starts in app area
+      if (WITHIN(wrp1b_strt, first_app_page, last_app_page)) {
+        if ( wrp1b_end <= last_app_page) {  
+      // CASE A1 - wrp1b entirely within application area
+          temp_wrp[0] = 0x0000007F;         // disable wrp1b (set last < start)
+        }
+        else {
+      // CASE A2 - wrp1b extends beyond application
+          temp_wrp[0] = (last_app_page | (wrp1b_end << 16));  // application is partially within wrp1b
+        }
+      }  
+      // CASE B - wrp1b starts before application
+      else if (WITHIN(wrp1b_strt, 0, first_app_page -1)) {
+        if (WITHIN(wrp1b_end, 0, first_app_page -1)) {
+      // CASE B1 - wrp1b entirely before application area
+           temp_wrp[0] = rd32(R_FLASH_WRP1BR);  // no change to wrp1b
+           }
+           else {
+      // CASE B2 - wrp1b starts before application area but extends into application area
+           temp_wrp[0] = wrp1b_strt | ((first_app_page - 1) << 16);  // wrp1b end to end of area before application
+           }
+         }
+         else {
+      // CASE C - wrp1b starts beyond the application so no changes needed
+           temp_wrp[0] = rd32(R_FLASH_WRP1BR);  // no change to wrp1b
+         }
+    }  // end wrp1b
+
+ 
+    if (wrp2a_end >= wrp2a_strt) {
+      // CASE A - wrp2a starts in app area
+      if (WITHIN(wrp2a_strt + 128, first_app_page, last_app_page)) {
+        if ( wrp2a_end + 128 <= last_app_page) {  
+      // CASE A1 - wrp2a entirely within application area
+          temp_wrp[0] = 0x0000007F;         // disable wrp2a (set last < start)
+        }
+        else {
+      // CASE A2 - wrp2a extends beyond application
+          temp_wrp[0] = ((last_app_page - 128) | (wrp2a_end << 16));  // application is partially within wrp2a
+        }
+      }  
+      // CASE B - wrp2a starts before application
+      else if (WITHIN(wrp2a_strt + 128, 0, first_app_page -1)) {
+        if (WITHIN(wrp2a_end + 128, 0, first_app_page -1)) {
+      // CASE B1 - wrp2a entirely before application area
+           temp_wrp[0] = rd32(R_FLASH_WRP2AR);  // no change to wrp2a
+           }
+           else {
+      // CASE B2 - wrp2a starts before application area but extends into application area
+           temp_wrp[0] = wrp2a_strt | ((first_app_page - 1 - 128) << 16);  // wrp2a end to end of area before application
+           }
+         }
+         else {
+      // CASE C - wrp2a starts beyond the application so no changes needed
+           temp_wrp[0] = rd32(R_FLASH_WRP2AR);  // no change to wrp2a
+         }
+    }  // end wrp2a 
+    
+ 
+    if (wrp2b_end >= wrp2b_strt) {
+      // CASE A - wrp2b starts in app area
+      if (WITHIN(wrp2b_strt + 128, first_app_page, last_app_page)) {
+        if ( wrp2b_end + 128 <= last_app_page) {  
+      // CASE A1 - wrp2b entirely within application area
+          temp_wrp[0] = 0x0000007F;         // disable wrp2b (set last < start)
+        }
+        else {
+      // CASE A2 - wrp2b extends beyond application
+          temp_wrp[0] = ((last_app_page - 128) | (wrp2b_end << 16));  // application is partially within wrp2b
+        }
+      }  
+      // CASE B - wrp2b starts before application
+      else if (WITHIN(wrp2b_strt + 128, 0, first_app_page -1)) {
+        if (WITHIN(wrp2b_end + 128, 0, first_app_page -1)) {
+      // CASE B1 - wrp2b entirely before application area
+           temp_wrp[0] = rd32(R_FLASH_WRP2BR);  // no change to wrp2b
+           }
+           else {
+      // CASE B2 - wrp2b starts before application area but extends into application area
+           temp_wrp[0] = wrp2b_strt | ((first_app_page - 1 - 128) << 16);  // wrp2b end to end of area before application
+           }
+         }
+         else {
+      // CASE C - wrp2b starts beyond the application so no changes needed
+           temp_wrp[0] = rd32(R_FLASH_WRP2BR);  // no change to wrp2b
+         }
+    }  // end wrp2b 
+
+  }  // app size
+  return HAL_OK;
+}
+
+
 
 void save_WRP_state(void) {
-  FLASH_OBProgramInitTypeDef OBStruct = {0};
-  HAL_FLASHEx_OBGetConfig(&OBStruct);  // get current FLASH config
-//  Write_Prot_Old = OBStruct.WRPPage;
   WRITE_Prot_Old_Flag = WRITE_Prot_Original_flag;  // flag that protection was saved
+  Bootloader_ConfigProtection_Save(wrp_old);  // save the current write protection
 }
 
 void report_WP_ConfigProtection(void)
 {
-  FLASH_OBProgramInitTypeDef OBStruct = {0};
-  HAL_StatusTypeDef status = HAL_ERROR;
-
-  status = HAL_FLASH_Unlock();
-  status |= HAL_FLASH_OB_Unlock();
- 
-  HAL_FLASHEx_OBGetConfig(&OBStruct);  // get current FLASH config
-//  uint32_t temp = OBStruct.WRPPage;
-//  
-//  sprintf(msg,"\nWRPPage:               %08lX\n", temp);
-//  kprint(msg);
+    
+  if (wrp1a_end < wrp1a_strt) {
+    kprint("BANK1 area A protection: none\n");
+  }
+  else {
+    sprintf(msg,"BANK1 area A protection: %08lX", Bank1a_prot_start);
+    kprint(msg);
+    sprintf(msg," - %08lX\n", Bank1a_prot_end);
+    kprint(msg);
+  }
+  
+  if (wrp1b_end < wrp1b_strt) {
+    kprint("BANK1 area B protection: none\n");
+  }
+  else {
+    sprintf(msg,"BANK1 area B protection: %08lX", Bank1b_prot_start);
+    kprint(msg);
+    sprintf(msg," - %08lX\n", Bank1b_prot_end);
+    kprint(msg);
+  }
+    
+  if (wrp2a_end < wrp2a_strt) {
+    kprint("BANK2 area A protection: none\n");
+  }
+  else {
+    sprintf(msg,"BANK2 area A protection: %08lX", Bank2a_prot_start );
+    kprint(msg);
+    sprintf(msg," - %08lX\n", Bank2a_prot_end);
+    kprint(msg);
+  }  
+    
+  if (wrp2b_end < wrp2b_strt) {
+    kprint("BANK2 area B protection: none\n");
+  }
+  else {
+    sprintf(msg,"BANK2 area B protection: %08lX", Bank2b_prot_start );
+    kprint(msg);
+    sprintf(msg," - %08lX\n", Bank2b_prot_end);
+    kprint(msg);
+  }  
+    
 }
 
 /**
@@ -753,6 +941,9 @@ void report_WP_ConfigProtection(void)
  */
 uint8_t Bootloader_CheckSize(uint32_t appsize)
 {
+    
+    kprint("APP size: %8lX\n", appsize);
+           
     return ((FLASH_BASE + FLASH_SIZE - APP_ADDRESS) >= appsize) ? BL_OK
                                                                 : BL_SIZE_ERROR;
 }

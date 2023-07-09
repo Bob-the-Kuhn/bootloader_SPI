@@ -30,7 +30,7 @@
 #include <intdefs.h>
 #include <stdint.h>
 #include "user_diskio.h"
-#include "SPI_defines.h"
+//#include "SPI_defines.h"
 #include "main.h"
 
 
@@ -201,10 +201,10 @@ int spiselect (void)	/* 1:OK, 0:Timeout */
 {
 	CS_LOW();		/* Set CS# low */
 	xchg_spi(0xFF);	/* Dummy clock (force DO enabled) */
-//	if (wait_ready(500)) return 1;	/* Wait for card ready */
-//
-//	despiselect();
-//	return 0;	/* Timeout */
+	if (wait_ready(500)) return 1;	/* Wait for card ready */
+
+	despiselect();
+	return 0;	/* Timeout */
 
 return 1;
 }

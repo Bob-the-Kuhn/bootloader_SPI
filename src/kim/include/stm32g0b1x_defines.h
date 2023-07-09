@@ -205,13 +205,19 @@
 #define R_FLASH_PCROP1ASR   reg32(0x40022024)    /*!< FLASH Bank PCROP area A Start address register,    Address offset: 0x24 */
 #define R_FLASH_PCROP1AER   reg32(0x40022028)    /*!< FLASH Bank PCROP area A End address register,      Address offset: 0x28 */
 #define R_FLASH_WRP1AR      reg32(0x4002202C)    /*!< FLASH Bank WRP area A address register,            Address offset: 0x2C */
+#define R_FLASH_WRP1AR_STRT reg16(0x4002202C)    /*!< FLASH Bank WRP area A address register, start bits Address offset: 0x2C */
 #define R_FLASH_WRP1BR      reg32(0x40022030)    /*!< FLASH Bank WRP area B address register,            Address offset: 0x30 */
+#define R_FLASH_WRP1BR_STRT reg16(0x40022030)    /*!< FLASH Bank WRP area B address register,            Address offset: 0x30 */
+
 #define R_FLASH_PCROP1BSR   reg32(0x40022034)    /*!< FLASH Bank PCROP area B Start address register,    Address offset: 0x34 */
 #define R_FLASH_PCROP1BER   reg32(0x40022038)    /*!< FLASH Bank PCROP area B End address register,      Address offset: 0x38 */
 #define R_FLASH_PCROP2ASR   reg32(0x40022044)    /*!< FLASH Bank2 PCROP area A Start address register,   Address offset: 0x44 */
 #define R_FLASH_PCROP2AER   reg32(0x40022048)    /*!< FLASH Bank2 PCROP area A End address register,     Address offset: 0x48 */
 #define R_FLASH_WRP2AR      reg32(0x4002204C)    /*!< FLASH Bank2 WRP area A address register,           Address offset: 0x4C */
+#define R_FLASH_WRP2AR_STRT reg16(0x4002204C)    /*!< FLASH Bank2 WRP area A address register,           Address offset: 0x4C */
 #define R_FLASH_WRP2BR      reg32(0x40022050)    /*!< FLASH Bank2 WRP area B address register,           Address offset: 0x50 */
+#define R_FLASH_WRP2BR_STRT reg16(0x40022050)    /*!< FLASH Bank2 WRP area B address register,           Address offset: 0x50 */
+
 #define R_FLASH_PCROP2BSR   reg32(0x40022054)    /*!< FLASH Bank2 PCROP area B Start address register,   Address offset: 0x54 */
 #define R_FLASH_PCROP2BER   reg32(0x40022058)    /*!< FLASH Bank2 PCROP area B End address register,     Address offset: 0x58 */
 #define R_FLASH_SECR        reg32(0x40022080)    /*!< FLASH security register ,                          Address offset: 0x80 */
@@ -332,33 +338,33 @@
 
 
 /* Generic offset for TIM registers */
-#define R_TIMx_CR1(base)   reg16((((u32)base) + 0x00)
-#define R_TIMx_CR2(base)   reg16((((u32)base) + 0x04)
-#define R_TIMx_SMCR(base)  reg16((((u32)base) + 0x08)
-#define R_TIMx_DIER(base)  reg16((((u32)base) + 0x0c)
-#define R_TIMx_SR(base)    reg16((((u32)base) + 0x10)
-#define R_TIMx_EGR(base)   reg16((((u32)base) + 0x14)
-#define R_TIMx_CCMR1(base) reg16(((u32)base) + 0x18)
-#define R_TIMx_CCMR2(base) reg16(((u32)base) + 0x1c)
-#define R_TIMx_CCER(base)  reg16(((u32)base) + 0x20)
-#define R_TIMx_CNT(base)   reg16(((u32)base) + 0x24)
-#define R_TIMx_PSC(base)   reg16(((u32)base) + 0x28)
-#define R_TIMx_ARR(base)   reg16(((u32)base) + 0x2c)
-#define R_TIMx_RCR(base)   reg16(((u32)base) + 0x30)
-#define R_TIMx_CCR1(base)  reg16(((u32)base) + 0x34)
-#define R_TIMx_CCR2(base)  reg16(((u32)base) + 0x38)
-#define R_TIMx_CCR3(base)  reg16(((u32)base) + 0x3c)
-#define R_TIMx_CCR4(base)  reg16(((u32)base) + 0x40)
-#define R_TIMx_BDTR(base)  reg16(((u32)base) + 0x44)
-#define R_TIMx_DCR(base)   reg16(((u32)base) + 0x48)
-#define R_TIMx_DMAR(base)  reg16(((u32)base) + 0x4c)
-#define R_TIMx_OR1(base)   reg16(((u32)base) + 0x50)
-#define R_TIMx_CCMR3(base) reg16(((u32)base) + 0x54)
-#define R_TIMx_CCR5(base)  reg16(((u32)base) + 0x58)
-#define R_TIMx_CCR6(base)  reg16(((u32)base) + 0x5C)
-#define R_TIMx_AF1(base)   reg16(((u32)base) + 0x60)
-#define R_TIMx_AF2(base)   reg16(((u32)base) + 0x64)
-#define R_TIMx_TISEL(base) reg16(((u32)base) + 0x68)
+#define R_TIMx_CR1(base)   reg16((((uint32_t)base) + 0x00)
+#define R_TIMx_CR2(base)   reg16((((uint32_t)base) + 0x04)
+#define R_TIMx_SMCR(base)  reg16((((uint32_t)base) + 0x08)
+#define R_TIMx_DIER(base)  reg16((((uint32_t)base) + 0x0c)
+#define R_TIMx_SR(base)    reg16((((uint32_t)base) + 0x10)
+#define R_TIMx_EGR(base)   reg16((((uint32_t)base) + 0x14)
+#define R_TIMx_CCMR1(base) reg16(((uint32_t)base) + 0x18)
+#define R_TIMx_CCMR2(base) reg16(((uint32_t)base) + 0x1c)
+#define R_TIMx_CCER(base)  reg16(((uint32_t)base) + 0x20)
+#define R_TIMx_CNT(base)   reg16(((uint32_t)base) + 0x24)
+#define R_TIMx_PSC(base)   reg16(((uint32_t)base) + 0x28)
+#define R_TIMx_ARR(base)   reg16(((uint32_t)base) + 0x2c)
+#define R_TIMx_RCR(base)   reg16(((uint32_t)base) + 0x30)
+#define R_TIMx_CCR1(base)  reg16(((uint32_t)base) + 0x34)
+#define R_TIMx_CCR2(base)  reg16(((uint32_t)base) + 0x38)
+#define R_TIMx_CCR3(base)  reg16(((uint32_t)base) + 0x3c)
+#define R_TIMx_CCR4(base)  reg16(((uint32_t)base) + 0x40)
+#define R_TIMx_BDTR(base)  reg16(((uint32_t)base) + 0x44)
+#define R_TIMx_DCR(base)   reg16(((uint32_t)base) + 0x48)
+#define R_TIMx_DMAR(base)  reg16(((uint32_t)base) + 0x4c)
+#define R_TIMx_OR1(base)   reg16(((uint32_t)base) + 0x50)
+#define R_TIMx_CCMR3(base) reg16(((uint32_t)base) + 0x54)
+#define R_TIMx_CCR5(base)  reg16(((uint32_t)base) + 0x58)
+#define R_TIMx_CCR6(base)  reg16(((uint32_t)base) + 0x5C)
+#define R_TIMx_AF1(base)   reg16(((uint32_t)base) + 0x60)
+#define R_TIMx_AF2(base)   reg16(((uint32_t)base) + 0x64)
+#define R_TIMx_TISEL(base) reg16(((uint32_t)base) + 0x68)
 
 
 /* I2C registers */

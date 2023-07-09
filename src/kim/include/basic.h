@@ -9,8 +9,9 @@
 #ifndef _BASIC_H_
 #define _BASIC_H_
 
-#include <intdefs.h>
-
+//#include <intdefs.h>
+#include <stdint.h>
+#include <stddef.h>
 
 /* Some useful macros */
 #define max(a, b) ((a) > (b) ? (a) : (b))
@@ -24,13 +25,13 @@
 
 //#define uint unsigned int
 
-static inline u32 abs(i32 a)
-{
-	if (a >= 0)
-		return a;
-	else
-  return -a;
-}
+//static inline uint32_t abs(int32_t a)
+//{
+//	if (a >= 0)
+//		return a;
+//	else
+//  return -a;
+//}
 
 /* Memory handling functions */
 //void *memcpy(void *dest, const void *src, size_t n);
@@ -69,7 +70,7 @@ int atoi_hex(const char *p);
 #define BIT12 (1 << 12)
 #define BIT13 (1 << 13)
 #define BIT14 (1 << 14)
-#define BIT15 ((u16)(1 << 15))
+#define BIT15 ((uint16_t)(1 << 15))
 #define BIT16 (1 << 16)
 #define BIT17 (1 << 17)
 #define BIT18 (1 << 18)
@@ -85,7 +86,7 @@ int atoi_hex(const char *p);
 #define BIT28 (1 << 28)
 #define BIT29 (1 << 29)
 #define BIT30 (1 << 30)
-#define BIT31 ((u32)(1 << 31))
+#define BIT31 ((uint32_t)(1 << 31))
 
 /* Useful constants */
 #define _K 1024
@@ -96,48 +97,48 @@ int atoi_hex(const char *p);
 #define reg16(x) ((volatile uint16_t*)(x))
 #define reg32(x) ((volatile uint32_t*)(x))
 
-static inline void wr32(volatile u32 *reg, u32 val) {*reg = val;}
-static inline u32 rd32(volatile u32 *reg) {return *reg;}
-static inline void or32(volatile u32 *reg, u32 val) {*reg |= val;}
-static inline void and32(volatile u32 *reg, u32 val) {*reg &= val;}
-//static inline void clr32(volatile u32 *r, int nbit) {and32(r, ~(1 << nbit));}
-//static inline void set32(volatile u32 *reg, int nbit) {or32(reg, 1 << nbit);}
+static inline void wr32(volatile uint32_t *reg, uint32_t val) {*reg = val;}
+static inline uint32_t rd32(volatile uint32_t *reg) {return *reg;}
+static inline void or32(volatile uint32_t *reg, uint32_t val) {*reg |= val;}
+static inline void and32(volatile uint32_t *reg, uint32_t val) {*reg &= val;}
+//static inline void clr32(volatile uint32_t *r, int nbit) {and32(r, ~(1 << nbit));}
+//static inline void set32(volatile uint32_t *reg, int nbit) {or32(reg, 1 << nbit);}
 
-//#define  wr32 (reg,val) do {volatile u32 *(reg) = u32 (val);} while(0)
-//#define  rd32 (reg) do {return (volatile u32 *(reg);} while(0)
-//#define  or32 (reg, val) do {(volatile u32 *(reg) |= u32 (val);} while(0)
-//#define  and32(reg, val) do {volatile u32 *(reg) &= u32 (val);} while(0)
+//#define  wr32 (reg,val) do {volatile uint32_t *(reg) = uint32_t (val);} while(0)
+//#define  rd32 (reg) do {return (volatile uint32_t *(reg);} while(0)
+//#define  or32 (reg, val) do {(volatile uint32_t *(reg) |= uint32_t (val);} while(0)
+//#define  and32(reg, val) do {volatile uint32_t *(reg) &= uint32_t (val);} while(0)
 //#define  clr32(r,   nbit) do {and32(##r, ~(1 << int (nbit));} while(0)
 //#define  set32(reg, nbit) do {or32((reg), (1 << int (nbit));} while(0)
 
 
 
 /* 16 bits registers */
-static inline void wr16(volatile u16 *reg, u16 val) {*reg = val;}
-static inline u16 rd16(volatile u16 *reg) {return *reg;}
-static inline void or16(volatile u16 *reg, u16 val) {*reg |= val;}
-static inline void and16(volatile u16 *reg, u16 val) {*reg &= val;}
-//static inline void clr16(volatile u16 *reg, int nbit) {and16(reg, ~(1 << nbit));}
-//static inline void set16(volatile u16 *reg, int nbit) {or16(reg, 1 << nbit);}
+static inline void wr16(volatile uint16_t *reg, uint16_t val) {*reg = val;}
+static inline uint16_t rd16(volatile uint16_t *reg) {return *reg;}
+static inline void or16(volatile uint16_t *reg, uint16_t val) {*reg |= val;}
+static inline void and16(volatile uint16_t *reg, uint16_t val) {*reg &= val;}
+//static inline void clr16(volatile uint16_t *reg, int nbit) {and16(reg, ~(1 << nbit));}
+//static inline void set16(volatile uint16_t *reg, int nbit) {or16(reg, 1 << nbit);}
 
 /* 8 bits registers */
-static inline void wr8(volatile u8 *reg, u8 val) {*reg = val;}
-static inline u8 rd8(volatile u8 *reg) {return *reg;}
-static inline void or8(volatile u8 *reg, u8 val) {*reg |= val;}
-static inline void and8(volatile u8 *reg, u8 val) {*reg &= val;}
-//static inline void clr8(volatile u8 *reg, int nbit) {and8(reg, ~(1 << nbit));}
-//static inline void set8(volatile u8 *reg, int nbit) {or8(reg, 1 << nbit);}
+static inline void wr8(volatile uint8_t *reg, uint8_t val) {*reg = val;}
+static inline uint8_t rd8(volatile uint8_t *reg) {return *reg;}
+static inline void or8(volatile uint8_t *reg, uint8_t val) {*reg |= val;}
+static inline void and8(volatile uint8_t *reg, uint8_t val) {*reg &= val;}
+//static inline void clr8(volatile uint8_t *reg, int nbit) {and8(reg, ~(1 << nbit));}
+//static inline void set8(volatile uint8_t *reg, int nbit) {or8(reg, 1 << nbit);}
 
 /* Circular buffer */
 struct c_buf_t {
-	u32 iwr;
-	u32 ird;
-	u8 buf[];
+	uint32_t iwr;
+	uint32_t ird;
+	uint8_t buf[];
 };
 
 typedef struct c_buf_t c_buf_t;
 
-static inline int cbuf_wr(c_buf_t *b, u8 data, int size)
+static inline int cbuf_wr(c_buf_t *b, uint8_t data, int size)
 {
 	/* FIXME handle overrun */
 	b->buf[b->iwr] = data;
@@ -145,7 +146,7 @@ static inline int cbuf_wr(c_buf_t *b, u8 data, int size)
 	return 1;
 }
 
-static inline int cbuf_rd(c_buf_t *b, u8 *data, int size)
+static inline int cbuf_rd(c_buf_t *b, uint8_t *data, int size)
 {
 	if (b->ird == b->iwr)
 		return 0;

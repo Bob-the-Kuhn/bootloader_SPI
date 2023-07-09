@@ -147,7 +147,7 @@ uint32_t systicks_freq(void)
   return SYSTICKS_FREQ;
 }
 
-u32 systicks(void)
+uint32_t systicks(void)
 {
   return ticks;
 }
@@ -157,8 +157,8 @@ inline void sleep()
   asm("wfi");
 }
 
-u32 k_ticks() attr_weak attr_alias("systicks");
-u32 k_ticks_freq(void) attr_alias("systicks_freq");
+uint32_t k_ticks() attr_weak attr_alias("systicks");
+uint32_t k_ticks_freq(void) attr_alias("systicks_freq");
 
 void init_clock(void)
 {
@@ -179,7 +179,7 @@ void init_clock(void)
   or32(RCC_CFGR, 2); // use PLL as SYSCLK source
   
   and32(RCC_PLLCFGR, ~0xff3f7f73UL);  // set all bits to zero except reserved and hardware controlled
-  // R: /4, PLLRCLK enabled, Q: /2, PLLQCLK enabled, P: /2, PLLPCLK enabled, N: x12, M: /1 , HSI16 is the input
+  // R: /4, PLLRCLK enabled, Q: /2, PLLQCLK enabled, P: /2, PLLPCLK enabled, N: x12, M: /1 , HSint16_t is the input
   or32(RCC_PLLCFGR, (3 << 29)  | (1 << 28) | (1 << 25) | (1 << 24) | (1 << 17) |  (1 << 16) | (12 << 8) | 2);  
   or32(RCC_CR, BIT24);  // turn on PLL
   while (!(rd32(RCC_CR) & BIT25)); 
