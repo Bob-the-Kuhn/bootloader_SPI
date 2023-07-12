@@ -342,8 +342,15 @@ inline DSTATUS USER_SPI_initialize (
 	if (Stat & STA_NODISK) return Stat;	/* Is card existing in the soket? */
 
 	FCLK_SLOW();
+  CS_HIGH();
 	for (n = 10; n; n--) xchg_spi(0xFF);	/* Send 80 dummy clocks */
-  //CS_LOW();
+//  CS_LOW();
+//  for (n = 255; n; n--) xchg_spi(n);
+//  CS_HIGH();
+//	for (n = 10; n; n--) xchg_spi(0xFF);	/* Send 80 dummy clocks */
+//  CS_LOW();
+//  for (n = 255; n; n--) xchg_spi(n);
+  
   //WRITE_SD_SS_PIN(GPIO_PIN_RESET);
   //uint8_t rcv_data[256];
   //for (n = 255; n; n--) rcv_data[n] = xchg_spi(n);
@@ -410,6 +417,8 @@ inline DSTATUS USER_SPI_status (
 /*-----------------------------------------------------------------------*/
 /* Read sector(s)                                                        */
 /*-----------------------------------------------------------------------*/
+
+extern  uint16_t rcv_count;
 
 inline DRESULT USER_SPI_read (
 	BYTE drv,		/* Physical drive number (0) */

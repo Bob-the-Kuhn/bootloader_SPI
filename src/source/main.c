@@ -121,11 +121,12 @@ int main(void)
   LED_G1_ON();
   LED_G2_OFF(); 
   
-  //SPIConfig();
-  //SPI_GPIOConfig();
-  //SPI_Enable();
   
-  spiBegin();  //softSPI
+  SPI_GPIOConfig();   // hard spi
+  SPIConfig();        // hard spi
+  SPI_Enable();       // hard spi
+  
+  //spiBegin();  //softSPI
   
   sprintf(msg, "\nSYSCLK_Frequency %08lu\n", HAL_RCC_GetSysClockFreq());
   kprint(msg);
@@ -351,24 +352,24 @@ uint8_t Enter_Bootloader(void)
       // Ozone debugger removed all sector write protection when downloading
       // a new image or when starting a debug session. 
       
-      if(init_1 ) {
-        Write_Prot_Old = WRITE_Prot_Old_Flag = Magic_Location = 0;
-        init_2 = 1;
-        init_1 = 0;
-        uint32_t temp_wrp[4] = { (1 | (2 << FLASH_WRP1AR_WRP1A_END_Pos)),  (3 | (4 << FLASH_WRP1BR_WRP1B_END_Pos)), 
-                                 (5 | (6 << FLASH_WRP2AR_WRP2A_END_Pos)),  (7 | (8 << FLASH_WRP2BR_WRP2B_END_Pos))};
-        Bootloader_ConfigProtection_Set(temp_wrp);
-        kprint("init_1: shouldn't see this\n");
-      }
-      
-      if(init_2 ) {
-        init_2 = 0;
-        Write_Prot_Old = WRITE_Prot_Old_Flag = Magic_Location = 0;
-        uint32_t temp_wrp[4] = { (1 | (0x7F << FLASH_WRP1AR_WRP1A_END_Pos)),  (0x20 | (0x40 << FLASH_WRP1BR_WRP1B_END_Pos)), 
-                                 (5 | (6 << FLASH_WRP2AR_WRP2A_END_Pos)),  (7 | (8 << FLASH_WRP2BR_WRP2B_END_Pos))};
-        Bootloader_ConfigProtection_Set(temp_wrp);
-        kprint("init_2: shouldn't see this\n");
-      }  
+      //if(init_1 ) {
+      //  Write_Prot_Old = WRITE_Prot_Old_Flag = Magic_Location = 0;
+      //  init_2 = 1;
+      //  init_1 = 0;
+      //  uint32_t temp_wrp[4] = { (1 | (2 << FLASH_WRP1AR_WRP1A_END_Pos)),  (3 | (4 << FLASH_WRP1BR_WRP1B_END_Pos)), 
+      //                           (5 | (6 << FLASH_WRP2AR_WRP2A_END_Pos)),  (7 | (8 << FLASH_WRP2BR_WRP2B_END_Pos))};
+      //  Bootloader_ConfigProtection_Set(temp_wrp);
+      //  kprint("init_1: shouldn't see this\n");
+      //}
+      //
+      //if(init_2 ) {
+      //  init_2 = 0;
+      //  Write_Prot_Old = WRITE_Prot_Old_Flag = Magic_Location = 0;
+      //  uint32_t temp_wrp[4] = { (1 | (0x7F << FLASH_WRP1AR_WRP1A_END_Pos)),  (0x20 | (0x40 << FLASH_WRP1BR_WRP1B_END_Pos)), 
+      //                           (5 | (6 << FLASH_WRP2AR_WRP2A_END_Pos)),  (7 | (8 << FLASH_WRP2BR_WRP2B_END_Pos))};
+      //  Bootloader_ConfigProtection_Set(temp_wrp);
+      //  kprint("init_2: shouldn't see this\n");
+      //}  
   
   /* Check for flash write protection of application area*/
   if(Bootloader_GetProtectionStatus()) {  
