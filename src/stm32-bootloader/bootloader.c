@@ -211,6 +211,90 @@ uint8_t Bootloader_Init(void)
   return BL_OK;
 }
 
+
+/**
+  * @brief  Erase the specified FLASH memory page.
+  * @param  Banks: Banks to be erased
+  *         This parameter can one of the following values:
+  *            @arg FLASH_BANK_1: Bank1 to be erased
+  *            @arg FLASH_BANK_2: Bank2 to be erased*
+  * @param  Page FLASH page to erase
+  *         This parameter must be a value between 0 and (max number of pages in Flash - 1)
+  * @note (*) availability depends on devices
+  * @retval None
+  */
+void FLASH_PageErase_(uint32_t Banks, uint32_t Page)
+{
+  uint32_t tmp;
+
+  /* Get configuration register, then clear page number */
+  tmp = (FLASH->CR & ~FLASH_CR_PNB);
+
+  /* Check if page has to be erased in bank 1 or 2 */
+  if (Banks != FLASH_BANK_1)
+  {
+    tmp |= FLASH_CR_BKER;
+  }
+  else
+  {
+    tmp &= ~FLASH_CR_BKER;
+  }
+
+
+  /* Set page number, Page Erase bit & Start bit */
+  FLASH->CR = (tmp | (FLASH_CR_STRT | (Page <<  FLASH_CR_PNB_Pos) | FLASH_CR_PER));
+}
+
+/**
+  * @brief  Perform a mass erase or erase the specified FLASH memory pages.
+  * @param[in]  pEraseInit Pointer to an @ref FLASH_EraseInitTypeDef structure that
+  *         contains the configuration information for the erasing.
+  * @param[out]  PageError Pointer to variable that contains the configuration
+  *         information on faulty page in case of error (0xFFFFFFFF means that all
+  *         the pages have been correctly erased)
+  * @retval HAL Status
+  */
+HAL_StatusTypeDef HAL_FLASHEx_Erase_(uint32_t bank, uint8_t start_page, uint8_t num_to_erase, uint32_t *PageError)
+{
+  HAL_StatusTypeDef status;
+  uint32_t index;
+
+
+  /* Wait for last operation to be completed */
+  status = FLASH_WaitForLastOperation(FLASH_TIMEOUT_VALUE);
+
+  if (status == HAL_OK)
+  {
+
+    /*Initialization of PageError variable*/
+    *PageError = 0xFFFFFFFFU;
+
+    for (index = start_page; index < (start_page + num_to_erase); index++)
+    {
+      /* Start erase page */
+      FLASH_PageErase_(bank, index);
+
+      /* Wait for last operation to be completed */
+      status = FLASH_WaitForLastOperation(FLASH_TIMEOUT_VALUE);
+
+      if (status != HAL_OK)
+      {
+        /* In case of error, stop erase procedure and return the faulty address */
+        *PageError = index;
+        break;
+      }
+    }
+
+    /* If operation is completed or interrupted, disable the Page Erase Bit */
+    CLEAR_BIT(FLASH->CR, FLASH_CR_PER);
+
+  }
+
+
+  /* return status */
+  return status;
+}
+
 /**
   * @brief  This function erases the user application area in flash
   * @return Bootloader error code ::eBootloaderErrorCodes
@@ -223,9 +307,6 @@ uint8_t Bootloader_Init(void)
 uint8_t Bootloader_Erase(void)
 {
   uint32_t PageError;
-  FLASH_EraseInitTypeDef pEraseInit;
-  pEraseInit.TypeErase = FLASH_TYPEERASE_PAGES;  // erase pages mode
-  
   
   uint8_t start_page = (APP_ADDRESS - FLASH_BASE)/FLASH_SECTOR_SIZE;
   uint8_t nbpages = app_size/FLASH_SECTOR_SIZE; // number full pages occupied by application
@@ -272,21 +353,20 @@ uint8_t Bootloader_Erase(void)
   LED_G2_OFF();
   
   #define FLASH_INCR 25  // number of pages to erase before reporting status
+  uint8_t num_to_erase;
   
   if (nbpages_bank_1) {
     for (uint16_t count = 0; count <= nbpages_bank_1; count += FLASH_INCR) {
-      pEraseInit.Banks = FLASH_BANK_1;            
-      pEraseInit.Page = start_page_bank_1 + count;       // first page # to erase
-      pEraseInit.NbPages = ((count + FLASH_INCR) < nbpages_bank_1) ? FLASH_INCR : (nbpages_bank_1 - count + 1); // number pages to erase this loop
+      num_to_erase = ((count + FLASH_INCR) < nbpages_bank_1) ? FLASH_INCR : (nbpages_bank_1 - count + 1); // number pages to erase this loop
       sprintf(msg, "Erasing bank 1, page: %02X\n", start_page_bank_1 + count);
       LED_ALL_TG();
       kprint(msg);
-      HAL_StatusTypeDef status = HAL_FLASHEx_Erase(&pEraseInit, &PageError);
+      HAL_StatusTypeDef status = HAL_FLASHEx_Erase_(FLASH_BANK_1, start_page_bank_1 + count, num_to_erase, &PageError);
       uint32_t* flash_addr = (uint32_t *)(((start_page_bank_1 + count) *FLASH_SECTOR_SIZE) + FLASH_BASE);
       uint32_t flash_data = *flash_addr; // read first word of just erased page
       sprintf(msg, "count: %02X  flash_addr: %08lX  flash_data: %08lX\n", count, flash_addr, flash_data);
       kprint(msg);
-      sprintf(msg, " pEraseInit.NbPages: %02X\n",  pEraseInit.NbPages);
+      sprintf(msg, " num pages erased:   %02X\n",  num_to_erase);
       kprint(msg);
       
       if ((status != HAL_OK) | (PageError != 0xFFFFFFFF)) {
@@ -300,13 +380,11 @@ uint8_t Bootloader_Erase(void)
   
   if (nbpages_bank_2) {
     for (uint16_t count = 0; count <= nbpages_bank_2; count += FLASH_INCR) {
-      pEraseInit.Banks = FLASH_BANK_2; 
-      pEraseInit.Page = start_page_bank_2 + count;       // first page # to erase
-      pEraseInit.NbPages = ((count + FLASH_INCR) < nbpages_bank_2) ? FLASH_INCR : (nbpages_bank_2 - count + 1); // number pages to erase this loop
+      num_to_erase = ((count + FLASH_INCR) < nbpages_bank_2) ? FLASH_INCR : (nbpages_bank_2 - count + 1); // number pages to erase this loop
       sprintf(msg, "Erasing bank 2, page: %u\n", start_page_bank_2 + count);
       LED_ALL_TG();
       kprint(msg);
-      HAL_StatusTypeDef status = HAL_FLASHEx_Erase(&pEraseInit, &PageError);
+      HAL_StatusTypeDef status = HAL_FLASHEx_Erase_(FLASH_BANK_2, start_page_bank_2 + count, num_to_erase, &PageError);
       if ((status != HAL_OK) | (PageError != 0xFFFFFFFF)) {
         sprintf(msg, "ERROR: status:    %u\n", status);
         kprint(msg);
