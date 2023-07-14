@@ -191,7 +191,7 @@ void init_clock(void)
 
   /* Enable clocks on AHB and APB peripherals */
   wr32(RCC_APBENR1, (BIT18 | BIT17 | BIT15 | BIT14 | BIT5 | BIT4 | BIT2 | BIT1 | BIT0)); /* USART3, USART2, SPI3, SPI2, TIM7, TIM6, TIM2-4*/
-  wr32(RCC_APBENR2, (BIT14 | BIT11 | BIT1)); /* SPI1, TIM1, SYSCFGEN: */
+  wr32(RCC_APBENR2, (BIT14 | BIT12 | BIT11 | BIT1)); /* USART1, SPI1, TIM1, SYSCFGEN: */
   wr32(RCC_IOPENR, 0x3f); /* GPIOA-GPIOF */
 }
 

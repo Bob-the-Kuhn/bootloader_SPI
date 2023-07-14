@@ -95,7 +95,9 @@
 //#define FLASH_BASE            ((uint32_t)0x08000000) // FLASH(up to 1 MB) base address in the alias region
 #define SRAM1_BASE            ((uint32_t)0x20000000)  // SRAM1 base address in the alias region
 //#define SRAM1_SIZE_MAX        ((uint32_t)0x1BFFF)     // SRAM1 length (112 KB)
-#define SRAM1_SIZE_MAX        ((uint32_t)0xFFFF)     // SRAM1 length (64 KB)
+//#define SRAM1_SIZE_MAX        ((uint32_t)0xFFFF)     // SRAM1 length (64 KB)
+//#define SRAM1_SIZE_MAX        ((uint32_t)0x1FFFF)     // SRAM1 length (128 KB)
+#define SRAM1_SIZE_MAX        ((uint32_t)0x23FFF)     // SRAM1 length (144 KB)
 //#define SRAM2_BASE            ((uint32_t)0x2001C000) // SRAM2(16 KB) base address in the alias region
 //#define SRAM2_SIZE_MAX        ((uint32_t)0x03FFF)
 //#define PERIPH_BASE           ((uint32_t)0x40000000) // Peripheral base address in the alias region

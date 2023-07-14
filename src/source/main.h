@@ -98,8 +98,8 @@ void Error_Handler(void);
 #define Detect_SDIO_GPIO_Port PORTA
 #define SD_MISO_Pin GPIO_PIN__11
 #define SD_MISO_GPIO_Port PORTC
-#define SDSS_Pin GPIO_PIN__4
-#define SDSS_GPIO_Port PORTA
+#define SDSS_Pin GPIO_PIN__9
+#define SDSS_GPIO_Port PORTD
 #define SD_SCK_Pin GPIO_PIN__10
 #define SD_SCK_GPIO_Port PORTC
 #define SD_MOSI_Pin GPIO_PIN__12
@@ -107,12 +107,13 @@ void Error_Handler(void);
 #define D4_LED_G2_Pin GPIO_PIN__0
 #define D4_LED_G2_GPIO_Port PORTD
 
-  // PA4 SS
-  // PC10 CLK
-  // PC11 MISO
-  // PC12 MOSI
+  // SPI 3             SPI 2          SPI 1
+  // PA4  AF9 SS       PB9 AF5 SS     PD9 AF5 SS
+  // PC10 AF4 CLK      PB8 AF5 CLK    PD8 AF1 CLK
+  // PC11 AF4 MISO     PC2 AF1 MISO   PD5 AF1 MISO
+  // PC12 AF4 MOSI     PC3 AF1 MOSI   PA2 AF0 MOSI
+  
   // PB11 SD_detect
-
 
 /* LD2 */
 #define LED_G1_Port D2_LED_G1_GPIO_Port
@@ -206,8 +207,8 @@ uint8_t SOFT_SPI_STM32_SpiTransfer_Mode_3(uint8_t b);
 #define CS_HIGH()	{WRITE_SD_SS_PIN(GPIO_PIN_SET);}
 #define CS_LOW()	{WRITE_SD_SS_PIN(GPIO_PIN_RESET);}
 
-#define FCLK_SLOW() { or16(RSPI3_CR1, (6<<3)); }	/* Set SCLK = slow, approx 300 KBits/s*/
-#define FCLK_FAST() { or16(RSPI3_CR1, (3<<3)); }	/* Set SCLK = fast, approx 2.5 MBits/s */
+#define FCLK_SLOW() { or16(RSPI1_CR1, (6<<3)); }	/* Set SCLK = slow, approx 300 KBits/s*/
+#define FCLK_FAST() { or16(RSPI1_CR1, (3<<3)); }	/* Set SCLK = fast, approx 2.5 MBits/s */
 
 enum Spi_Speed
 {

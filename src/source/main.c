@@ -543,7 +543,7 @@ uint8_t Enter_Bootloader(void)
   f_close(&SDFile);
 #endif  
 #endif
- #if 0                  
+                  
   LED_G1_OFF();
 
   #if defined(FILE_EXT_CHANGE) && (_LFN_UNICODE == 0)   // rename file if using ANSI/OEM strings
@@ -582,7 +582,7 @@ uint8_t Enter_Bootloader(void)
                                            // after the next reset
     }
   #endif
-#endif
+
  
   /* Eject SD card */
   SD_Eject();
