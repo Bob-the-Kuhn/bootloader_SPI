@@ -25,6 +25,7 @@
 
 //void kprint(const char* str);   // debug
 void k_delay(const uint32_t ms);
+uint32_t k_ticks(void);
 
 void NVIC_System_Reset(void);
 
@@ -413,6 +414,123 @@ uint8_t Bootloader_FlashNext_Buf(uint8_t *data, UINT count)
   return BL_OK;
 }
 
+
+/**
+  * @brief  Wait for a FLASH operation to complete.
+  * @param  Timeout maximum flash operation timeout
+  * @retval HAL_StatusTypeDef HAL Status
+  */
+HAL_StatusTypeDef FLASH_WaitForLastOperation_(uint32_t Timeout)
+{
+  uint32_t error;
+  /* Wait for the FLASH operation to complete by polling on BUSY flag to be reset.
+     Even if the FLASH operation fails, the BUSY flag will be reset and an error
+     flag will be set */
+  uint32_t timeout = k_ticks() + Timeout;
+
+  /* Wait if any operation is ongoing */
+#if defined(FLASH_DBANK_SUPPORT)
+  error = (FLASH_SR_BSY1 | FLASH_SR_BSY2);
+#else
+  error = FLASH_SR_BSY1;
+#endif /* FLASH_DBANK_SUPPORT */
+
+  while ((FLASH->SR & error) != 0x00U)
+  {
+    if (k_ticks() >= timeout)
+    {
+      return HAL_TIMEOUT;
+    }
+  }
+
+  /* check flash errors */
+  error = (FLASH->SR & FLASH_SR_ERRORS);
+
+  /* Clear SR register */
+  FLASH->SR = FLASH_SR_CLEAR;
+
+  if (error != 0x00U)
+  {
+    return HAL_ERROR;
+  }
+
+  /* Wait for control register to be written */
+  timeout = k_ticks() + Timeout;
+
+  while ((FLASH->SR & FLASH_SR_CFGBSY) != 0x00U)
+  {
+    if (k_ticks() >= timeout)
+    {
+      return HAL_TIMEOUT;
+    }
+  }
+
+  return HAL_OK;
+}
+
+/**
+  * @brief  Program double-word (64-bit) at a specified address.
+  * @param  Address Specifies the address to be programmed.
+  * @param  Data Specifies the data to be programmed.
+  * @retval None
+  */
+static void FLASH_Program_DoubleWord_(uint32_t Address, uint64_t Data)
+{
+  /* Set PG bit */
+  SET_BIT(FLASH->CR, FLASH_CR_PG);
+
+  /* Program first word */
+  *(uint32_t *)Address = (uint32_t)Data;
+
+  /* Barrier to ensure programming is performed in 2 steps, in right order
+    (independently of compiler optimization behavior) */
+  __ISB();
+
+  /* Program second word */
+  *(uint32_t *)(Address + 4U) = (uint32_t)(Data >> 32U);
+}
+
+
+/**
+  * @brief  Program double word or fast program of a row at a specified address.
+  * @param  TypeProgram Indicate the way to program at a specified address.
+  *                      This parameter can be a value of @ref FLASH_Type_Program
+  * @param  Address Specifies the address to be programmed.
+  * @param  Data Specifies the data to be programmed
+  *               This parameter is the data for the double word program and the address where
+  *               are stored the data for the row fast program depending on the TypeProgram:
+  *               TypeProgram = FLASH_TYPEPROGRAM_DOUBLEWORD (64-bit)
+  *               TypeProgram = FLASH_TYPEPROGRAM_FAST (32-bit).
+  *
+  * @retval HAL_StatusTypeDef HAL Status
+  */
+HAL_StatusTypeDef HAL_FLASH_Program_Double(uint32_t Address, uint64_t Data)
+{
+  HAL_StatusTypeDef status;
+
+ 
+  /* Wait for last operation to be completed */
+  status = FLASH_WaitForLastOperation_(FLASH_TIMEOUT_VALUE);
+
+  if (status == HAL_OK)
+  {
+    /* Program double-word (64-bit) at a specified address */
+    FLASH_Program_DoubleWord_(Address, Data);
+
+    /* Wait for last operation to be completed */
+    status = FLASH_WaitForLastOperation_(FLASH_TIMEOUT_VALUE);
+
+    /* If the program operation is completed, disable the PG */
+    CLEAR_BIT(FLASH->CR, FLASH_CR_PG);
+  }
+
+  /* Process Unlocked */
+  __HAL_UNLOCK(&pFlash);
+
+  /* return status */
+  return status;
+}
+
 /**                                                              
   * @brief  Program 64bit data into flash: this function writes an 8byte (64bit)
   *         data chunk into the flash and increments the data pointer.
@@ -433,7 +551,7 @@ uint8_t Bootloader_FlashNext(uint64_t data)
     return BL_WRITE_ERROR;
   }
   
-  status = HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, flash_ptr, data);
+  status = HAL_FLASH_Program_Double(flash_ptr, data);
   if(status == HAL_OK)
   {
     /* Check the written value */
