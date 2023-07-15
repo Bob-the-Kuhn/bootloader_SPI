@@ -144,10 +144,10 @@ uint8_t Bootloader_Init(void)
   //sprintf(msg, "\nAPP_sector_mask %08lX\n", APP_sector_mask);
   //kprint(msg);
   // 
-  sprintf(msg, "\nBOOT_LOADER_END %08lX\n", BOOT_LOADER_END);
-  kprint(msg);
-  sprintf(msg, "Lowest possible APP_ADDRESS is %08lX\n", APP_first_addr);
-  kprint(msg);
+  //count:sprintf(msg, "\nBOOT_LOADER_END %08lX\n", BOOT_LOADER_END);
+  //count:kprint(msg);
+  //count:sprintf(msg, "Lowest possible APP_ADDRESS is %08lX\n", APP_first_addr);
+  //count:kprint(msg);
   
   /* check APP_ADDRESS */
   if (APP_ADDRESS & 0x1ff) {
@@ -312,10 +312,10 @@ uint8_t Bootloader_Erase(void)
   uint8_t nbpages = app_size/FLASH_SECTOR_SIZE; // number full pages occupied by application
   if (app_size % FLASH_SECTOR_SIZE) nbpages++; // + 1 if have a partial page used
   
-  sprintf(msg, "start_page       : %2X\n", start_page);
-  kprint(msg);
-  sprintf(msg, "nbpages          : %2X\n", nbpages);
-  kprint(msg);
+  //sprintf(msg, "start_page       : %2X\n", start_page);
+  //kprint(msg);
+  //sprintf(msg, "nbpages          : %2X\n", nbpages);
+  //kprint(msg);
   
   uint8_t start_page_bank_1;
   uint8_t start_page_bank_2;
@@ -342,10 +342,10 @@ uint8_t Bootloader_Erase(void)
     nbpages_bank_2 = nbpages;
   }
   
-  sprintf(msg, "start_page_bank_1: %2X\nstart_page_bank_2: %2X\n", start_page_bank_1, start_page_bank_2);
-  kprint(msg);
-  sprintf(msg, "nbpages_bank_1:    %2X\nnbpages_bank_2:    %2X\n", nbpages_bank_1, nbpages_bank_2);
-  kprint(msg);
+  //sprintf(msg, "start_page_bank_1: %2X\nstart_page_bank_2: %2X\n", start_page_bank_1, start_page_bank_2);
+  //kprint(msg);
+  //sprintf(msg, "nbpages_bank_1:    %2X\nnbpages_bank_2:    %2X\n", nbpages_bank_1, nbpages_bank_2);
+  //kprint(msg);
   
   HAL_FLASH_Unlock();  
   
@@ -362,12 +362,12 @@ uint8_t Bootloader_Erase(void)
       LED_ALL_TG();
       kprint(msg);
       HAL_StatusTypeDef status = HAL_FLASHEx_Erase_(FLASH_BANK_1, start_page_bank_1 + count, num_to_erase, &PageError);
-      uint32_t* flash_addr = (uint32_t *)(((start_page_bank_1 + count) *FLASH_SECTOR_SIZE) + FLASH_BASE);
-      uint32_t flash_data = *flash_addr; // read first word of just erased page
-      sprintf(msg, "count: %02X  flash_addr: %08lX  flash_data: %08lX\n", count, flash_addr, flash_data);
-      kprint(msg);
-      sprintf(msg, " num pages erased:   %02X\n",  num_to_erase);
-      kprint(msg);
+      //uint32_t* flash_addr = (uint32_t *)(((start_page_bank_1 + count) *FLASH_SECTOR_SIZE) + FLASH_BASE);
+      //uint32_t flash_data = *flash_addr; // read first word of just erased page
+      //sprintf(msg, "count: %02X  flash_addr: %08lX  flash_data: %08lX\n", count, flash_addr, flash_data);
+      //kprint(msg);
+      //sprintf(msg, " num pages erased:   %02X\n",  num_to_erase);
+      //kprint(msg);
       
       if ((status != HAL_OK) | (PageError != 0xFFFFFFFF)) {
         sprintf(msg, "ERROR: status:    %u\n", status);
@@ -1093,14 +1093,14 @@ uint8_t Bootloader_ConfigProtection_Keep_Boot(void) {
 void save_WRP_state(void) {
   WRITE_Prot_Old_Flag = WRITE_Prot_Original_flag;  // flag that protection was saved
   Bootloader_ConfigProtection_Save(wrp_old);  // save the current write protection
-  sprintf(msg, "saved wrp_old[0] (wrp1a): %08lX\n", wrp_old[0]);
-  kprint(msg);                    
-  sprintf(msg, "saved wrp_old[1] (wrp1b): %08lX\n", wrp_old[1]);
-  kprint(msg);                    
-  sprintf(msg, "saved wrp_old[2] (wrp2a): %08lX\n", wrp_old[2]);
-  kprint(msg);                    
-  sprintf(msg, "saved wrp_old[3] (wrp2b): %08lX\n", wrp_old[3]);
-  kprint(msg);
+  //sprintf(msg, "saved wrp_old[0] (wrp1a): %08lX\n", wrp_old[0]);
+  //kprint(msg);                    
+  //sprintf(msg, "saved wrp_old[1] (wrp1b): %08lX\n", wrp_old[1]);
+  //kprint(msg);                    
+  //sprintf(msg, "saved wrp_old[2] (wrp2a): %08lX\n", wrp_old[2]);
+  //kprint(msg);                    
+  //sprintf(msg, "saved wrp_old[3] (wrp2b): %08lX\n", wrp_old[3]);
+  //kprint(msg);
 }
 
 void report_WP_ConfigProtection(void)
@@ -1175,7 +1175,8 @@ void report_WP_ConfigProtection(void)
 uint8_t Bootloader_CheckSize(uint32_t appsize)
 {
   
-  kprint("APP size: %8lX\n", appsize);
+ //sprintf(msg, "APP size: %8lX\n", appsize);
+ //kprint(msg);
   
   return ((FLASH_BASE + FLASH_SIZE - APP_ADDRESS) >= appsize) ? BL_OK
   : BL_SIZE_ERROR;

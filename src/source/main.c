@@ -78,7 +78,7 @@ void report_WP_ConfigProtection(void);
 void SPI_Transmit (BYTE *data, UINT size);
 
 void spiBegin(void);
-
+extern uint32_t app_size;
 
 #define PGM_READ_WORD(x) *(x)
 
@@ -128,10 +128,10 @@ int main(void)
   
   //spiBegin();  //softSPI
   
-  sprintf(msg, "\nSYSCLK_Frequency %08lu\n", HAL_RCC_GetSysClockFreq());
-  kprint(msg);
-  sprintf(msg, "HCLK_Frequency   %08lu\n", HAL_RCC_GetHCLKFreq());
-  kprint(msg);
+  //sprintf(msg, "\nSYSCLK_Frequency %08lu\n", HAL_RCC_GetSysClockFreq());
+  //kprint(msg);
+  //sprintf(msg, "HCLK_Frequency   %08lu\n", HAL_RCC_GetHCLKFreq());
+  //kprint(msg);
   
   LED_G1_OFF();
   LED_G2_OFF();             
@@ -227,10 +227,10 @@ static void main_boot(void)
     #endif
   }
   
-  kprint("Entering Bootloader...\n");
+  //kprint("Entering Bootloader...\n");
   Bootloader_Init();
   
-  report_WP_ConfigProtection();  
+  //report_WP_ConfigProtection();  
   
   uint8_t temp_stat = Enter_Bootloader();
   if((temp_stat == ERR_FLASH) || (temp_stat == ERR_VERIFY)) Error_Handler();
