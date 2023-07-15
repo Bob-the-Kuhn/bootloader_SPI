@@ -342,6 +342,11 @@ inline DSTATUS USER_SPI_initialize (
 	if (Stat & STA_NODISK) return Stat;	/* Is card existing in the soket? */
 
 	FCLK_SLOW();
+  void k_delay(const uint32_t ms);
+  k_delay(20);
+  CS_LOW();
+  
+  k_delay(20);
   CS_HIGH();
 	for (n = 10; n; n--) xchg_spi(0xFF);	/* Send 80 dummy clocks */
 //  CS_LOW();

@@ -91,21 +91,24 @@ void Error_Handler(void);
 #define GPIO_PIN__14    14
 #define GPIO_PIN__15    15
 
-
 #define D2_LED_G1_Pin GPIO_PIN__5
 #define D2_LED_G1_GPIO_Port PORTA
-#define Detect_SDIO_Pin GPIO_PIN__9
-#define Detect_SDIO_GPIO_Port PORTA
-#define SD_MISO_Pin GPIO_PIN__11
-#define SD_MISO_GPIO_Port PORTC
-#define SDSS_Pin GPIO_PIN__9
-#define SDSS_GPIO_Port PORTD
-#define SD_SCK_Pin GPIO_PIN__10
-#define SD_SCK_GPIO_Port PORTC
-#define SD_MOSI_Pin GPIO_PIN__12
-#define SD_MOSI_GPIO_Port PORTC
 #define D4_LED_G2_Pin GPIO_PIN__0
 #define D4_LED_G2_GPIO_Port PORTD
+
+//#define SOFT_SPI       // select if use soft spi or hard spi routines  
+
+#define Detect_SDIO_Pin GPIO_PIN__11
+#define Detect_SDIO_GPIO_Port PORTB
+#define SD_MISO_Pin GPIO_PIN__5
+#define SD_MISO_GPIO_Port PORTD
+#define SDSS_Pin GPIO_PIN__9
+#define SDSS_GPIO_Port PORTD
+#define SD_SCK_Pin GPIO_PIN__8
+#define SD_SCK_GPIO_Port PORTD
+#define SD_MOSI_Pin GPIO_PIN__2
+#define SD_MOSI_GPIO_Port PORTA
+
 
   // SPI 3             SPI 2          SPI 1
   // PA4  AF9 SS       PB9 AF5 SS     PD9 AF5 SS
@@ -183,6 +186,7 @@ void spiBegin(void);
 void spiInit(uint8_t spiRate);
 uint8_t SOFT_SPI_STM32_SpiTransfer_Mode_3(uint8_t b);
 
+
 //#define WRITE(PIN, DATA)  {HAL_GPIO_WritePin(PIN, DATA);}
 //#define READ(PIN)         {HAL_GPIO_ReadPin(PIN);}
 //#define SD_MOSI_PIN (SD_MOSI_GPIO_Port, SD_MOSI_Pin)
@@ -196,33 +200,19 @@ uint8_t SOFT_SPI_STM32_SpiTransfer_Mode_3(uint8_t b);
 #define READ_SD_MISO_PIN()       gpio_rd(SD_MISO_GPIO_Port, SD_MISO_Pin)
 
 
-#define WRITE_SD_SCK_PIN_RESET  GPIOC->BSRR = 0x04000000 // PC10
-#define WRITE_SD_SCK_PIN_SET    GPIOC->BSRR = 0x00000400 // PC10
+#define WRITE_SD_SCK_PIN_RESET  GPIOD->BSRR = 0x01000000 // PD8
+#define WRITE_SD_SCK_PIN_SET    GPIOD->BSRR = 0x00000100 // PD8
 
-#define WRITE_SD_MOSI_PIN_RESET GPIOC->BSRR = 0x10000000 // PC12
-#define WRITE_SD_MOSI_PIN_SET   GPIOC->BSRR = 0x00001000 // PC12
+#define WRITE_SD_MOSI_PIN_RESET GPIOA->BSRR = 0x00040000 // PA2
+#define WRITE_SD_MOSI_PIN_SET   GPIOA->BSRR = 0x00000004 // PA2
 
-#define SD_MISO_PIN_READ     ((GPIOC->IDR & 0x00000800) ? 1:0) // PC11
+#define SD_MISO_PIN_READ     ((GPIOD->IDR & 0x00000020) ? 1:0) // PD5
 
 #define CS_HIGH()	{WRITE_SD_SS_PIN(GPIO_PIN_SET);}
 #define CS_LOW()	{WRITE_SD_SS_PIN(GPIO_PIN_RESET);}
 
 #define FCLK_SLOW() { or16(RSPI1_CR1, (6<<3)); }	/* Set SCLK = slow, approx 300 KBits/s*/
 #define FCLK_FAST() { or16(RSPI1_CR1, (3<<3)); }	/* Set SCLK = fast, approx 2.5 MBits/s */
-
-enum Spi_Speed
-{
-  SPI_FULL_SPEED = 0,
-  SPI_HALF_SPEED,
-  SPI_QUARTER_SPEED,
-  SPI_EIGHTH_SPEED,
-  SPI_SPEED_5,
-  SPI_SPEED_6,
-};
-
-
-
-
 
 
 /* USER CODE BEGIN Private defines */

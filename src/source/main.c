@@ -121,12 +121,17 @@ int main(void)
   LED_G1_ON();
   LED_G2_OFF(); 
   
+  #ifdef SOFT_SPI
+    spiBegin();  //softSPI
+    //kprint("SOFT SPI\n");
+  #else
+    SPI_GPIOConfig();   // hard spi
+    //kprint("HARD SPI\n");
+    SPIConfig();        // hard spi
+    SPI_Enable();       // hard spi
+  #endif
   
-  SPI_GPIOConfig();   // hard spi
-  SPIConfig();        // hard spi
-  SPI_Enable();       // hard spi
   
-  //spiBegin();  //softSPI
   
   //sprintf(msg, "\nSYSCLK_Frequency %08lu\n", HAL_RCC_GetSysClockFreq());
   //kprint(msg);
@@ -583,7 +588,6 @@ uint8_t Enter_Bootloader(void)
     }
   #endif
 
- 
   /* Eject SD card */
   SD_Eject();
   kprint("SD ejected.\n");

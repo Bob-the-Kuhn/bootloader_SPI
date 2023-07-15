@@ -23,12 +23,6 @@
  * @{
  */
 
-/** Select target MCU family: please define the target MCU family type below.
- * Currently supported MCU families:
- *  - STM32L4
- *  - STM32F1
- */
-//#define STM32F1
 
 /** Check application checksum on startup */
 #define USE_CHECKSUM 0

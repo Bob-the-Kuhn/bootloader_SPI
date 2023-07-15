@@ -8,23 +8,13 @@
 #include "main.h"
 #include <stdint.h>
 
+#ifndef SOFT_SPI  // enable hard spi routines
+  
 extern uint32_t k_ticks(void);
 void k_delay(const uint32_t ms);
 
 BYTE SPI_Transfer(uint16_t data);
 
-
-//uint16_t spi_status_temp1[256] = {0xFF};
-//uint16_t spi_status_temp2[256] = {0xFF};
-//uint16_t spi_status_temp3[256] = {0xFF};
-//uint16_t spi_status_temp4[256] = {0xFF};
-uint8_t spi_status_timeout1[1024];
-uint8_t spi_status_timeout2[1024];
-
-uint16_t rcv_count = 0;
-
-uint8_t rcv_data_buf[1024] ;
-uint16_t rcv_data_status[1024];
 
 void SPIConfig (void)
 {
@@ -66,15 +56,6 @@ void SPIConfig (void)
   
   k_delay(2);  // try to keep optimizing compiler from executing the following out of order
   or16(RSPI1_CR1, (1<<6));   // SPE=1, Peripheral enabled
-  
-  // init debug arrays
-    if(! rcv_count ) {
-    for (uint16_t count = 0; count <1024; count++) {
-      rcv_data_buf[count] = 0xaa;
-      rcv_data_status[count] = 0xAA55;
-    }
-  }
-  
 }
 
 
@@ -290,36 +271,19 @@ __attribute__((weak))
 BYTE SPI_Transfer(uint16_t data) {
   uint32_t timeout = k_ticks() + 10;  // 10 ms timeout
   uint8_t* RD_pointer = (uint8_t*)RSPI1_DR_8;
-//  spi_status_temp1[(uint8_t) data] = rd16(RSPI1_SR); // save a copy of the status registers
-  //while(rd16(RSPI1_SR)&(3<<11));  //wait if xmit fifo is not empty
-  //while (!((rd16(RSPI1_SR))&(3<<11)) && (timeout > k_ticks())) {};  // wait for TX FIFO to be empty.
   while (!((rd16(RSPI1_SR))&(0x82)) && (timeout > k_ticks())) {};  // wait for TXE bit to set low. This will indicate that the buffer is empty
-//  spi_status_temp2[(uint8_t) data] = rd16(RSPI1_SR); // save a copy of the status registers
-//  if (timeout <= k_ticks()) spi_status_timeout1[(uint8_t) data] = 0;
   if(timeout <= k_ticks()) {
-    spi_status_timeout1[rcv_count] = 0xFF;
+    return 0;
   }
   *RD_pointer =  (data & 0x00FF);  // load the data into the Data Register
-//  spi_status_temp3[(uint8_t) data] = rd16(RSPI1_SR); // save a copy of the status registers
   timeout = k_ticks() + 10;  // 10 ms timeout
   while (!((rd16(RSPI1_SR)) &(1<<0)) && (timeout > k_ticks())){};  // Wait for RXNE to set low. This will indicate that the Rx buffer is not empty
- // if (timeout <= k_ticks()) spi_status_timeout2[(uint8_t) data] = 0;
- // spi_status_temp4[(uint8_t) data] = rd16(RSPI1_SR); // save a copy of the status registers
-  
-  //rcv_data_buf[rcv_count] = SPI1->DR;
-  rcv_data_buf[rcv_count] = *RD_pointer ;
-  rcv_data_status[rcv_count]= SPI1->SR; 
-  uint8_t rcv_data = rcv_data_buf[rcv_count++];
-  if (rcv_count >1023) rcv_count = 1023;
-    //return *RD_pointer ;
+  uint8_t rcv_data = *RD_pointer ;
   if(timeout <= k_ticks()) {
-    spi_status_timeout2[rcv_count - 1] = 0xFF;
     return 0; 
   }
-return (rcv_data);
+  return (rcv_data);
   
- // if (__HAL_SPI_GET_FLAG(hspi, SPI_FLAG_TXE))
- //     {
- //       *((__IO uint8_t *)&hspi->Instance->DR) = (*hspi->pTxBuffPtr);  // transmit 8 bits
 }
+#endif // hard spi
   
