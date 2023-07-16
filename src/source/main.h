@@ -93,30 +93,39 @@ void Error_Handler(void);
 
 #define D2_LED_G1_Pin GPIO_PIN__5
 #define D2_LED_G1_GPIO_Port PORTA
-#define D4_LED_G2_Pin GPIO_PIN__0
-#define D4_LED_G2_GPIO_Port PORTD
+#define D4_LED_G2_Pin GPIO_PIN__6
+#define D4_LED_G2_GPIO_Port PORTA
 
 //#define SOFT_SPI       // select if use soft spi or hard spi routines  
 
-#define Detect_SDIO_Pin GPIO_PIN__11
+#define Detect_SDIO_Pin GPIO_PIN__5
 #define Detect_SDIO_GPIO_Port PORTB
-#define SD_MISO_Pin GPIO_PIN__5
-#define SD_MISO_GPIO_Port PORTD
-#define SDSS_Pin GPIO_PIN__9
-#define SDSS_GPIO_Port PORTD
-#define SD_SCK_Pin GPIO_PIN__8
-#define SD_SCK_GPIO_Port PORTD
-#define SD_MOSI_Pin GPIO_PIN__2
-#define SD_MOSI_GPIO_Port PORTA
+#define SD_MISO_Pin GPIO_PIN__14
+#define SD_MISO_GPIO_Port PORTB
+#define SDSS_Pin GPIO_PIN__12
+#define SDSS_GPIO_Port PORTB
+#define SD_SCK_Pin GPIO_PIN__13
+#define SD_SCK_GPIO_Port PORTB
+#define SD_MOSI_Pin GPIO_PIN__15
+#define SD_MOSI_GPIO_Port PORTB
 
 
-  // SPI 3             SPI 2          SPI 1
-  // PA4  AF9 SS       PB9 AF5 SS     PD9 AF5 SS
-  // PC10 AF4 CLK      PB8 AF1 CLK    PD8 AF1 CLK
-  // PC11 AF4 MISO     PC2 AF1 MISO   PD5 AF1 MISO
-  // PC12 AF4 MOSI     PC3 AF1 MOSI   PA2 AF0 MOSI
-  
-  // PB11 SD_detect
+  // USART 2       USART 1       SPI 2          
+  // PA2  AF7 TX   PA9  AF7 TX   PB12 AF5 SS    
+  // PA3  AF7 Rx   PA10 AF7 Rx   PB13 AF5 CLK   
+  //                             PB14 AF5 MISO  
+  //                             PB15 AF5 MOSI  
+  //
+  // PB5 SD_detect
+  //
+  // PA5 LED, green (built in)
+  // PA6 LED, yellow 
+  //
+  // PC13 button
+  //
+  // PA13 SWDIO  AF0
+  // PA14 SWCLK  AF0
+  // PB3  SWO    AF0
 
 /* LD2 */
 #define LED_G1_Port D2_LED_G1_GPIO_Port

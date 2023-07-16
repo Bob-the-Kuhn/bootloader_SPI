@@ -105,42 +105,8 @@ static const void *attr_sect("isrv_sys") _isrv_sys[] = {
   isr_systick,  /* SysTick_Handler */
 };
 
-// STM32G0B1 vector table
-static const void *attr_sect("isrv_irq") _isrv_irq[] = {
-  /* Peripheral interrupts */
-  isr_none,
-  isr_none,
-  isr_none,
-  isr_none,
-  isr_none,
-  isr_none,
-  isr_none,
-  isr_none,
-  isr_none,
-  isr_none,
-  isr_none,
-  isr_none,
-  isr_none,
-  isr_none,
-  isr_none,
-  isr_none,
-  isr_none,
-  isr_none,
-  isr_none,
-  isr_none,
-  isr_none,
-  isr_none,
-  isr_none,
-  isr_none,
-  isr_none,
-  isr_none,
-  isr_none,
-  isr_none,
-  isr_none,
-  isr_none,
-  isr_none,
-  isr_none,
-};
+// STM32G474 Peripheral interrupt vector table
+static const void *attr_sect("isrv_irq") _isrv_irq[101] = {isr_none};
 
 uint32_t systicks_freq(void)
 {
@@ -165,42 +131,45 @@ void init_clock(void)
   
   /* Configure flash */
   // G0x  must set FLASH latency before switching to higher speed
-  or32(R_FLASH_ACR, 0x00000102UL);  // 2 wait states, prefetch enabled.
-  while ((rd32(R_FLASH_ACR) & 0x00000102U) != 0x00000102U);  // wait until the bits update
+  or32(R_FLASH_ACR, 0x00000101UL);  // 1 wait states, prefetch enabled.
+  while ((rd32(R_FLASH_ACR) & 0x00000101U) != 0x00000101U);  // wait until the bits update
   
+  or32(RCC_CR, (BIT8 | BIT9));  //turn on HSI 
   and32(RCC_CR, ~(BIT24 | BIT18 | BIT16) ); // turn off PLL so can update RCC_CFGR, turn HSE off
+  
   while ((rd32(RCC_CR) & BIT25));  // wait for PLL to stop
   
   // G0x
   /* SYSCLOCK=48MHz, f_USB=48MHz */
   
   /* use PLL, AHB (HPRE): /1 , APB (PPRE): /1 ,  MCO:none */
-  and32(RCC_CFGR, ~0xffff7f07UL);  // set all bits to zero except reserved and hardware controlled
-  or32(RCC_CFGR, 2); // use PLL as SYSCLK source
+  and32(RCC_CFGR, ~0x7f006ff3UL);  // set all bits to zero except reserved and hardware controlled
+  or32(RCC_CFGR, 0xF); // use PLL as SYSCLK source
   
-  and32(RCC_PLLCFGR, ~0xff3f7f73UL);  // set all bits to zero except reserved and hardware controlled
-  // R: /4, PLLRCLK enabled, Q: /2, PLLQCLK enabled, P: /2, PLLPCLK enabled, N: x12, M: /1 , HSint16_t is the input
-  or32(RCC_PLLCFGR, (3 << 29)  | (1 << 28) | (1 << 25) | (1 << 24) | (1 << 17) |  (1 << 16) | (12 << 8) | 2);  
+  and32(RCC_PLLCFGR, ~0xff737ff3UL);  // set all bits to zero except reserved and hardware controlled
+  // R: /4, PLLRCLK enabled, Q: /4, PLLQCLK enabled, P: /2, PLLPCLK disabled, N: x12, M: /1 , HSint16_t is the input
+  or32(RCC_PLLCFGR, (2 << 27) | (1 << 25) | (1 << 24) | (1 << 21) |  (1 << 20) | (12 << 8) | 2);  
   or32(RCC_CR, BIT24);  // turn on PLL
   while (!(rd32(RCC_CR) & BIT25)); 
   
   
-  // set USART2 & 3 clocks to sysclk 
-  and32(RCC_CCIPR, ~0b111100);  //clear out bits
+  // set USART1 & 2 clocks to sysclk 
+  and32(RCC_CCIPR, ~0b1111);  //clear out bits
   or32(RCC_CCIPR,   0b010100);    //select sysclk
 
   /* Enable clocks on AHB and APB peripherals */
-  wr32(RCC_APBENR1, (BIT18 | BIT17 | BIT15 | BIT14 | BIT5 | BIT4 | BIT2 | BIT1 | BIT0)); /* USART3, USART2, SPI3, SPI2, TIM7, TIM6, TIM2-4*/
-  wr32(RCC_APBENR2, (BIT14 | BIT12 | BIT11 | BIT1)); /* USART1, SPI1, TIM1, SYSCFGEN: */
-  wr32(RCC_IOPENR, 0x3f); /* GPIOA-GPIOF */
+  wr32(RCC_AHB2EN, (BIT6 | BIT5 | BIT4 | BIT2 | BIT1 | BIT0));  /* GPIOA-GPIOG */
+  wr32(RCC_APB1ENR1, (BIT17 | BIT14  | BIT5 | BIT4 | BIT2 | BIT1 | BIT0));   /* USART2, SPI2, TIM2-7 */
+  wr32(RCC_APB2ENR, ( BIT14  | BIT13 | BIT11 | BIT0)); /* USART1, TIM8, TIM1, SYSCFGEN */
+
 }
 
 void init_systick(void)
 {
   ticks = 0;
-  wr32(R_SYST_RVR, ((HCLCK / SYSTICKS_FREQ) * 4));
-  wr32(R_SYST_CVR, 0);
-  wr32(R_SYST_CSR, BIT0 | BIT1 | BIT2);
+  wr32(R_SYST_LOAD, ((HCLCK / SYSTICKS_FREQ) * 4));
+  wr32(R_SYST_VAL, 0);
+  wr32(R_SYST_CTRL, BIT0 | BIT1 | BIT2);
 }
 
 int putchar(int c)
@@ -232,10 +201,10 @@ void init_uart(void)
   //or32(R_NVIC_ISER(1), BIT5); /* USART1 is irq 37 */
   
  
- /* USART1 on PA9/PA10 */
+ /* USART1 on PC4/PC5 */
  
-  GPIO_CONFIG_ALT(PORTA, 9, 1, GPIO_NO_PULL_UP_DOWN, GPIO_OUTPUT_PUSH_PULL, GPIO_OUTPUT_VERY_HIGH_SPEED);
-  GPIO_CONFIG_ALT(PORTA,10, 1, GPIO_NO_PULL_UP_DOWN, GPIO_OUTPUT_PUSH_PULL, GPIO_OUTPUT_VERY_HIGH_SPEED);
+  GPIO_CONFIG_ALT(PORTC, 4, 7, GPIO_NO_PULL_UP_DOWN, GPIO_OUTPUT_PUSH_PULL, GPIO_OUTPUT_VERY_HIGH_SPEED);
+  GPIO_CONFIG_ALT(PORTC, 5, 1, GPIO_NO_PULL_UP_DOWN, GPIO_OUTPUT_PUSH_PULL, GPIO_OUTPUT_VERY_HIGH_SPEED);
   /* fPCLK=48MHz, br=115.2KBps, USARTDIV=22.8125, see table 80 pag. 519 */
   wr32(R_USART1_BRR, 0x19f);
   or32(R_USART1_CR1, BIT13 | BIT5 | BIT3 | BIT2 | BIT0);
