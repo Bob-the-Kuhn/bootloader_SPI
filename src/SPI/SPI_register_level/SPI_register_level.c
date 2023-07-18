@@ -2,7 +2,7 @@
 
 #include "integer.h" //from FatFs middleware library
 //#include "SPI_register_level_defines.h"
-#include "stm32g0b1x_defines.h"
+#include "stm32g474x_defines.h"
 #include "basic.h"
 #include "gpio.h"
 #include "main.h"
@@ -30,7 +30,7 @@ void SPIConfig (void)
   wr16(RSPI1_CR1, 0); //  Set all bits (including SSM) to 0 
   //or16(RSPI1_CR2, (1<<3));  //  Set NSSP bit to 1  (optional)
   
-  while (SPI1->SR & (1<<5)) {  // writing to some registers is disabled if Mode fault (MODF) bit is active
+  while (rd16(RSPI1_SR) & (1<<5)) {  // writing to some registers is disabled if Mode fault (MODF) bit is active
      wr16(RSPI1_CR1, 0);      // clearing sequence is to read or write the status register and then write CR1
   }                               //  SDSS (NSSP) must be inactive for this to work
     

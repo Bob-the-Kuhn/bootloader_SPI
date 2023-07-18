@@ -8,14 +8,14 @@
 #include <basic.h>
 #include <log.h>
 #include <gpio.h>
-#include "stm32g0b1x_defines.h"
+#include "stm32g474x_defines.h"
 #include <string.h>
 #include <string.h>
 
 #define STACK_TOP ((void*)(0x20004000))
 
 #define CPU_FREQ      48000000
-#define AHB_PRESCALER         4
+#define AHB_PRESCALER         1
 #define HCLCK (CPU_FREQ / AHB_PRESCALER)
 #define SYSTICKS_FREQ      1000
 
@@ -75,38 +75,38 @@ void attr_weak isr_hf(void)
 {
 }
 
-void attr_weak isr_systick(void)
+void isr_systick(void)
 {
   ticks++;
 }
 
-void SysTick_Handler(void)
+void attr_weak SysTick_Handler(void)
 {
   ticks++;
 }
-// STM32G0B1 vector table
+// STM32G474vector table
 static const void *attr_sect("isrv_sys") _isrv_sys[] = {
-  /* Cortex-M0 system exceptions */
+  /* Cortex-M4 system interrupts */
   STACK_TOP,    /* Stack top */
   isr_reset,    /* Reset_Handler */
   isr_nmi,      /* NMI_Handler */
   isr_hf,       /* HardFault_Handler */
-  0,            /* Reserved */
-  0,            /* Reserved */
-  0,            /* Reserved */
+  isr_none,     /* MemManage_Handler */
+  isr_none,     /* BusFault_Handler */
+  isr_none,     /* UsageFault_Handler */
   0,            /* Reserved */
   0,            /* Reserved */
   0,            /* Reserved */
   0,            /* Reserved */
   isr_none,     /* SVC_Handler */
-  0,            /* Reserved */
+  isr_none,     /* DebugMon_Handler */
   0,            /* Reserved */
   isr_none,     /* PendSV_Handler */
   isr_systick,  /* SysTick_Handler */
 };
 
 // STM32G474 Peripheral interrupt vector table
-static const void *attr_sect("isrv_irq") _isrv_irq[101] = {isr_none};
+static const void *attr_sect("isrv_irq") _isrv_irq[102] = {isr_none};
 
 uint32_t systicks_freq(void)
 {
@@ -130,8 +130,11 @@ void init_clock(void)
 {
   
   /* Configure flash */
-  // G0x  must set FLASH latency before switching to higher speed
-  or32(R_FLASH_ACR, 0x00000101UL);  // 1 wait states, prefetch enabled.
+  // G474  must set FLASH latency before switching to higher speed
+  //and32(R_FLASH_ACR, ~(0x0000000FUL)); // clear out wait state bits
+  and32(R_FLASH_ACR, ~(0x0000070FUL)); // clear out wait state, prefetch, instruction cache & data cache bits
+  or32(R_FLASH_ACR, 0x0000010FUL);  // 4 wait states, prefetch enabled.
+  //or32(R_FLASH_ACR, 0x0000070FUL);  // 4 wait states, prefetch, instruction cache & data cache enabled.
   while ((rd32(R_FLASH_ACR) & 0x00000101U) != 0x00000101U);  // wait until the bits update
   
   or32(RCC_CR, (BIT8 | BIT9));  //turn on HSI 
@@ -139,7 +142,7 @@ void init_clock(void)
   
   while ((rd32(RCC_CR) & BIT25));  // wait for PLL to stop
   
-  // G0x
+  
   /* SYSCLOCK=48MHz, f_USB=48MHz */
   
   /* use PLL, AHB (HPRE): /1 , APB (PPRE): /1 ,  MCO:none */
@@ -155,11 +158,11 @@ void init_clock(void)
   
   // set USART1 & 2 clocks to sysclk 
   and32(RCC_CCIPR, ~0b1111);  //clear out bits
-  or32(RCC_CCIPR,   0b010100);    //select sysclk
+  or32(RCC_CCIPR,   0b0101);    //select sysclk
 
   /* Enable clocks on AHB and APB peripherals */
-  wr32(RCC_AHB2EN, (BIT6 | BIT5 | BIT4 | BIT2 | BIT1 | BIT0));  /* GPIOA-GPIOG */
-  wr32(RCC_APB1ENR1, (BIT17 | BIT14  | BIT5 | BIT4 | BIT2 | BIT1 | BIT0));   /* USART2, SPI2, TIM2-7 */
+  wr32(RCC_AHB2ENR, (BIT6 | BIT5 | BIT4 | BIT3 | BIT2 | BIT1 | BIT0));  /* GPIOA-GPIOG */
+  wr32(RCC_APB1ENR1, (BIT17 | BIT14  | BIT5 | BIT4 | BIT3 | BIT2 | BIT1 | BIT0));   /* USART2, SPI2, TIM2-7 */
   wr32(RCC_APB2ENR, ( BIT14  | BIT13 | BIT11 | BIT0)); /* USART1, TIM8, TIM1, SYSCFGEN */
 
 }
@@ -167,9 +170,9 @@ void init_clock(void)
 void init_systick(void)
 {
   ticks = 0;
-  wr32(R_SYST_LOAD, ((HCLCK / SYSTICKS_FREQ) * 4));
-  wr32(R_SYST_VAL, 0);
-  wr32(R_SYST_CTRL, BIT0 | BIT1 | BIT2);
+  wr32(R_STK_LOAD, ((HCLCK / SYSTICKS_FREQ) * 4));
+  wr32(R_STK_VAL, 0);
+  wr32(R_STK_CTRL, BIT0 | BIT1 | BIT2);
 }
 
 int putchar(int c)
@@ -197,7 +200,7 @@ void init_uart(void)
   wr32(R_USART2_BRR, 0x19f);
   or32(R_USART2_CR1, BIT13 | BIT5 | BIT3 | BIT2 | BIT0);
   //or32(R_NVIC_ISER(1), BIT7); /* USART3 is irq 39 */
-  or32(R_NVIC_ISER(1), BIT6); /* USART2 is irq 38 */
+  //or32(R_NVIC_ISER(1), BIT6); /* USART2 is irq 38 */
   //or32(R_NVIC_ISER(1), BIT5); /* USART1 is irq 37 */
   
  
@@ -210,7 +213,7 @@ void init_uart(void)
   or32(R_USART1_CR1, BIT13 | BIT5 | BIT3 | BIT2 | BIT0);
   //or32(R_NVIC_ISER(1), BIT7); /* USART3 is irq 39 */
   //or32(R_NVIC_ISER(1), BIT6); /* USART2 is irq 38 */
-  or32(R_NVIC_ISER(1), BIT5); /* USART1 is irq 37 */
+  //or32(R_NVIC_ISER(1), BIT5); /* USART1 is irq 37 */
 }
 
 void init(void)

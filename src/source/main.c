@@ -78,6 +78,7 @@ void report_WP_ConfigProtection(void);
 void SPI_Transmit (BYTE *data, UINT size);
 
 void spiBegin(void);
+
 extern uint32_t app_size;
 
 #define PGM_READ_WORD(x) *(x)
@@ -104,8 +105,8 @@ int main(void)
 
   
   /* USER CODE BEGIN Init */
-  
-  HAL_NVIC_EnableIRQ(SysTick_IRQn);  // enable Systick irq
+  //__disable_irq();
+  NVIC_EnableIRQ(SysTick_IRQn);  // enable Systick irq
   
   /* USER CODE END Init */
   
@@ -116,6 +117,8 @@ int main(void)
   /* USER CODE END SysInit */
   
   /* Initialize all configured peripherals */
+  
+  
   GPIO_Init();
   
   LED_G1_ON();
@@ -132,7 +135,8 @@ int main(void)
   #endif
   
   
-  
+  //uint32_t          HAL_RCC_GetSysClockFreq(void);
+  //uint32_t          HAL_RCC_GetHCLKFreq(void);
   //sprintf(msg, "\nSYSCLK_Frequency %08lu\n", HAL_RCC_GetSysClockFreq());
   //kprint(msg);
   //sprintf(msg, "HCLK_Frequency   %08lu\n", HAL_RCC_GetHCLKFreq());
@@ -222,12 +226,12 @@ static void main_boot(void)
   kprint("\nPower up, Boot started.\n");
   
   /* Check system reset flags */
-  if(__HAL_RCC_GET_FLAG(RCC_FLAG_PWRRST))
+  if(RCC->CSR & (RCC_CSR_PINRSTF | RCC_CSR_BORRSTF) )
   {
     //print("POR/PDR reset flag is active.\n");
     #if(CLEAR_RESET_FLAGS)
       /* Clear system reset flags */
-      __HAL_RCC_CLEAR_RESET_FLAGS();
+    RCC->CSR |= RCC_CSR_RMVF;
       //print("Reset flags cleared.\n");
     #endif
   }

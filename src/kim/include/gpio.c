@@ -3,7 +3,7 @@
 #ifndef _GPIO_CPP_
 #define _GPIO_CPP_
 
-#include "stm32g0b1x_defines.h"
+#include "stm32g474x_defines.h"
 #include "basic.h"
 #include "gpio.h"
 

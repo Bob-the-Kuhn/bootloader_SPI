@@ -27,9 +27,10 @@
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32g0xx_hal.h"
+//#include "stm32g474xx_hal.h"
 #include "kprint.h"
 #include "gpio.h"
+#include "stm32g4xx_hal_def.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -59,11 +60,10 @@ void Error_Handler(void);
 #define USE_VCP 1
 /******************************************************************************/
 
+
 /* Hardware Defines ----------------------------------------------------------*/
                           
-// BTT SKR PRO has only one LED at PA7
-// The 407 black board has two at PA6 and PA7
-// The 103 black board has two at PE5 and PB5
+
 
 
 // D2_LED_G1_Pin PE5

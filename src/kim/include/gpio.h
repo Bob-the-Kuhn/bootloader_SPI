@@ -3,7 +3,7 @@
 #ifndef _GPIO_H_
 #define _GPIO_H_
 
-#include "stm32g0b1x_defines.h"
+#include "stm32g474x_defines.h"
 #include "basic.h"
 
 #define PORTA 0
@@ -31,6 +31,8 @@
 #define GPIO_PULL_UP                  0b01
 #define GPIO_PULL_DOWN                0b10
 
+#define GPIO_PIN_SET                  0b1
+#define GPIO_PIN_RESET                0b0
 
 #define IO(port, pin) (((port) << 8) | (pin))
 #define PORT(io) ((io) >> 8)
