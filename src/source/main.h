@@ -72,7 +72,7 @@ void Error_Handler(void);
 // SDSS_Pin PC11
 // SD_SCK_Pin PC12
 // SD_MOSI_Pin PD2
-// D4_LED_G2_Pin PB5
+// D4_LED_G2_Pin PA7
 
 #define GPIO_PIN__0    0
 #define GPIO_PIN__1    1
@@ -93,7 +93,7 @@ void Error_Handler(void);
 
 #define D2_LED_G1_Pin GPIO_PIN__5
 #define D2_LED_G1_GPIO_Port PORTA
-#define D4_LED_G2_Pin GPIO_PIN__6
+#define D4_LED_G2_Pin GPIO_PIN__7
 #define D4_LED_G2_GPIO_Port PORTA
 
 //#define SOFT_SPI       // select if use soft spi or hard spi routines  

@@ -135,12 +135,12 @@ int main(void)
   #endif
   
   
-  //uint32_t          HAL_RCC_GetSysClockFreq(void);
-  //uint32_t          HAL_RCC_GetHCLKFreq(void);
-  //sprintf(msg, "\nSYSCLK_Frequency %08lu\n", HAL_RCC_GetSysClockFreq());
-  //kprint(msg);
-  //sprintf(msg, "HCLK_Frequency   %08lu\n", HAL_RCC_GetHCLKFreq());
-  //kprint(msg);
+  uint32_t          HAL_RCC_GetSysClockFreq(void);
+  uint32_t          HAL_RCC_GetHCLKFreq(void);
+  sprintf(msg, "\nSYSCLK_Frequency %08lu\n", HAL_RCC_GetSysClockFreq());
+  kprint(msg);
+  sprintf(msg, "HCLK_Frequency   %08lu\n", HAL_RCC_GetHCLKFreq());
+  kprint(msg);
   
   LED_G1_OFF();
   LED_G2_OFF();             
@@ -194,7 +194,7 @@ void GPIO_Init(void)
   GPIO_CONFIG_OUTPUT(D2_LED_G1_GPIO_Port, D2_LED_G1_Pin, GPIO_NO_PULL_UP_DOWN, GPIO_OUTPUT_PUSH_PULL, GPIO_OUTPUT_VERY_LOW_SPEED)
   
   /*Configure GPIO pins : LED_D4_Pin */
-  // D4_LED_G2_Pin PD0 
+  // D4_LED_G2_Pin PA7 
   gpio_wr(D4_LED_G2_GPIO_Port, D4_LED_G2_Pin, 0);
   GPIO_CONFIG_OUTPUT(D4_LED_G2_GPIO_Port, D4_LED_G2_Pin, GPIO_NO_PULL_UP_DOWN, GPIO_OUTPUT_PUSH_PULL, GPIO_OUTPUT_VERY_LOW_SPEED)
   
@@ -554,7 +554,7 @@ uint8_t Enter_Bootloader(void)
 #endif
                   
   LED_G1_OFF();
-
+#if 0
   #if defined(FILE_EXT_CHANGE) && (_LFN_UNICODE == 0)   // rename file if using ANSI/OEM strings
     TCHAR new_filename[strlen(CONF_FILENAME) + 1];
     new_filename[strlen(CONF_FILENAME)] = '\0';  // terminate the string
@@ -591,6 +591,7 @@ uint8_t Enter_Bootloader(void)
                                            // after the next reset
     }
   #endif
+#endif
 
   /* Eject SD card */
   SD_Eject();
