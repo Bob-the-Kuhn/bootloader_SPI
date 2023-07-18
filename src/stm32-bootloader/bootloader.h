@@ -99,15 +99,19 @@
                                   FLASH_SR_WRPERR   | FLASH_SR_PGAERR  | FLASH_SR_SIZERR  |  \
                                   FLASH_SR_MISERR   | FLASH_SR_OPERR   | FLASH_SR_PGSERR  |  \
                                   FLASH_SR_FASTERR)
-    
-                         
 
-/* MCU RAM information (to check whether flash contains valid application) */
-//#define RAM_BASE SRAM1_BASE     /*!< Start address of RAM */  //defined by STM32G474 platform
-#ifdef SRAM2_SIZE_MAX
-  #define RAM_SIZE (SRAM1_SIZE_MAX + SRAM2_SIZE_MAX + 2) /*!< RAM size in bytes */
+#ifdef SRAM1_SIZE_MAX      //defined by STM32G474 platform
+  #ifdef SRAM2_SIZE
+    #ifdef CCMSRAM_SIZE
+      #define RAM_SIZE (SRAM1_SIZE_MAX + SRAM2_SIZE + CCMSRAM_SIZE)
+    #else
+      #define RAM_SIZE (SRAM1_SIZE_MAX + SRAM2_SIZE)
+    #endif
+  #else
+    #define RAM_SIZE (SRAM1_SIZE_MAX)
+  #endif
 #else
-  #define RAM_SIZE SRAM1_SIZE_MAX +1 /*!< RAM size in bytes */
+  #error "SRAM size not defined by platform"
 #endif
 
 /* Enumerations --------------------------------------------------------------*/

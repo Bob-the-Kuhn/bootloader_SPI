@@ -13558,7 +13558,7 @@ Discarded input sections
  .debug_macro   0x0000000000000000      0x4d0 .pio/build/bootloader_STM32G474RE/SrcWrapper/src/stm32/bootloader.c.o
  .debug_macro   0x0000000000000000       0x10 .pio/build/bootloader_STM32G474RE/SrcWrapper/src/stm32/bootloader.c.o
  .debug_line    0x0000000000000000      0x694 .pio/build/bootloader_STM32G474RE/SrcWrapper/src/stm32/bootloader.c.o
- .debug_str     0x0000000000000000    0xbbd1b .pio/build/bootloader_STM32G474RE/SrcWrapper/src/stm32/bootloader.c.o
+ .debug_str     0x0000000000000000    0xbbd36 .pio/build/bootloader_STM32G474RE/SrcWrapper/src/stm32/bootloader.c.o
  .comment       0x0000000000000000       0x44 .pio/build/bootloader_STM32G474RE/SrcWrapper/src/stm32/bootloader.c.o
  .ARM.attributes
                 0x0000000000000000       0x34 .pio/build/bootloader_STM32G474RE/SrcWrapper/src/stm32/bootloader.c.o
@@ -16887,7 +16887,7 @@ LOAD c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc
                 0x00000000080001d8                g_pfnVectors
                 0x00000000080003b0                . = ALIGN (0x4)
 
-.text           0x00000000080003b0     0x4570
+.text           0x00000000080003b0     0x456c
                 0x00000000080003b0                . = ALIGN (0x4)
  *(.text)
  .text          0x00000000080003b0       0xa0 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-memchr.o)
@@ -17376,481 +17376,481 @@ LOAD c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc
                 0x0000000008003dac        0xc .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/bootloader.c.o
                 0x0000000008003dac                Bootloader_CheckSize
  .text.Bootloader_CheckForApplication
-                0x0000000008003db8       0x1c .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/bootloader.c.o
+                0x0000000008003db8       0x18 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/bootloader.c.o
                 0x0000000008003db8                Bootloader_CheckForApplication
  .text.Bootloader_JumpToApplication
-                0x0000000008003dd4       0x20 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/bootloader.c.o
-                0x0000000008003dd4                Bootloader_JumpToApplication
+                0x0000000008003dd0       0x20 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/bootloader.c.o
+                0x0000000008003dd0                Bootloader_JumpToApplication
  .text.Reset_Handler
-                0x0000000008003df4       0xb4 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
-                0x0000000008003df4                Reset_Handler
+                0x0000000008003df0       0xb4 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003df0                Reset_Handler
  .text.NMI_Handler
-                0x0000000008003ea8        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003ea4        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.HardFault_Handler
-                0x0000000008003eaa        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003ea6        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.BusFault_Handler
-                0x0000000008003eac        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003ea8        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.UsageFault_Handler
-                0x0000000008003eae        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003eaa        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.SVC_Handler
-                0x0000000008003eb0        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003eac        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.DebugMon_Handler
-                0x0000000008003eb2        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003eae        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.PendSV_Handler
-                0x0000000008003eb4        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003eb0        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.WWDG_IRQHandler
-                0x0000000008003eb6        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003eb2        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.PVD_PVM_IRQHandler
-                0x0000000008003eb8        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003eb4        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.RTC_TAMP_LSECSS_IRQHandler
-                0x0000000008003eba        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003eb6        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.RTC_WKUP_IRQHandler
-                0x0000000008003ebc        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003eb8        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.FLASH_IRQHandler
-                0x0000000008003ebe        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003eba        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.RCC_IRQHandler
-                0x0000000008003ec0        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003ebc        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.EXTI0_IRQHandler
-                0x0000000008003ec2        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003ebe        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.EXTI1_IRQHandler
-                0x0000000008003ec4        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003ec0        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.EXTI2_IRQHandler
-                0x0000000008003ec6        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003ec2        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.EXTI3_IRQHandler
-                0x0000000008003ec8        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003ec4        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.EXTI4_IRQHandler
-                0x0000000008003eca        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003ec6        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.DMA1_Channel1_IRQHandler
-                0x0000000008003ecc        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003ec8        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.DMA1_Channel2_IRQHandler
-                0x0000000008003ece        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003eca        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.DMA1_Channel3_IRQHandler
-                0x0000000008003ed0        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003ecc        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.DMA1_Channel4_IRQHandler
-                0x0000000008003ed2        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003ece        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.DMA1_Channel5_IRQHandler
-                0x0000000008003ed4        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003ed0        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.DMA1_Channel6_IRQHandler
-                0x0000000008003ed6        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003ed2        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.DMA1_Channel7_IRQHandler
-                0x0000000008003ed8        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003ed4        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.ADC1_2_IRQHandler
-                0x0000000008003eda        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003ed6        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.USB_HP_IRQHandler
-                0x0000000008003edc        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003ed8        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.USB_LP_IRQHandler
-                0x0000000008003ede        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003eda        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.FDCAN1_IT0_IRQHandler
-                0x0000000008003ee0        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003edc        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.FDCAN1_IT1_IRQHandler
-                0x0000000008003ee2        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003ede        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.EXTI9_5_IRQHandler
-                0x0000000008003ee4        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003ee0        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.TIM1_BRK_TIM15_IRQHandler
-                0x0000000008003ee6        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003ee2        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.TIM1_UP_TIM16_IRQHandler
-                0x0000000008003ee8        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003ee4        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.TIM1_TRG_COM_TIM17_IRQHandler
-                0x0000000008003eea        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003ee6        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.TIM1_CC_IRQHandler
-                0x0000000008003eec        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003ee8        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.TIM2_IRQHandler
-                0x0000000008003eee        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003eea        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.TIM3_IRQHandler
-                0x0000000008003ef0        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003eec        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.TIM4_IRQHandler
-                0x0000000008003ef2        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003eee        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.I2C1_EV_IRQHandler
-                0x0000000008003ef4        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003ef0        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.I2C1_ER_IRQHandler
-                0x0000000008003ef6        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003ef2        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.I2C2_EV_IRQHandler
-                0x0000000008003ef8        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003ef4        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.I2C2_ER_IRQHandler
-                0x0000000008003efa        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003ef6        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.SPI1_IRQHandler
-                0x0000000008003efc        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003ef8        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.SPI2_IRQHandler
-                0x0000000008003efe        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003efa        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.USART1_IRQHandler
-                0x0000000008003f00        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003efc        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.USART2_IRQHandler
-                0x0000000008003f02        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003efe        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.USART3_IRQHandler
-                0x0000000008003f04        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f00        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.RTC_Alarm_IRQHandler
-                0x0000000008003f06        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f02        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.USBWakeUp_IRQHandler
-                0x0000000008003f08        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f04        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.TIM8_BRK_IRQHandler
-                0x0000000008003f0a        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f06        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.TIM8_UP_IRQHandler
-                0x0000000008003f0c        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f08        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.TIM8_TRG_COM_IRQHandler
-                0x0000000008003f0e        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f0a        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.TIM8_CC_IRQHandler
-                0x0000000008003f10        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f0c        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.ADC3_IRQHandler
-                0x0000000008003f12        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f0e        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.FMC_IRQHandler
-                0x0000000008003f14        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f10        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.LPTIM1_IRQHandler
-                0x0000000008003f16        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f12        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.TIM5_IRQHandler
-                0x0000000008003f18        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f14        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.SPI3_IRQHandler
-                0x0000000008003f1a        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f16        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.UART4_IRQHandler
-                0x0000000008003f1c        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f18        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.UART5_IRQHandler
-                0x0000000008003f1e        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f1a        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.TIM6_DAC_IRQHandler
-                0x0000000008003f20        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f1c        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.TIM7_DAC_IRQHandler
-                0x0000000008003f22        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f1e        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.DMA2_Channel2_IRQHandler
-                0x0000000008003f24        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f20        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.DMA2_Channel1_IRQHandler
-                0x0000000008003f26        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f22        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.DMA2_Channel3_IRQHandler
-                0x0000000008003f28        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f24        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.DMA2_Channel4_IRQHandler
-                0x0000000008003f2a        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f26        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.DMA2_Channel5_IRQHandler
-                0x0000000008003f2c        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f28        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.ADC4_IRQHandler
-                0x0000000008003f2e        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f2a        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.ADC5_IRQHandler
-                0x0000000008003f30        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f2c        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.UCPD1_IRQHandler
-                0x0000000008003f32        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f2e        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.COMP1_2_3_IRQHandler
-                0x0000000008003f34        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f30        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.COMP4_5_6_IRQHandler
-                0x0000000008003f36        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f32        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.COMP7_IRQHandler
-                0x0000000008003f38        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f34        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.HRTIM1_Master_IRQHandler
-                0x0000000008003f3a        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f36        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.HRTIM1_TIMA_IRQHandler
-                0x0000000008003f3c        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f38        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.HRTIM1_TIMB_IRQHandler
-                0x0000000008003f3e        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f3a        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.HRTIM1_TIMC_IRQHandler
-                0x0000000008003f40        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f3c        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.HRTIM1_TIMD_IRQHandler
-                0x0000000008003f42        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f3e        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.HRTIM1_TIME_IRQHandler
-                0x0000000008003f44        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f40        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.HRTIM1_FLT_IRQHandler
-                0x0000000008003f46        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f42        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.HRTIM1_TIMF_IRQHandler
-                0x0000000008003f48        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f44        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.CRS_IRQHandler
-                0x0000000008003f4a        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f46        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.SAI1_IRQHandler
-                0x0000000008003f4c        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f48        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.TIM20_BRK_IRQHandler
-                0x0000000008003f4e        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f4a        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.TIM20_UP_IRQHandler
-                0x0000000008003f50        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f4c        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.TIM20_TRG_COM_IRQHandler
-                0x0000000008003f52        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f4e        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.TIM20_CC_IRQHandler
-                0x0000000008003f54        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f50        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.FPU_IRQHandler
-                0x0000000008003f56        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f52        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.I2C4_EV_IRQHandler
-                0x0000000008003f58        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f54        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.I2C4_ER_IRQHandler
-                0x0000000008003f5a        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f56        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.SPI4_IRQHandler
-                0x0000000008003f5c        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f58        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.FDCAN2_IT0_IRQHandler
-                0x0000000008003f5e        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f5a        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.FDCAN2_IT1_IRQHandler
-                0x0000000008003f60        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f5c        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.FDCAN3_IT0_IRQHandler
-                0x0000000008003f62        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f5e        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.FDCAN3_IT1_IRQHandler
-                0x0000000008003f64        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f60        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.RNG_IRQHandler
-                0x0000000008003f66        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f62        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.LPUART1_IRQHandler
-                0x0000000008003f68        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f64        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.I2C3_EV_IRQHandler
-                0x0000000008003f6a        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f66        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.I2C3_ER_IRQHandler
-                0x0000000008003f6c        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f68        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.DMAMUX_OVR_IRQHandler
-                0x0000000008003f6e        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f6a        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.QUADSPI_IRQHandler
-                0x0000000008003f70        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f6c        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.DMA1_Channel8_IRQHandler
-                0x0000000008003f72        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f6e        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.DMA2_Channel6_IRQHandler
-                0x0000000008003f74        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f70        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.DMA2_Channel7_IRQHandler
-                0x0000000008003f76        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f72        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.DMA2_Channel8_IRQHandler
-                0x0000000008003f78        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f74        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.CORDIC_IRQHandler
-                0x0000000008003f7a        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f76        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.FMAC_IRQHandler
-                0x0000000008003f7c        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
+                0x0000000008003f78        0x2 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/startup_stm32g474re.s.o
  .text.Default_Handler
-                0x0000000008003f7e        0x2 .pio/build/bootloader_STM32G474RE/libFrameworkArduino.a(startup_stm32yyxx.S.o)
-                0x0000000008003f7e                RTC_Alarm_IRQHandler
-                0x0000000008003f7e                TIM8_TRG_COM_IRQHandler
-                0x0000000008003f7e                HRTIM1_Master_IRQHandler
-                0x0000000008003f7e                DebugMon_Handler
-                0x0000000008003f7e                SPI4_IRQHandler
-                0x0000000008003f7e                FDCAN3_IT0_IRQHandler
-                0x0000000008003f7e                HardFault_Handler
-                0x0000000008003f7e                HRTIM1_FLT_IRQHandler
-                0x0000000008003f7e                HRTIM1_TIMF_IRQHandler
-                0x0000000008003f7e                USB_HP_IRQHandler
-                0x0000000008003f7e                CORDIC_IRQHandler
-                0x0000000008003f7e                HRTIM1_TIMD_IRQHandler
-                0x0000000008003f7e                PendSV_Handler
-                0x0000000008003f7e                DMA2_Channel8_IRQHandler
-                0x0000000008003f7e                NMI_Handler
-                0x0000000008003f7e                I2C3_ER_IRQHandler
-                0x0000000008003f7e                I2C2_EV_IRQHandler
-                0x0000000008003f7e                FPU_IRQHandler
-                0x0000000008003f7e                FDCAN1_IT1_IRQHandler
-                0x0000000008003f7e                UsageFault_Handler
-                0x0000000008003f7e                ADC1_2_IRQHandler
-                0x0000000008003f7e                HRTIM1_TIME_IRQHandler
-                0x0000000008003f7e                SPI1_IRQHandler
-                0x0000000008003f7e                HRTIM1_TIMC_IRQHandler
-                0x0000000008003f7e                DMA2_Channel2_IRQHandler
-                0x0000000008003f7e                DMA1_Channel4_IRQHandler
-                0x0000000008003f7e                TIM20_TRG_COM_IRQHandler
-                0x0000000008003f7e                DMA1_Channel7_IRQHandler
-                0x0000000008003f7e                ADC3_IRQHandler
-                0x0000000008003f7e                DMA2_Channel1_IRQHandler
-                0x0000000008003f7e                QUADSPI_IRQHandler
-                0x0000000008003f7e                I2C1_EV_IRQHandler
-                0x0000000008003f7e                DMA1_Channel6_IRQHandler
-                0x0000000008003f7e                DMA2_Channel4_IRQHandler
-                0x0000000008003f7e                RCC_IRQHandler
-                0x0000000008003f7e                DMA1_Channel1_IRQHandler
-                0x0000000008003f7e                Default_Handler
-                0x0000000008003f7e                DMA2_Channel7_IRQHandler
-                0x0000000008003f7e                RTC_TAMP_LSECSS_IRQHandler
-                0x0000000008003f7e                FMAC_IRQHandler
-                0x0000000008003f7e                DMA1_Channel8_IRQHandler
-                0x0000000008003f7e                HRTIM1_TIMA_IRQHandler
-                0x0000000008003f7e                FDCAN3_IT1_IRQHandler
-                0x0000000008003f7e                UCPD1_IRQHandler
-                0x0000000008003f7e                I2C3_EV_IRQHandler
-                0x0000000008003f7e                RTC_WKUP_IRQHandler
-                0x0000000008003f7e                PVD_PVM_IRQHandler
-                0x0000000008003f7e                SPI2_IRQHandler
-                0x0000000008003f7e                MemManage_Handler
-                0x0000000008003f7e                ADC5_IRQHandler
-                0x0000000008003f7e                SVC_Handler
-                0x0000000008003f7e                DMA2_Channel5_IRQHandler
-                0x0000000008003f7e                CRS_IRQHandler
-                0x0000000008003f7e                DMA1_Channel5_IRQHandler
-                0x0000000008003f7e                USB_LP_IRQHandler
-                0x0000000008003f7e                RNG_IRQHandler
-                0x0000000008003f7e                HRTIM1_TIMB_IRQHandler
-                0x0000000008003f7e                FDCAN2_IT1_IRQHandler
-                0x0000000008003f7e                DMA1_Channel3_IRQHandler
-                0x0000000008003f7e                ADC4_IRQHandler
-                0x0000000008003f7e                WWDG_IRQHandler
-                0x0000000008003f7e                I2C4_EV_IRQHandler
-                0x0000000008003f7e                FDCAN2_IT0_IRQHandler
-                0x0000000008003f7e                DMA2_Channel6_IRQHandler
-                0x0000000008003f7e                FDCAN1_IT0_IRQHandler
-                0x0000000008003f7e                COMP7_IRQHandler
-                0x0000000008003f7e                COMP1_2_3_IRQHandler
-                0x0000000008003f7e                COMP4_5_6_IRQHandler
-                0x0000000008003f7e                TIM20_BRK_IRQHandler
-                0x0000000008003f7e                I2C2_ER_IRQHandler
-                0x0000000008003f7e                DMA1_Channel2_IRQHandler
-                0x0000000008003f7e                TIM8_BRK_IRQHandler
-                0x0000000008003f7e                FLASH_IRQHandler
-                0x0000000008003f7e                BusFault_Handler
-                0x0000000008003f7e                SPI3_IRQHandler
-                0x0000000008003f7e                I2C1_ER_IRQHandler
-                0x0000000008003f7e                FMC_IRQHandler
-                0x0000000008003f7e                LPTIM1_IRQHandler
-                0x0000000008003f7e                DMAMUX_OVR_IRQHandler
-                0x0000000008003f7e                I2C4_ER_IRQHandler
-                0x0000000008003f7e                USBWakeUp_IRQHandler
-                0x0000000008003f7e                SAI1_IRQHandler
-                0x0000000008003f7e                DMA2_Channel3_IRQHandler
+                0x0000000008003f7a        0x2 .pio/build/bootloader_STM32G474RE/libFrameworkArduino.a(startup_stm32yyxx.S.o)
+                0x0000000008003f7a                RTC_Alarm_IRQHandler
+                0x0000000008003f7a                TIM8_TRG_COM_IRQHandler
+                0x0000000008003f7a                HRTIM1_Master_IRQHandler
+                0x0000000008003f7a                DebugMon_Handler
+                0x0000000008003f7a                SPI4_IRQHandler
+                0x0000000008003f7a                FDCAN3_IT0_IRQHandler
+                0x0000000008003f7a                HardFault_Handler
+                0x0000000008003f7a                HRTIM1_FLT_IRQHandler
+                0x0000000008003f7a                HRTIM1_TIMF_IRQHandler
+                0x0000000008003f7a                USB_HP_IRQHandler
+                0x0000000008003f7a                CORDIC_IRQHandler
+                0x0000000008003f7a                HRTIM1_TIMD_IRQHandler
+                0x0000000008003f7a                PendSV_Handler
+                0x0000000008003f7a                DMA2_Channel8_IRQHandler
+                0x0000000008003f7a                NMI_Handler
+                0x0000000008003f7a                I2C3_ER_IRQHandler
+                0x0000000008003f7a                I2C2_EV_IRQHandler
+                0x0000000008003f7a                FPU_IRQHandler
+                0x0000000008003f7a                FDCAN1_IT1_IRQHandler
+                0x0000000008003f7a                UsageFault_Handler
+                0x0000000008003f7a                ADC1_2_IRQHandler
+                0x0000000008003f7a                HRTIM1_TIME_IRQHandler
+                0x0000000008003f7a                SPI1_IRQHandler
+                0x0000000008003f7a                HRTIM1_TIMC_IRQHandler
+                0x0000000008003f7a                DMA2_Channel2_IRQHandler
+                0x0000000008003f7a                DMA1_Channel4_IRQHandler
+                0x0000000008003f7a                TIM20_TRG_COM_IRQHandler
+                0x0000000008003f7a                DMA1_Channel7_IRQHandler
+                0x0000000008003f7a                ADC3_IRQHandler
+                0x0000000008003f7a                DMA2_Channel1_IRQHandler
+                0x0000000008003f7a                QUADSPI_IRQHandler
+                0x0000000008003f7a                I2C1_EV_IRQHandler
+                0x0000000008003f7a                DMA1_Channel6_IRQHandler
+                0x0000000008003f7a                DMA2_Channel4_IRQHandler
+                0x0000000008003f7a                RCC_IRQHandler
+                0x0000000008003f7a                DMA1_Channel1_IRQHandler
+                0x0000000008003f7a                Default_Handler
+                0x0000000008003f7a                DMA2_Channel7_IRQHandler
+                0x0000000008003f7a                RTC_TAMP_LSECSS_IRQHandler
+                0x0000000008003f7a                FMAC_IRQHandler
+                0x0000000008003f7a                DMA1_Channel8_IRQHandler
+                0x0000000008003f7a                HRTIM1_TIMA_IRQHandler
+                0x0000000008003f7a                FDCAN3_IT1_IRQHandler
+                0x0000000008003f7a                UCPD1_IRQHandler
+                0x0000000008003f7a                I2C3_EV_IRQHandler
+                0x0000000008003f7a                RTC_WKUP_IRQHandler
+                0x0000000008003f7a                PVD_PVM_IRQHandler
+                0x0000000008003f7a                SPI2_IRQHandler
+                0x0000000008003f7a                MemManage_Handler
+                0x0000000008003f7a                ADC5_IRQHandler
+                0x0000000008003f7a                SVC_Handler
+                0x0000000008003f7a                DMA2_Channel5_IRQHandler
+                0x0000000008003f7a                CRS_IRQHandler
+                0x0000000008003f7a                DMA1_Channel5_IRQHandler
+                0x0000000008003f7a                USB_LP_IRQHandler
+                0x0000000008003f7a                RNG_IRQHandler
+                0x0000000008003f7a                HRTIM1_TIMB_IRQHandler
+                0x0000000008003f7a                FDCAN2_IT1_IRQHandler
+                0x0000000008003f7a                DMA1_Channel3_IRQHandler
+                0x0000000008003f7a                ADC4_IRQHandler
+                0x0000000008003f7a                WWDG_IRQHandler
+                0x0000000008003f7a                I2C4_EV_IRQHandler
+                0x0000000008003f7a                FDCAN2_IT0_IRQHandler
+                0x0000000008003f7a                DMA2_Channel6_IRQHandler
+                0x0000000008003f7a                FDCAN1_IT0_IRQHandler
+                0x0000000008003f7a                COMP7_IRQHandler
+                0x0000000008003f7a                COMP1_2_3_IRQHandler
+                0x0000000008003f7a                COMP4_5_6_IRQHandler
+                0x0000000008003f7a                TIM20_BRK_IRQHandler
+                0x0000000008003f7a                I2C2_ER_IRQHandler
+                0x0000000008003f7a                DMA1_Channel2_IRQHandler
+                0x0000000008003f7a                TIM8_BRK_IRQHandler
+                0x0000000008003f7a                FLASH_IRQHandler
+                0x0000000008003f7a                BusFault_Handler
+                0x0000000008003f7a                SPI3_IRQHandler
+                0x0000000008003f7a                I2C1_ER_IRQHandler
+                0x0000000008003f7a                FMC_IRQHandler
+                0x0000000008003f7a                LPTIM1_IRQHandler
+                0x0000000008003f7a                DMAMUX_OVR_IRQHandler
+                0x0000000008003f7a                I2C4_ER_IRQHandler
+                0x0000000008003f7a                USBWakeUp_IRQHandler
+                0x0000000008003f7a                SAI1_IRQHandler
+                0x0000000008003f7a                DMA2_Channel3_IRQHandler
  .text.unlikely._ZSt25__throw_bad_function_callv
-                0x0000000008003f80        0x6 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libstdc++_nano.a(functional.o)
-                0x0000000008003f80                std::__throw_bad_function_call()
- .text.abort    0x0000000008003f86        0xe c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-abort.o)
-                0x0000000008003f86                abort
- .text.memcpy   0x0000000008003f94       0x1c c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-memcpy-stub.o)
-                0x0000000008003f94                memcpy
- .text.memset   0x0000000008003fb0       0x10 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-memset.o)
-                0x0000000008003fb0                memset
- .text._free_r  0x0000000008003fc0       0x98 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-nano-freer.o)
-                0x0000000008003fc0                _free_r
+                0x0000000008003f7c        0x6 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libstdc++_nano.a(functional.o)
+                0x0000000008003f7c                std::__throw_bad_function_call()
+ .text.abort    0x0000000008003f82        0xe c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-abort.o)
+                0x0000000008003f82                abort
+ .text.memcpy   0x0000000008003f90       0x1c c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-memcpy-stub.o)
+                0x0000000008003f90                memcpy
+ .text.memset   0x0000000008003fac       0x10 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-memset.o)
+                0x0000000008003fac                memset
+ .text._free_r  0x0000000008003fbc       0x98 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-nano-freer.o)
+                0x0000000008003fbc                _free_r
  .text.sbrk_aligned
-                0x0000000008004058       0x40 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-nano-mallocr.o)
+                0x0000000008004054       0x40 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-nano-mallocr.o)
  .text._malloc_r
-                0x0000000008004098       0xe8 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-nano-mallocr.o)
-                0x0000000008004098                _malloc_r
- .text._sbrk_r  0x0000000008004180       0x20 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-sbrkr.o)
-                0x0000000008004180                _sbrk_r
+                0x0000000008004094       0xe8 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-nano-mallocr.o)
+                0x0000000008004094                _malloc_r
+ .text._sbrk_r  0x000000000800417c       0x20 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-sbrkr.o)
+                0x000000000800417c                _sbrk_r
  .text._raise_r
-                0x00000000080041a0       0x50 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-signal.o)
-                0x00000000080041a0                _raise_r
- .text.raise    0x00000000080041f0       0x10 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-signal.o)
-                0x00000000080041f0                raise
- .text._kill_r  0x0000000008004200       0x24 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-signalr.o)
-                0x0000000008004200                _kill_r
+                0x000000000800419c       0x50 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-signal.o)
+                0x000000000800419c                _raise_r
+ .text.raise    0x00000000080041ec       0x10 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-signal.o)
+                0x00000000080041ec                raise
+ .text._kill_r  0x00000000080041fc       0x24 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-signalr.o)
+                0x00000000080041fc                _kill_r
  .text._getpid_r
-                0x0000000008004224        0x4 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-signalr.o)
-                0x0000000008004224                _getpid_r
- .text.sprintf  0x0000000008004228       0x40 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-sprintf.o)
-                0x0000000008004228                siprintf
-                0x0000000008004228                sprintf
+                0x0000000008004220        0x4 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-signalr.o)
+                0x0000000008004220                _getpid_r
+ .text.sprintf  0x0000000008004224       0x40 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-sprintf.o)
+                0x0000000008004224                siprintf
+                0x0000000008004224                sprintf
  .text.__malloc_lock
-                0x0000000008004268        0xc c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-mlock.o)
-                0x0000000008004268                __malloc_lock
+                0x0000000008004264        0xc c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-mlock.o)
+                0x0000000008004264                __malloc_lock
  .text.__malloc_unlock
-                0x0000000008004274        0xc c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-mlock.o)
-                0x0000000008004274                __malloc_unlock
+                0x0000000008004270        0xc c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-mlock.o)
+                0x0000000008004270                __malloc_unlock
  .text.__ssputs_r
-                0x0000000008004280       0xb6 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-nano-svfprintf.o)
-                0x0000000008004280                __ssputs_r
- *fill*         0x0000000008004336        0x2 
+                0x000000000800427c       0xb6 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-nano-svfprintf.o)
+                0x000000000800427c                __ssputs_r
+ *fill*         0x0000000008004332        0x2 
  .text._svfprintf_r
-                0x0000000008004338      0x200 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-nano-svfprintf.o)
-                0x0000000008004338                _svfiprintf_r
-                0x0000000008004338                _svfprintf_r
+                0x0000000008004334      0x200 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-nano-svfprintf.o)
+                0x0000000008004334                _svfiprintf_r
+                0x0000000008004334                _svfprintf_r
  .text._printf_common
-                0x0000000008004538       0xda c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-nano-vfprintf_i.o)
-                0x0000000008004538                _printf_common
- *fill*         0x0000000008004612        0x2 
+                0x0000000008004534       0xda c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-nano-vfprintf_i.o)
+                0x0000000008004534                _printf_common
+ *fill*         0x000000000800460e        0x2 
  .text._printf_i
-                0x0000000008004614      0x24c c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-nano-vfprintf_i.o)
-                0x0000000008004614                _printf_i
+                0x0000000008004610      0x24c c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-nano-vfprintf_i.o)
+                0x0000000008004610                _printf_i
  .text.__retarget_lock_acquire_recursive
-                0x0000000008004860        0x2 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-lock.o)
-                0x0000000008004860                __retarget_lock_acquire_recursive
+                0x000000000800485c        0x2 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-lock.o)
+                0x000000000800485c                __retarget_lock_acquire_recursive
  .text.__retarget_lock_release_recursive
-                0x0000000008004862        0x2 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-lock.o)
-                0x0000000008004862                __retarget_lock_release_recursive
- .text.memmove  0x0000000008004864       0x34 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-memmove.o)
-                0x0000000008004864                memmove
+                0x000000000800485e        0x2 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-lock.o)
+                0x000000000800485e                __retarget_lock_release_recursive
+ .text.memmove  0x0000000008004860       0x34 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-memmove.o)
+                0x0000000008004860                memmove
  .text._realloc_r
-                0x0000000008004898       0x5e c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-nano-reallocr.o)
-                0x0000000008004898                _realloc_r
+                0x0000000008004894       0x5e c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-nano-reallocr.o)
+                0x0000000008004894                _realloc_r
  .text._malloc_usable_size_r
-                0x00000000080048f6       0x10 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-nano-msizer.o)
-                0x00000000080048f6                _malloc_usable_size_r
+                0x00000000080048f2       0x10 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-nano-msizer.o)
+                0x00000000080048f2                _malloc_usable_size_r
  *(.glue_7)
- .glue_7        0x0000000008004906        0x0 linker stubs
+ .glue_7        0x0000000008004902        0x0 linker stubs
  *(.glue_7t)
- .glue_7t       0x0000000008004906        0x0 linker stubs
+ .glue_7t       0x0000000008004902        0x0 linker stubs
  *(.eh_frame)
- *fill*         0x0000000008004906        0x2 
- .eh_frame      0x0000000008004908        0x0 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7e-m+fp/hard/crtbegin.o
+ *fill*         0x0000000008004902        0x2 
+ .eh_frame      0x0000000008004904        0x0 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7e-m+fp/hard/crtbegin.o
  *(.init)
- .init          0x0000000008004908        0x4 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7e-m+fp/hard/crti.o
-                0x0000000008004908                _init
- .init          0x000000000800490c        0x8 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7e-m+fp/hard/crtn.o
+ .init          0x0000000008004904        0x4 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7e-m+fp/hard/crti.o
+                0x0000000008004904                _init
+ .init          0x0000000008004908        0x8 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7e-m+fp/hard/crtn.o
  *(.fini)
- .fini          0x0000000008004914        0x4 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7e-m+fp/hard/crti.o
-                0x0000000008004914                _fini
- .fini          0x0000000008004918        0x8 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7e-m+fp/hard/crtn.o
-                0x0000000008004920                . = ALIGN (0x4)
-                0x0000000008004920                _etext = .
+ .fini          0x0000000008004910        0x4 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7e-m+fp/hard/crti.o
+                0x0000000008004910                _fini
+ .fini          0x0000000008004914        0x8 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7e-m+fp/hard/crtn.o
+                0x000000000800491c                . = ALIGN (0x4)
+                0x000000000800491c                _etext = .
 
-.vfp11_veneer   0x0000000008004920        0x0
- .vfp11_veneer  0x0000000008004920        0x0 linker stubs
+.vfp11_veneer   0x000000000800491c        0x0
+ .vfp11_veneer  0x000000000800491c        0x0 linker stubs
 
-.v4_bx          0x0000000008004920        0x0
- .v4_bx         0x0000000008004920        0x0 linker stubs
+.v4_bx          0x000000000800491c        0x0
+ .v4_bx         0x000000000800491c        0x0 linker stubs
 
-.iplt           0x0000000008004920        0x0
- .iplt          0x0000000008004920        0x0 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7e-m+fp/hard/crtbegin.o
+.iplt           0x000000000800491c        0x0
+ .iplt          0x000000000800491c        0x0 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7e-m+fp/hard/crtbegin.o
 
-.rodata         0x0000000008004920      0x528
-                0x0000000008004920                . = ALIGN (0x4)
+.rodata         0x000000000800491c      0x528
+                0x000000000800491c                . = ALIGN (0x4)
  *(.rodata)
  *(.rodata*)
- .rodata.hex    0x0000000008004920       0x11 .pio/build/bootloader_STM32G474RE/src/kim/kprint.c.o
-                0x0000000008004920                hex
+ .rodata.hex    0x000000000800491c       0x11 .pio/build/bootloader_STM32G474RE/src/kim/kprint.c.o
+                0x000000000800491c                hex
  .rodata.check_fs.str1.1
-                0x0000000008004931        0xa .pio/build/bootloader_STM32G474RE/src/source/ff.c.o
+                0x000000000800492d        0xa .pio/build/bootloader_STM32G474RE/src/source/ff.c.o
  .rodata.find_volume.str1.1
-                0x000000000800493b       0x32 .pio/build/bootloader_STM32G474RE/src/source/ff.c.o
+                0x0000000008004937       0x32 .pio/build/bootloader_STM32G474RE/src/source/ff.c.o
  .rodata.follow_path.str1.1
-                0x000000000800496d        0xf .pio/build/bootloader_STM32G474RE/src/source/ff.c.o
+                0x0000000008004969        0xf .pio/build/bootloader_STM32G474RE/src/source/ff.c.o
  .rodata.Enter_Bootloader.str1.1
-                0x000000000800497c      0x285 .pio/build/bootloader_STM32G474RE/src/source/main.c.o
+                0x0000000008004978      0x285 .pio/build/bootloader_STM32G474RE/src/source/main.c.o
  .rodata.main.str1.1
-                0x0000000008004c01       0x7d .pio/build/bootloader_STM32G474RE/src/source/main.c.o
+                0x0000000008004bfd       0x7d .pio/build/bootloader_STM32G474RE/src/source/main.c.o
  .rodata.Bootloader_Init.str1.1
-                0x0000000008004c7e       0x7d .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/bootloader.c.o
+                0x0000000008004c7a       0x7d .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/bootloader.c.o
  .rodata.Bootloader_Erase.str1.1
-                0x0000000008004cfb       0x43 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/bootloader.c.o
+                0x0000000008004cf7       0x43 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/bootloader.c.o
  .rodata.Bootloader_FlashNext.str1.1
-                0x0000000008004d3e       0xb4 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/bootloader.c.o
+                0x0000000008004d3a       0xb4 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/bootloader.c.o
                                          0xd4 (size before relaxing)
  .rodata.Bootloader_ConfigProtection_Keep_Boot.str1.1
-                0x0000000008004df2       0x23 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/bootloader.c.o
+                0x0000000008004dee       0x23 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/bootloader.c.o
  .rodata._svfprintf_r.str1.1
-                0x0000000008004e15       0x11 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-nano-svfprintf.o)
+                0x0000000008004e11       0x11 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-nano-svfprintf.o)
  .rodata._printf_i.str1.1
-                0x0000000008004e26       0x22 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-nano-vfprintf_i.o)
-                0x0000000008004e48                . = ALIGN (0x4)
+                0x0000000008004e22       0x22 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(lib_a-nano-vfprintf_i.o)
+                0x0000000008004e44                . = ALIGN (0x4)
 
-.rel.dyn        0x0000000008004e48        0x0
- .rel.iplt      0x0000000008004e48        0x0 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7e-m+fp/hard/crtbegin.o
+.rel.dyn        0x0000000008004e44        0x0
+ .rel.iplt      0x0000000008004e44        0x0 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7e-m+fp/hard/crtbegin.o
 
-.ARM.extab      0x0000000008004e48        0x0
-                0x0000000008004e48                . = ALIGN (0x4)
+.ARM.extab      0x0000000008004e44        0x0
+                0x0000000008004e44                . = ALIGN (0x4)
  *(.ARM.extab* .gnu.linkonce.armextab.*)
-                0x0000000008004e48                . = ALIGN (0x4)
+                0x0000000008004e44                . = ALIGN (0x4)
 
-.ARM            0x0000000008004e48        0x0
-                0x0000000008004e48                . = ALIGN (0x4)
-                0x0000000008004e48                __exidx_start = .
+.ARM            0x0000000008004e44        0x0
+                0x0000000008004e44                . = ALIGN (0x4)
+                0x0000000008004e44                __exidx_start = .
  *(.ARM.exidx*)
-                0x0000000008004e48                __exidx_end = .
-                0x0000000008004e48                . = ALIGN (0x4)
+                0x0000000008004e44                __exidx_end = .
+                0x0000000008004e44                . = ALIGN (0x4)
 
-.preinit_array  0x0000000008004e48        0x0
-                0x0000000008004e48                . = ALIGN (0x4)
-                0x0000000008004e48                PROVIDE (__preinit_array_start = .)
+.preinit_array  0x0000000008004e44        0x0
+                0x0000000008004e44                . = ALIGN (0x4)
+                0x0000000008004e44                PROVIDE (__preinit_array_start = .)
  *(.preinit_array*)
-                0x0000000008004e48                PROVIDE (__preinit_array_end = .)
-                0x0000000008004e48                . = ALIGN (0x4)
+                0x0000000008004e44                PROVIDE (__preinit_array_end = .)
+                0x0000000008004e44                . = ALIGN (0x4)
 
-.init_array     0x0000000008004e48        0x8
-                0x0000000008004e48                . = ALIGN (0x4)
-                0x0000000008004e48                PROVIDE (__init_array_start = .)
+.init_array     0x0000000008004e44        0x8
+                0x0000000008004e44                . = ALIGN (0x4)
+                0x0000000008004e44                PROVIDE (__init_array_start = .)
  *(SORT_BY_NAME(.init_array.*))
  *(.init_array*)
- .init_array    0x0000000008004e48        0x4 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7e-m+fp/hard/crtbegin.o
- .init_array    0x0000000008004e4c        0x4 .pio/build/bootloader_STM32G474RE/SrcWrapper/src/stm32/interrupt.cpp.o
-                0x0000000008004e50                PROVIDE (__init_array_end = .)
-                0x0000000008004e50                . = ALIGN (0x4)
+ .init_array    0x0000000008004e44        0x4 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7e-m+fp/hard/crtbegin.o
+ .init_array    0x0000000008004e48        0x4 .pio/build/bootloader_STM32G474RE/SrcWrapper/src/stm32/interrupt.cpp.o
+                0x0000000008004e4c                PROVIDE (__init_array_end = .)
+                0x0000000008004e4c                . = ALIGN (0x4)
 
-.fini_array     0x0000000008004e50        0x8
-                0x0000000008004e50                . = ALIGN (0x4)
+.fini_array     0x0000000008004e4c        0x8
+                0x0000000008004e4c                . = ALIGN (0x4)
                 [!provide]                        PROVIDE (__fini_array_start = .)
  *(SORT_BY_NAME(.fini_array.*))
  *(.fini_array*)
- .fini_array    0x0000000008004e50        0x4 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7e-m+fp/hard/crtbegin.o
- .fini_array    0x0000000008004e54        0x4 .pio/build/bootloader_STM32G474RE/SrcWrapper/src/stm32/interrupt.cpp.o
+ .fini_array    0x0000000008004e4c        0x4 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7e-m+fp/hard/crtbegin.o
+ .fini_array    0x0000000008004e50        0x4 .pio/build/bootloader_STM32G474RE/SrcWrapper/src/stm32/interrupt.cpp.o
                 [!provide]                        PROVIDE (__fini_array_end = .)
-                0x0000000008004e58                . = ALIGN (0x4)
-                0x0000000008004e58                _sidata = LOADADDR (.data)
+                0x0000000008004e54                . = ALIGN (0x4)
+                0x0000000008004e54                _sidata = LOADADDR (.data)
 
-.data           0x0000000020000000       0x88 load address 0x0000000008004e58
+.data           0x0000000020000000       0x88 load address 0x0000000008004e54
                 0x0000000020000000                . = ALIGN (0x4)
                 0x0000000020000000                _sdata = .
  *(.data)
@@ -17887,10 +17887,10 @@ LOAD c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc
                 0x0000000020000088                . = ALIGN (0x4)
                 0x0000000020000088                _edata = .
 
-.igot.plt       0x0000000020000088        0x0 load address 0x0000000008004ee0
+.igot.plt       0x0000000020000088        0x0 load address 0x0000000008004edc
  .igot.plt      0x0000000020000088        0x0 c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7e-m+fp/hard/crtbegin.o
 
-no_init         0x0000000020000088       0x14 load address 0x0000000008004ee0
+no_init         0x0000000020000088       0x14 load address 0x0000000008004edc
  no_init        0x0000000020000088       0x14 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/bootloader.c.o
                 0x0000000020000088                wrp1a_strt
                 0x0000000020000089                wrp1a_end
@@ -17901,7 +17901,7 @@ no_init         0x0000000020000088       0x14 load address 0x0000000008004ee0
                 0x0000000020000098                Write_Prot_Old
                 0x000000002000009c                . = ALIGN (0x4)
 
-.bss            0x000000002000009c      0x22c load address 0x0000000008004ef4
+.bss            0x000000002000009c      0x22c load address 0x0000000008004ef0
                 0x000000002000009c                _sbss = .
                 0x000000002000009c                __bss_start__ = _sbss
  *(.bss)
@@ -17975,7 +17975,7 @@ no_init         0x0000000020000088       0x14 load address 0x0000000008004ee0
                 0x00000000200002c8                __bss_end__ = _ebss
 
 ._user_heap_stack
-                0x00000000200002c8      0x600 load address 0x0000000008004ef4
+                0x00000000200002c8      0x600 load address 0x0000000008004ef0
                 0x00000000200002c8                . = ALIGN (0x8)
                 [!provide]                        PROVIDE (end = .)
                 0x00000000200002c8                PROVIDE (_end = .)
@@ -18446,7 +18446,7 @@ LOAD c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc
  .debug_macro   0x0000000000008694      0x11f .pio/build/bootloader_STM32G474RE/src/source/main.c.o
  .debug_macro   0x00000000000087b3      0x34a .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/bootloader.c.o
 
-.debug_line     0x0000000000000000    0x27a19
+.debug_line     0x0000000000000000    0x27a16
  .debug_line    0x0000000000000000      0xeec .pio/build/bootloader_STM32G474RE/SrcWrapper/src/HAL/stm32yyxx_hal.c.o
  .debug_line    0x0000000000000eec     0x1024 .pio/build/bootloader_STM32G474RE/SrcWrapper/src/HAL/stm32yyxx_hal_cortex.c.o
  .debug_line    0x0000000000001f10     0x144d .pio/build/bootloader_STM32G474RE/SrcWrapper/src/HAL/stm32yyxx_hal_dma.c.o
@@ -18473,9 +18473,9 @@ LOAD c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc
  .debug_line    0x0000000000022580     0x314e .pio/build/bootloader_STM32G474RE/src/source/ff.c.o
  .debug_line    0x00000000000256ce      0x2ef .pio/build/bootloader_STM32G474RE/src/source/k_delay.c.o
  .debug_line    0x00000000000259bd      0xda2 .pio/build/bootloader_STM32G474RE/src/source/main.c.o
- .debug_line    0x000000000002675f     0x12ba .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/bootloader.c.o
+ .debug_line    0x000000000002675f     0x12b7 .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/bootloader.c.o
 
-.debug_str      0x0000000000000000   0x14a6fa
+.debug_str      0x0000000000000000   0x14a715
  .debug_str     0x0000000000000000   0x118af0 .pio/build/bootloader_STM32G474RE/SrcWrapper/src/HAL/stm32yyxx_hal.c.o
                                      0x11a3c6 (size before relaxing)
  .debug_str     0x0000000000118af0      0x3c5 .pio/build/bootloader_STM32G474RE/SrcWrapper/src/HAL/stm32yyxx_hal_cortex.c.o
@@ -18526,10 +18526,10 @@ LOAD c:/users/bobku/.platformio/packages/toolchain-gccarmnoneeabi/bin/../lib/gcc
                                        0xab8a (size before relaxing)
  .debug_str     0x000000000014942d       0x3e .pio/build/bootloader_STM32G474RE/src/source/k_delay.c.o
                                        0x6626 (size before relaxing)
- .debug_str     0x000000000014946b      0xea4 .pio/build/bootloader_STM32G474RE/src/source/main.c.o
-                                      0xbf200 (size before relaxing)
- .debug_str     0x000000000014a30f      0x3eb .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/bootloader.c.o
-                                      0xbf5af (size before relaxing)
+ .debug_str     0x000000000014946b      0xebf .pio/build/bootloader_STM32G474RE/src/source/main.c.o
+                                      0xbf21b (size before relaxing)
+ .debug_str     0x000000000014a32a      0x3eb .pio/build/bootloader_STM32G474RE/src/stm32-bootloader/bootloader.c.o
+                                      0xbf5ca (size before relaxing)
 
 .debug_frame    0x0000000000000000     0x3c68
  .debug_frame   0x0000000000000000      0x280 .pio/build/bootloader_STM32G474RE/SrcWrapper/src/HAL/stm32yyxx_hal.c.o
