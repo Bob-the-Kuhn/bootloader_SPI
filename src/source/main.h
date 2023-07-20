@@ -109,17 +109,17 @@ void Error_Handler(void);
 #define SD_MOSI_Pin GPIO_PIN__15
 #define SD_MOSI_GPIO_Port PORTB
 
-
-  // USART 2       USART 1       SPI 2          
-  // PA2  AF7 TX   PA9  AF7 TX   PB12 AF5 SS    
-  // PA3  AF7 Rx   PA10 AF7 Rx   PB13 AF5 CLK   
-  //                             PB14 AF5 MISO  
-  //                             PB15 AF5 MOSI  
+  //                            virtual com port     
+  // USART 3       USART 2       USART 1       SPI 2         
+  // PB9  AF7 TX   PA2  AF7 TX   PA9  AF7 TX   PB12 AF5 SS   
+  // PB8  AF7 Rx   PA3  AF7 Rx   PA10 AF7 Rx   PB13 AF5 CLK  
+  //                                           PB14 AF5 MISO 
+  //                                           PB15 AF5 MOSI 
   //
   // PB5 SD_detect
   //
   // PA5 LED, green (built in)
-  // PA6 LED, yellow 
+  // PA7 LED, yellow 
   //
   // PC13 button
   //

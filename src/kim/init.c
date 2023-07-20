@@ -181,8 +181,8 @@ int putchar(int c)
     putchar('\r');
   wr32(R_USART3_TDR, c);
   while (!(rd32(R_USART3_ISR) & BIT6));
-  wr32(R_USART1_TDR, c);
-  while (!(rd32(R_USART1_ISR) & BIT6));
+  wr32(R_USART2_TDR, c);
+  while (!(rd32(R_USART2_ISR) & BIT6));
   return c;
 }
 
@@ -192,11 +192,11 @@ void init_uart(void)
 {
  
    //               virtual com port     
-  // USART 3        USART 1       SPI 2         
-  // PB9  AF7 TX    PA9  AF7 TX   PB12 AF5 SS   
-  // PB8  AF7 Rx    PA10 AF7 Rx   PB13 AF5 CLK  
-  //                              PB14 AF5 MISO 
-  //                              PB15 AF5 MOSI 
+  // USART 3        USART 2          SPI 2         
+  // PB9  AF7 TX    PA2  AF7 TX      PB12 AF5 SS   
+  // PB8  AF7 Rx    PA3  AF7 Rx      PB13 AF5 CLK  
+  //                                 PB14 AF5 MISO 
+  //                                 PB15 AF5 MOSI 
   //
   // PB5 SD_detect
   //
@@ -222,26 +222,26 @@ void init_uart(void)
   
  /* USART2 on PA2/PA3 */
  
-// GPIO_CONFIG_ALT(PORTA, 2, 1, GPIO_NO_PULL_UP_DOWN, GPIO_OUTPUT_PUSH_PULL, GPIO_OUTPUT_VERY_HIGH_SPEED);
-// GPIO_CONFIG_ALT(PORTA, 3, 1, GPIO_NO_PULL_UP_DOWN, GPIO_OUTPUT_PUSH_PULL, GPIO_OUTPUT_VERY_HIGH_SPEED);
-// /* fPCLK=48MHz, br=115.2KBps, USARTDIV=22.8125, see table 80 pag. 519 */
-// wr32(R_USART2_BRR, 0x19f);
-// or32(R_USART2_CR1, BIT13 | BIT3 | BIT0);  // enable TX, USART, disable RCV & interrupts
-// //or32(R_NVIC_ISER(1), BIT7); /* USART3 is irq 39 */
-// //or32(R_NVIC_ISER(1), BIT6); /* USART2 is irq 38 */
-// //or32(R_NVIC_ISER(1), BIT5); /* USART1 is irq 37 */
+ GPIO_CONFIG_ALT(PORTA, 2, 7, GPIO_NO_PULL_UP_DOWN, GPIO_OUTPUT_PUSH_PULL, GPIO_OUTPUT_VERY_HIGH_SPEED);
+ GPIO_CONFIG_ALT(PORTA, 3, 7, GPIO_NO_PULL_UP_DOWN, GPIO_OUTPUT_PUSH_PULL, GPIO_OUTPUT_VERY_HIGH_SPEED);
+  /* fPCLK=48MHz, br=115.2KBps, USARTDIV=22.8125, see table 80 pag. 519 */
+  wr32(R_USART2_BRR, 0x19f);
+  or32(R_USART2_CR1, BIT13 | BIT3 | BIT0); // enable TX, USART, disable RCV & interrupts
+  //or32(R_NVIC_ISER(1), BIT7); /* USART3 is irq 39 */
+  //or32(R_NVIC_ISER(1), BIT6); /* USART2 is irq 38 */
+  //or32(R_NVIC_ISER(1), BIT5); /* USART1 is irq 37 */
   
  
  /* USART1 on PC4/PC5 */
  
-  GPIO_CONFIG_ALT(PORTC, 4, 7, GPIO_NO_PULL_UP_DOWN, GPIO_OUTPUT_PUSH_PULL, GPIO_OUTPUT_VERY_HIGH_SPEED);
-  GPIO_CONFIG_ALT(PORTC, 5, 1, GPIO_NO_PULL_UP_DOWN, GPIO_OUTPUT_PUSH_PULL, GPIO_OUTPUT_VERY_HIGH_SPEED);
-  /* fPCLK=48MHz, br=115.2KBps, USARTDIV=22.8125, see table 80 pag. 519 */
-  wr32(R_USART1_BRR, 0x19f);
-  or32(R_USART1_CR1, BIT13 | BIT3 | BIT0); // enable TX, USART, disable RCV & interrupts
-  //or32(R_NVIC_ISER(1), BIT7); /* USART3 is irq 39 */
-  //or32(R_NVIC_ISER(1), BIT6); /* USART2 is irq 38 */
-  //or32(R_NVIC_ISER(1), BIT5); /* USART1 is irq 37 */
+//  GPIO_CONFIG_ALT(PORTC, 4, 7, GPIO_NO_PULL_UP_DOWN, GPIO_OUTPUT_PUSH_PULL, GPIO_OUTPUT_VERY_HIGH_SPEED);
+//  GPIO_CONFIG_ALT(PORTC, 5, 1, GPIO_NO_PULL_UP_DOWN, GPIO_OUTPUT_PUSH_PULL, GPIO_OUTPUT_VERY_HIGH_SPEED);
+//  /* fPCLK=48MHz, br=115.2KBps, USARTDIV=22.8125, see table 80 pag. 519 */
+//  wr32(R_USART1_BRR, 0x19f);
+//  or32(R_USART1_CR1, BIT13 | BIT3 | BIT0); // enable TX, USART, disable RCV & interrupts
+//  //or32(R_NVIC_ISER(1), BIT7); /* USART3 is irq 39 */
+//  //or32(R_NVIC_ISER(1), BIT6); /* USART2 is irq 38 */
+//  //or32(R_NVIC_ISER(1), BIT5); /* USART1 is irq 37 */
 }
 
 void init(void)

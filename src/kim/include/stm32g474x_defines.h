@@ -184,21 +184,21 @@
 #define R_FLASH_WRP1BR      reg32(0x40022030)    /*!< FLASH bank1 WRP area B address register,  Address offset: 0x30 */
 #define R_FLASH_PCROP2SR    reg32(0x40022044)    /*!< FLASH bank2 PCROP start address register, Address offset: 0x44 */
 #define R_FLASH_PCROP2ER    reg32(0x40022048)    /*!< FLASH bank2 PCROP end address register,   Address offset: 0x48 */
-#define R_FLASH_WRP2AR      reg32(0x4002204C)    /*!< FLASH bank2 WRP area A address register,  Address offset: 0x4C */
-#define R_FLASH_WRP2BR      reg32(0x40022050)    /*!< FLASH bank2 WRP area B address register,  Address offset: 0x50 */
+//#define R_FLASH_WRP2AR      reg32(0x4002204C)    /*!< FLASH bank2 WRP area A address register,  Address offset: 0x4C */
+//#define R_FLASH_WRP2BR      reg32(0x40022050)    /*!< FLASH bank2 WRP area B address register,  Address offset: 0x50 */
 #define R_FLASH_SEC1R       reg32(0x40022070)    /*!< FLASH Securable memory register bank1,    Address offset: 0x70 */
 #define R_FLASH_SEC2R       reg32(0x40022074)    /*!< FLASH Securable memory register bank2,    Address offset: 0x74 */
                             
 #define R_FLASH_WRP1AR_STRT reg16(0x4002202C)    /*!< FLASH Bank WRP area A address register, start bits Address offset: 0x2C */ 
 #define R_FLASH_WRP1BR_STRT reg16(0x40022030)    /*!< FLASH Bank WRP area B address register,            Address offset: 0x30 */ 
                                                                                                                                  
-#define R_FLASH_WRP2AR_STRT reg16(0x4002204C)    /*!< FLASH Bank2 WRP area A address register,           Address offset: 0x4C */ 
-#define R_FLASH_WRP2BR_STRT reg16(0x40022050)    /*!< FLASH Bank2 WRP area B address register,           Address offset: 0x50 */
+//#define R_FLASH_WRP2AR_STRT reg16(0x4002204C)    /*!< FLASH Bank2 WRP area A address register,           Address offset: 0x4C */ 
+//#define R_FLASH_WRP2BR_STRT reg16(0x40022050)    /*!< FLASH Bank2 WRP area B address register,           Address offset: 0x50 */
 #define R_FLASH_WRP1AR_END  reg16(0x4002202E)    /*!< FLASH Bank WRP area A address register, start bits Address offset: 0x2C */ 
 #define R_FLASH_WRP1BR_END  reg16(0x40022032)    /*!< FLASH Bank WRP area B address register,            Address offset: 0x30 */ 
                                                                                                       
-#define R_FLASH_WRP2AR_END  reg16(0x4002204E)    /*!< FLASH Bank2 WRP area A address register,           Address offset: 0x4C */ 
-#define R_FLASH_WRP2BR_END  reg16(0x40022052)    /*!< FLASH Bank2 WRP area B address register,           Address offset: 0x50 */
+//#define R_FLASH_WRP2AR_END  reg16(0x4002204E)    /*!< FLASH Bank2 WRP area A address register,           Address offset: 0x4C */ 
+//#define R_FLASH_WRP2BR_END  reg16(0x40022052)    /*!< FLASH Bank2 WRP area B address register,           Address offset: 0x50 */
 
 
 /* TIM1 registers */

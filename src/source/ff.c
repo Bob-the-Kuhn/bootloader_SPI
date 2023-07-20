@@ -3026,7 +3026,7 @@ BYTE check_fs (	/* 0:FAT, 1:exFAT, 2:Valid BS but not FAT, 3:Not a BS, 4:Disk er
 #if FF_FS_EXFAT
 	if (!mem_cmp(fs->win + BS_JmpBoot, "\xEB\x76\x90" "EXFAT   ", 11)) {  	/* Check if exFAT VBR */
     SS(fs) = 1 << ld_word(fs->win + BPB_BytsPerSecEx);  // init sector size
-    kprint("exFAT SS(fs): %d\n", SS(fs));
+    //kprint("exFAT SS(fs): %d\n", SS(fs));
     // make sure sector size is valid
     if (!((SS(fs) == 512) | (SS(fs) == 1024) | (SS(fs) == 2048) | (SS(fs) == 4096) )) SS(fs) = 512;
     return 1; 	/* Check if exFAT VBR */
@@ -3189,7 +3189,7 @@ FRESULT find_volume (	/* FR_OK(0): successful, !=0: any error occurred */
     // make sure sector size is valid
     if (!((SS(fs) == 512) | (SS(fs) == 1024) | (SS(fs) == 2048) | (SS(fs) == 4096) )) 
     {
-      kprint("2 - invalid sector size, settings to 512, was %x\n", SS(fs));
+      //kprint("2 - invalid sector size, settings to 512, was %x\n", SS(fs));
       SS(fs) = 512;
     }
     //kprint("final SS(fs): %x\n", SS(fs));

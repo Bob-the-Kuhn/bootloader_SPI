@@ -105,7 +105,7 @@ int main(void)
 
   
   /* USER CODE BEGIN Init */
-  //__disable_irq();
+
   NVIC_EnableIRQ(SysTick_IRQn);  // enable Systick irq
   
   /* USER CODE END Init */
@@ -135,18 +135,18 @@ int main(void)
   #endif
   
   
-  uint32_t          HAL_RCC_GetSysClockFreq(void);
-  uint32_t          HAL_RCC_GetHCLKFreq(void);
-  sprintf(msg, "\nSYSCLK_Frequency %08lu\n", HAL_RCC_GetSysClockFreq());
-  kprint(msg);
-  sprintf(msg, "HCLK_Frequency   %08lu\n", HAL_RCC_GetHCLKFreq());
-  kprint(msg);
+  //uint32_t          HAL_RCC_GetSysClockFreq(void);
+  //uint32_t          HAL_RCC_GetHCLKFreq(void);
+  //sprintf(msg, "\nSYSCLK_Frequency %08lu\n", HAL_RCC_GetSysClockFreq());
+  //kprint(msg);
+  //sprintf(msg, "HCLK_Frequency   %08lu\n", HAL_RCC_GetHCLKFreq());
+  //kprint(msg);
   
   LED_G1_OFF();
   LED_G2_OFF();             
 
   //print("debug test\n");  
-
+  
   LED_G1_ON();
   LED_G2_OFF();  
   
@@ -211,39 +211,10 @@ void GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
-/*
-  * @brief  This is the main program. Does some setup, calls the 
-  *         bootloader and then jumps to the application.
-  * @param  None
-  * @retval None
-  *
-*/
-static void main_boot(void)
-{
-  
-  
-  
-  kprint("\nPower up, Boot started.\n");
-  
-  /* Check system reset flags */
-  if(RCC->CSR & (RCC_CSR_PINRSTF | RCC_CSR_BORRSTF) )
-  {
-    //print("POR/PDR reset flag is active.\n");
-    #if(CLEAR_RESET_FLAGS)
-      /* Clear system reset flags */
-    RCC->CSR |= RCC_CSR_RMVF;
-      //print("Reset flags cleared.\n");
-    #endif
-  }
-  
-  //kprint("Entering Bootloader...\n");
-  Bootloader_Init();
-  
-  //report_WP_ConfigProtection();  
-  
-  uint8_t temp_stat = Enter_Bootloader();
-  if((temp_stat == ERR_FLASH) || (temp_stat == ERR_VERIFY)) Error_Handler();
-  
+// go to application if one is available
+// else go to error_handler
+
+void jump_to_application (void) {
   /* Check if there is application in user flash area */
   if(Bootloader_CheckForApplication() == BL_OK)
   {
@@ -283,6 +254,45 @@ static void main_boot(void)
   {
     Error_Handler();
   }
+}
+
+
+
+/*
+  * @brief  This is the main program. Does some setup, calls the 
+  *         bootloader and then jumps to the application.
+  * @param  None
+  * @retval None
+  *
+*/
+static void main_boot(void)
+{
+  
+  
+  
+  kprint("\nPower up, Boot started.\n");
+  
+  /* Check system reset flags */
+  if(RCC->CSR & (RCC_CSR_PINRSTF | RCC_CSR_BORRSTF) )
+  {
+    //print("POR/PDR reset flag is active.\n");
+    #if(CLEAR_RESET_FLAGS)
+      /* Clear system reset flags */
+    RCC->CSR |= RCC_CSR_RMVF;
+      //print("Reset flags cleared.\n");
+    #endif
+  }
+  
+  //kprint("Entering Bootloader...\n");
+  Bootloader_Init();
+  
+  report_WP_ConfigProtection();  
+  
+  uint8_t temp_stat = Enter_Bootloader();
+  if((temp_stat == ERR_FLASH) || (temp_stat == ERR_VERIFY)) Error_Handler();
+  
+  jump_to_application;
+  
 }
 
 /**
@@ -361,29 +371,29 @@ uint8_t Enter_Bootloader(void)
       // Ozone debugger removed all sector write protection when downloading
       // a new image or when starting a debug session. 
       
-      //if(init_1 ) {
-      //  Write_Prot_Old = WRITE_Prot_Old_Flag = Magic_Location = 0;
-      //  init_2 = 1;
-      //  init_1 = 0;
-      //  uint32_t temp_wrp[4] = { (1 | (2 << FLASH_WRP1AR_WRP1A_END_Pos)),  (3 | (4 << FLASH_WRP1BR_WRP1B_END_Pos)), 
-      //                           (5 | (6 << FLASH_WRP2AR_WRP2A_END_Pos)),  (7 | (8 << FLASH_WRP2BR_WRP2B_END_Pos))};
-      //  Bootloader_ConfigProtection_Set(temp_wrp);
-      //  kprint("init_1: shouldn't see this\n");
-      //}
-      //
-      //if(init_2 ) {
-      //  init_2 = 0;
-      //  Write_Prot_Old = WRITE_Prot_Old_Flag = Magic_Location = 0;
-      //  uint32_t temp_wrp[4] = { (1 | (0x7F << FLASH_WRP1AR_WRP1A_END_Pos)),  (0x20 | (0x40 << FLASH_WRP1BR_WRP1B_END_Pos)), 
-      //                           (5 | (6 << FLASH_WRP2AR_WRP2A_END_Pos)),  (7 | (8 << FLASH_WRP2BR_WRP2B_END_Pos))};
-      //  Bootloader_ConfigProtection_Set(temp_wrp);
-      //  kprint("init_2: shouldn't see this\n");
-      //}  
+      if(init_1 ) {
+        WRITE_Prot_Old_Flag = Magic_Location = 0;
+        init_2 = 1;
+        init_1 = 0;
+        uint32_t temp_wrp[4] = { (1 | (2 << FLASH_WRP1AR_WRP1A_END_Pos)),  (3 | (4 << FLASH_WRP1BR_WRP1B_END_Pos)), 
+                                 (5 | (6 << FLASH_WRP2AR_WRP2A_END_Pos)),  (7 | (8 << FLASH_WRP2BR_WRP2B_END_Pos))};
+        Bootloader_ConfigProtection_Set(temp_wrp);
+        kprint("init_1: shouldn't see this\n");
+      }
+      
+      if(init_2 ) {
+        init_2 = 0;
+        WRITE_Prot_Old_Flag = Magic_Location = 0;
+        uint32_t temp_wrp[4] = { (1 | (0x7F << FLASH_WRP1AR_WRP1A_END_Pos)),  (0x20 | (0x40 << FLASH_WRP1BR_WRP1B_END_Pos)), 
+                                 (5 | (6 << FLASH_WRP2AR_WRP2A_END_Pos)),  (7 | (8 << FLASH_WRP2BR_WRP2B_END_Pos))};
+        Bootloader_ConfigProtection_Set(temp_wrp);
+        kprint("init_2: shouldn't see this\n");
+      }  
   
   /* Check for flash write protection of application area*/
   if(Bootloader_GetProtectionStatus()) {  
     kprint("Application space in flash is write protected.\n");
-    if (IGNORE_WRITE_PROTECTION) {                              
+    #ifdef IGNORE_WRITE_PROTECTION                             
       //        kprint("Press button to disable flash write protection...\n");
       //        LED_ALL_ON();
       //        for(i = 0; i < 100; ++i)
@@ -399,35 +409,30 @@ uint8_t Enter_Bootloader(void)
       //        }
       //        LED_ALL_OFF();
       //        kprint("Button was not pressed, write protection is still active.\n");
-      if (!(WRITE_Prot_Old_Flag == WRITE_Prot_Old_Flag_Restored_flag)) {   // already restored original protection so don't initiate the process again                             
-      kprint("Disabling write protection and generating system reset...\n"); 
-      /* Eject SD card */
-      SD_Eject();
-      Magic_Location = Magic_BootLoader;  // flag that we should load the bootloader
-                                          // after the next reset
-      WRITE_Prot_Old_Flag = WRITE_Prot_Original_flag;  // flag that protection was saved                                    
-      save_WRP_state();  // save WRP state and set flag so can be restored later                                                                                  
-      if (Bootloader_ConfigProtection_Keep_Boot() != HAL_OK)   // sends system though reset - no more code executed unless there's an error 
-        {
-          kprint("Failed to set write protection.\n");
-          kprint("Exiting Bootloader.\n");
-          return ERR_OK;
-        }
-
-        kprint("write protection removed\n");
-
-        WRITE_Prot_Old_Flag = WRITE_Prot_Original_flag;  // flag that protection was removed so can
-                                                       // restore write protection after next reset)
-
-        Magic_Location = Magic_BootLoader;  // flag that we should load the bootloader
-                                            // after the next reset
-        // NVIC_System_Reset();  // send system through reset
+      
+      sprintf(msg, "WRITE_Prot_Old_Flag:               %08lX\n", WRITE_Prot_Old_Flag);
+      kprint(msg);
+      sprintf(msg, "WRITE_Prot_Old_Flag_Restored_flag: %08lX\n", WRITE_Prot_Old_Flag_Restored_flag);
+      kprint(msg);
+      
+      if (WRITE_Prot_Old_Flag == WRITE_Prot_Old_Flag_Restored_flag) {   // already restored original protection so don't initiate the process again  
+        jump_to_application();
       }
       else {
-        return ERR_OK;  // already programmed FLASH & protection restored so it's time to launch the application
-      }
-        
-    }
+        kprint("Disabling write protection and generating system reset...\n"); 
+        /* Eject SD card */
+        SD_Eject();
+        Magic_Location = Magic_BootLoader;  // flag that we should load the bootloader
+                                            // after the next reset
+        WRITE_Prot_Old_Flag = WRITE_Prot_Original_flag;  // flag that protection was saved                                    
+        save_WRP_state();  // save WRP state and set flag so can be restored later                                                                                  
+        Bootloader_ConfigProtection_Keep_Boot();   // remove protection from application area
+                                                   // sends system though reset - no more code executed 
+      } 
+    #else
+      jump_to_application();  //  application area is write protected but removing protection isn't allowed
+    #endif
+
   }
  
   /* Step 2: Erase Flash */
@@ -468,9 +473,8 @@ uint8_t Enter_Bootloader(void)
       else
       {
         //                kprint("Programming error at: %lu byte\n", (cntr * 8));
-        char cmd[64];
-        sprintf(cmd, "  offset in file (byte):   %08lX\n", (cntr * 8));
-        kprint(cmd);
+        sprintf(msg, "Programming error at offset in file (byte):   %08lX\n", (cntr * 8));
+        kprint(msg);
         
         f_close(&SDFile);
         SD_Eject();
@@ -492,8 +496,8 @@ uint8_t Enter_Bootloader(void)
   f_close(&SDFile);
   LED_ALL_OFF();
   kprint("Programming finished.\n");
-  sprintf(msg, "Flashed: %ld bytes.\n", (cntr * 8));
-  kprint(msg);
+  //sprintf(msg, "Flashed: %ld bytes.\n", (cntr * 8));
+  //kprint(msg);
   
   
 #if 0  // adds 25-26 seconds but doesn't add any value (verify during programming only costs 60mS)  
@@ -504,7 +508,7 @@ uint8_t Enter_Bootloader(void)
   {
     /* f_open failed */
     kprint("File cannot be opened.\n");
-    kprint("FatFs error code: %u\n", fr);
+   // kprint("FatFs error code: %u\n", fr);
   //print(msg);
     
     SD_Eject();
@@ -592,7 +596,6 @@ uint8_t Enter_Bootloader(void)
     }
   #endif
 #endif
-
   /* Eject SD card */
   SD_Eject();
   kprint("SD ejected.\n");
@@ -616,7 +619,7 @@ uint8_t Enter_Bootloader(void)
 
       if (Bootloader_ConfigProtection_Set(wrp_old) != BL_OK)  // sends system though reset - no more code executed unless there's an error
       {
-        kprint("Failed to restore write protection.\n");
+        //kprint("Failed to restore write protection.\n");
       }
     }
   #endif
@@ -645,7 +648,11 @@ void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
-  //__disable_irq();   //  k_delay doesn't work if IRQs are disabled            
+  //__disable_irq();   //  k_delay doesn't work if IRQs are disabled  
+  
+  // restore flags to power up state
+  WRITE_Prot_Old_Flag = Magic_Location = 0;
+  
   while (1)
   {
     LED_G1_ON();

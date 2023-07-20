@@ -151,7 +151,7 @@ uint8_t Bootloader_FlashNext_Buf(uint8_t *data, UINT count);
 uint8_t Bootloader_FlashNext(uint64_t data);
 uint8_t Bootloader_FlashEnd(void);
 
-uint8_t Bootloader_ConfigProtection_Keep_Boot(void);
+void    Bootloader_ConfigProtection_Keep_Boot(void);
 uint8_t Bootloader_ConfigProtection_Set(uint32_t *data);
 uint8_t Bootloader_GetProtectionStatus(void);
 uint8_t Bootloader_CheckSize(uint32_t appsize);
