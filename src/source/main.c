@@ -286,12 +286,12 @@ static void main_boot(void)
   //kprint("Entering Bootloader...\n");
   Bootloader_Init();
   
-  report_WP_ConfigProtection();  
+  //report_WP_ConfigProtection();  
   
   uint8_t temp_stat = Enter_Bootloader();
-  if((temp_stat == ERR_FLASH) || (temp_stat == ERR_VERIFY)) Error_Handler();
-  
-  jump_to_application;
+  if((temp_stat == ERR_FLASH) || (temp_stat == ERR_VERIFY)) Error_Handler();  // halt if programming/erase/verify issues
+  kprint("unable to load new image - checking for exising application\n");
+  jump_to_application();                                                        // try to jump to already existing application
   
 }
 
@@ -347,8 +347,8 @@ uint8_t Enter_Bootloader(void)
   /* Check size of application found on SD card */
   app_size = f_size(&SDFile);
   
-  sprintf(msg, "Application size: %8lX\nApplication end:  %8lX\n", app_size, app_size + APP_ADDRESS);
-  kprint(msg);
+  //sprintf(msg, "Application size: %8lX\nApplication end:  %8lX\n", app_size, app_size + APP_ADDRESS);
+  //kprint(msg);
   
   if(Bootloader_CheckSize(app_size) != BL_OK)
   {
@@ -359,7 +359,7 @@ uint8_t Enter_Bootloader(void)
     kprint("SD ejected.\n");
     return ERR_APP_LARGE;
   }
-  kprint("App size OK.\n");
+  //kprint("App size OK.\n");
   
   /* Step 1: Init Bootloader and Flash */
   
@@ -371,24 +371,24 @@ uint8_t Enter_Bootloader(void)
       // Ozone debugger removed all sector write protection when downloading
       // a new image or when starting a debug session. 
       
-      if(init_1 ) {
-        WRITE_Prot_Old_Flag = Magic_Location = 0;
-        init_2 = 1;
-        init_1 = 0;
-        uint32_t temp_wrp[4] = { (1 | (2 << FLASH_WRP1AR_WRP1A_END_Pos)),  (3 | (4 << FLASH_WRP1BR_WRP1B_END_Pos)), 
-                                 (5 | (6 << FLASH_WRP2AR_WRP2A_END_Pos)),  (7 | (8 << FLASH_WRP2BR_WRP2B_END_Pos))};
-        Bootloader_ConfigProtection_Set(temp_wrp);
-        kprint("init_1: shouldn't see this\n");
-      }
-      
-      if(init_2 ) {
-        init_2 = 0;
-        WRITE_Prot_Old_Flag = Magic_Location = 0;
-        uint32_t temp_wrp[4] = { (1 | (0x7F << FLASH_WRP1AR_WRP1A_END_Pos)),  (0x20 | (0x40 << FLASH_WRP1BR_WRP1B_END_Pos)), 
-                                 (5 | (6 << FLASH_WRP2AR_WRP2A_END_Pos)),  (7 | (8 << FLASH_WRP2BR_WRP2B_END_Pos))};
-        Bootloader_ConfigProtection_Set(temp_wrp);
-        kprint("init_2: shouldn't see this\n");
-      }  
+      //if(init_1 ) {
+      //  WRITE_Prot_Old_Flag = Magic_Location = 0;
+      //  init_2 = 1;
+      //  init_1 = 0;
+      //  uint32_t temp_wrp[4] = { (1 | (2 << FLASH_WRP1AR_WRP1A_END_Pos)),  (3 | (4 << FLASH_WRP1BR_WRP1B_END_Pos)), 
+      //                           (5 | (6 << FLASH_WRP2AR_WRP2A_END_Pos)),  (7 | (8 << FLASH_WRP2BR_WRP2B_END_Pos))};
+      //  Bootloader_ConfigProtection_Set(temp_wrp);
+      //  kprint("init_1: shouldn't see this\n");
+      //}
+      //
+      //if(init_2 ) {
+      //  init_2 = 0;
+      //  WRITE_Prot_Old_Flag = Magic_Location = 0;
+      //  uint32_t temp_wrp[4] = { (20 | (0x60 << FLASH_WRP1AR_WRP1A_END_Pos)),  (0x7f | (0x0 << FLASH_WRP1BR_WRP1B_END_Pos)), 
+      //                           (5 | (6 << FLASH_WRP2AR_WRP2A_END_Pos)),  (7 | (8 << FLASH_WRP2BR_WRP2B_END_Pos))};
+      //  Bootloader_ConfigProtection_Set(temp_wrp);
+      //  kprint("init_2: shouldn't see this\n");
+      //}  
   
   /* Check for flash write protection of application area*/
   if(Bootloader_GetProtectionStatus()) {  
@@ -410,10 +410,10 @@ uint8_t Enter_Bootloader(void)
       //        LED_ALL_OFF();
       //        kprint("Button was not pressed, write protection is still active.\n");
       
-      sprintf(msg, "WRITE_Prot_Old_Flag:               %08lX\n", WRITE_Prot_Old_Flag);
-      kprint(msg);
-      sprintf(msg, "WRITE_Prot_Old_Flag_Restored_flag: %08lX\n", WRITE_Prot_Old_Flag_Restored_flag);
-      kprint(msg);
+      //sprintf(msg, "WRITE_Prot_Old_Flag:               %08lX\n", WRITE_Prot_Old_Flag);
+      //kprint(msg);
+      //sprintf(msg, "WRITE_Prot_Old_Flag_Restored_flag: %08lX\n", WRITE_Prot_Old_Flag_Restored_flag);
+      //kprint(msg);
       
       if (WRITE_Prot_Old_Flag == WRITE_Prot_Old_Flag_Restored_flag) {   // already restored original protection so don't initiate the process again  
         jump_to_application();
@@ -484,10 +484,12 @@ uint8_t Enter_Bootloader(void)
         return ERR_FLASH;
       }
     }
-    if(cntr % 256 == 0)
+    if(cntr % 512 == 0)
     {
       /* Toggle green LED during programming */
       LED_G1_TG();
+      sprintf(msg, "Programming byte: %08lX\n", (cntr * 8));
+      kprint(msg);
     }
   } while((fr == FR_OK) && (num > 0));
   
@@ -558,7 +560,7 @@ uint8_t Enter_Bootloader(void)
 #endif
                   
   LED_G1_OFF();
-#if 0
+
   #if defined(FILE_EXT_CHANGE) && (_LFN_UNICODE == 0)   // rename file if using ANSI/OEM strings
     TCHAR new_filename[strlen(CONF_FILENAME) + 1];
     new_filename[strlen(CONF_FILENAME)] = '\0';  // terminate the string
@@ -577,7 +579,7 @@ uint8_t Enter_Bootloader(void)
       {
         /* f_open failed */
         kprint("File cannot be renamed.\n");
-        kprint("FatFs error code: %u\n", fr);
+        //kprint("FatFs error code: %u\n", fr);
         //print(msg);
         
         //SD_Eject();               // allow loading application even if can't rename
@@ -588,14 +590,14 @@ uint8_t Enter_Bootloader(void)
     else {
     /* f_open failed */
       kprint("removing .CUR failed.\n");
-      kprint("FatFs error code: %u\n", fr);
+      //kprint("FatFs error code: %u\n", fr);
 
       // allow loading application even if can't rename
       Magic_Location = Magic_Application;  // flag that we should load application
                                            // after the next reset
     }
   #endif
-#endif
+
   /* Eject SD card */
   SD_Eject();
   kprint("SD ejected.\n");
