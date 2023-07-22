@@ -480,6 +480,8 @@ uint8_t Enter_Bootloader(void)
     {
       /* Toggle green LED during programming */
       LED_G1_TG();
+      sprintf(msg, "Programming byte: %08lX\n", (cntr * 8));
+      kprint(msg);
     }
   } while((fr == FR_OK) && (num > 0));
   

@@ -144,10 +144,10 @@ uint8_t Bootloader_Init(void)
   //sprintf(msg, "\nAPP_sector_mask %08lX\n", APP_sector_mask);
   //kprint(msg);
   // 
-  //sprintf(msg, "\nBOOT_LOADER_END %08lX\n", BOOT_LOADER_END);
-  //kprint(msg);
-  //sprintf(msg, "Lowest possible APP_ADDRESS is %08lX\n", APP_first_addr);
-  //kprint(msg);
+  sprintf(msg, "\nBOOT_LOADER_END %08lX\n", BOOT_LOADER_END);
+  kprint(msg);
+  sprintf(msg, "Lowest possible APP_ADDRESS is %08lX\n", APP_first_addr);
+  kprint(msg);
   
   /* check APP_ADDRESS */
   if (APP_ADDRESS & 0x1ff) {
@@ -162,14 +162,14 @@ uint8_t Bootloader_Init(void)
   if (APP_OFFSET == 0) return BL_ERASE_ERROR;   // start of boot program
   if (APP_first_sector == 0) return BL_ERASE_ERROR;   // application is within same sector as bootloader
   
-  wrp1a_strt = (uint8_t)(rd32(R_FLASH_WRP1AR) & 0x03ff);
-  wrp1a_end  = (uint8_t)((rd32(R_FLASH_WRP1AR) >> 16) & 0x03ff);
-  wrp2a_strt = (uint8_t)(rd32(R_FLASH_WRP2AR) & 0x03ff);
-  wrp2a_end  = (uint8_t)((rd32(R_FLASH_WRP2AR) >> 16) & 0x03ff);
-  wrp1b_strt = (uint8_t)(rd32(R_FLASH_WRP1BR) & 0x03ff);
-  wrp1b_end  = (uint8_t)((rd32(R_FLASH_WRP1BR) >> 16) & 0x03ff);
-  wrp2b_strt = (uint8_t)(rd32(R_FLASH_WRP2BR) & 0x03ff);
-  wrp2b_end  = (uint8_t)((rd32(R_FLASH_WRP2BR) >> 16) & 0x03ff);
+  wrp1a_strt = (uint8_t)(rd32(R_FLASH_WRP1AR) & 0x07f);
+  wrp1a_end  = (uint8_t)((rd32(R_FLASH_WRP1AR) >> 16) & 0x07f);
+  wrp2a_strt = (uint8_t)(rd32(R_FLASH_WRP2AR) & 0x07f);
+  wrp2a_end  = (uint8_t)((rd32(R_FLASH_WRP2AR) >> 16) & 0x07f);
+  wrp1b_strt = (uint8_t)(rd32(R_FLASH_WRP1BR) & 0x07f);
+  wrp1b_end  = (uint8_t)((rd32(R_FLASH_WRP1BR) >> 16) & 0x07f);
+  wrp2b_strt = (uint8_t)(rd32(R_FLASH_WRP2BR) & 0x07f);
+  wrp2b_end  = (uint8_t)((rd32(R_FLASH_WRP2BR) >> 16) & 0x07f);
   
   if (wrp1a_end < wrp1a_strt) {
     Bank1a_prot_start = 0;
@@ -356,9 +356,9 @@ uint8_t Bootloader_Erase(void)
   uint8_t num_to_erase;
   
   if (nbpages_bank_1) {
-    for (uint16_t count = 0; count <= nbpages_bank_1; count += FLASH_INCR) {
-      num_to_erase = ((count + FLASH_INCR) < nbpages_bank_1) ? FLASH_INCR : (nbpages_bank_1 - count + 1); // number pages to erase this loop
-      sprintf(msg, "Erasing bank 1, page: %02X\n", start_page_bank_1 + count);
+    for (uint16_t count = 0; count < nbpages_bank_1; count += FLASH_INCR) {
+      num_to_erase = ((count + FLASH_INCR) < nbpages_bank_1) ? FLASH_INCR : (nbpages_bank_1 - count); // number pages to erase this loop
+      sprintf(msg, "Erasing bank 1, page: %02X  num to erase: %02X\n", start_page_bank_1 + count, num_to_erase);
       LED_ALL_TG();
       kprint(msg);
       HAL_StatusTypeDef status = HAL_FLASHEx_Erase_(FLASH_BANK_1, start_page_bank_1 + count, num_to_erase, &PageError);
@@ -379,9 +379,9 @@ uint8_t Bootloader_Erase(void)
   }
   
   if (nbpages_bank_2) {
-    for (uint16_t count = 0; count <= nbpages_bank_2; count += FLASH_INCR) {
-      num_to_erase = ((count + FLASH_INCR) < nbpages_bank_2) ? FLASH_INCR : (nbpages_bank_2 - count + 1); // number pages to erase this loop
-      sprintf(msg, "Erasing bank 2, page: %u\n", start_page_bank_2 + count);
+    for (uint16_t count = 0; count < nbpages_bank_2; count += FLASH_INCR) {
+      num_to_erase = ((count + FLASH_INCR) < nbpages_bank_2) ? FLASH_INCR : (nbpages_bank_2 - count); // number pages to erase this loop
+      sprintf(msg, "Erasing bank 2, page: %02X  num to erase: %02X\n", start_page_bank_2 + count, num_to_erase);
       LED_ALL_TG();
       kprint(msg);
       HAL_StatusTypeDef status = HAL_FLASHEx_Erase_(FLASH_BANK_2, start_page_bank_2 + count, num_to_erase, &PageError);
@@ -699,17 +699,20 @@ uint8_t Bootloader_GetProtectionStatus(void)
   #define WITHIN(N,L,H)       ((N) >= (L) && (N) <= (H))
   
   if (app_size) {
-    
-    uint8_t last_app_page = ((app_size/FLASH_SECTOR_SIZE) + last_boot_page);
+    uint8_t first_app_page = (APP_ADDRESS - FLASH_BASE)/FLASH_SECTOR_SIZE;
+    uint8_t last_app_page = ((app_size/FLASH_SECTOR_SIZE) + first_app_page);
     if (app_size % FLASH_SECTOR_SIZE) last_app_page++;  // include partial page
     
+    sprintf(msg, "first_app_page : %2X   last_app_page: %2X\n", first_app_page, last_app_page);
+    kprint(msg);
+
     if (wrp1a_end >= wrp1a_strt) {
       // CASE A - wrp1a starts in app area
-      if (WITHIN(wrp1a_strt, last_boot_page + 1, last_app_page)) {
+      if (WITHIN(wrp1a_strt, first_app_page, last_app_page)) {
         return 1;
       }
       // CASE B - wrp1a ends in application area
-      if (WITHIN(wrp1a_end, last_boot_page + 1, last_app_page)) {
+      if (WITHIN(wrp1a_end, first_app_page, last_app_page)) {
         return 1;
       }
       // CASE C - application entirely within wrp1a
@@ -721,11 +724,11 @@ uint8_t Bootloader_GetProtectionStatus(void)
     
     if (wrp1b_end >= wrp1b_strt) {
       // CASE A - wrp1b starts in app area
-      if (WITHIN(wrp1b_strt, last_boot_page + 1, last_app_page)) {
+      if (WITHIN(wrp1b_strt, first_app_page, last_app_page)) {
         return 1;
       }
       // CASE B - wrp1b ends in application area
-      if (WITHIN(wrp1b_end, last_boot_page + 1, last_app_page)) {
+      if (WITHIN(wrp1b_end, first_app_page, last_app_page)) {
         return 1;
       }
       // CASE C - application entirely within wrp1b
@@ -737,11 +740,11 @@ uint8_t Bootloader_GetProtectionStatus(void)
     
     if (wrp2a_end >= wrp2a_strt) {
       // CASE A - wrp2a starts in app area
-      if (WITHIN(wrp2a_strt + 128, last_boot_page + 1, last_app_page)) {
+      if (WITHIN(wrp2a_strt + 128, first_app_page, last_app_page)) {
         return 1;
       }
       // CASE B - wrp2a ends in application area
-      if (WITHIN(wrp2a_end + 128, last_boot_page + 1, last_app_page)) {
+      if (WITHIN(wrp2a_end + 128, first_app_page, last_app_page)) {
         return 1;
       }
       // CASE C - application entirely within wrp2a
@@ -753,11 +756,11 @@ uint8_t Bootloader_GetProtectionStatus(void)
     
     if (wrp2b_end >= wrp2b_strt) {
       // CASE A - wrp2b starts in app area
-      if (WITHIN(wrp2b_strt + 128, last_boot_page + 1, last_app_page)) {
+      if (WITHIN(wrp2b_strt + 128, first_app_page, last_app_page)) {
         return 1;
       }
       // CASE B - wrp2b ends in application area
-      if (WITHIN(wrp2b_end + 128, last_boot_page + 1, last_app_page)) {
+      if (WITHIN(wrp2b_end + 128, first_app_page, last_app_page)) {
         return 1;
       }
       // CASE C - application entirely within wrp2b
@@ -813,60 +816,11 @@ uint8_t Bootloader_ConfigProtection_Set(uint32_t *data) {
     *         This parameter can be page number between WRPStartOffset and (max number of pages in the Flash Bank - 1)
     * @retval None
   */
-  //FLASH_OB_WRPConfig(OB_WRPAREA_ZONE_A, 5, 20);
-  //FLASH_OB_WRPConfig(OB_WRPAREA_ZONE_B, 45, 90);
-  
-  //FLASH_OBProgramInitTypeDef pOBInit ={0};
-  //HAL_FLASHEx_OBGetConfig(&pOBInit);
-  //
-  //pOBInit.OptionType = OPTIONBYTE_WRP;
-  //pOBInit.WRPArea = OB_WRPAREA_ZONE_A; // OB_WRPAREA_ZONE_A, OB_WRPAREA_ZONE_B , OB_WRPAREA_ZONE2_A, OB_WRPAREA_ZONE2_B
-  //pOBInit.WRPStartOffset = 0x7f;  //  zero based sector/page number
-  //pOBInit.WRPEndOffset = 0; 
   
   HAL_FLASH_Unlock();
   HAL_FLASH_OB_Unlock();
   while( rd32(R_FLASH_SR) & FLASH_SR_BSY1);  // wait until BSY1 is inactive before programming
   
-  // #define FLASH_WRP_START_MSK 0x7F
-  // #define FLASH_WRP_END_MSK   (0x7F << 16)
-  // 
-  //and32(R_FLASH_WRP1AR, ~(FLASH_WRP_START_MSK | FLASH_WRP_END_MSK));          // clear out start & end bits (but leave others unaffected)
-  //or32(R_FLASH_WRP1AR , data[0] & (FLASH_WRP_START_MSK | FLASH_WRP_END_MSK)); // write new start & end bits (but leave others unaffected)
-  //and32(R_FLASH_WRP1BR , ~(FLASH_WRP_START_MSK | FLASH_WRP_END_MSK));         // clear out start & end bits (but leave others unaffected)
-  //or32(R_FLASH_WRP1BR , data[1] & (FLASH_WRP_START_MSK | FLASH_WRP_END_MSK)); // write new start & end bits (but leave others unaffected)
-  //and32(R_FLASH_WRP2AR , ~(FLASH_WRP_START_MSK | FLASH_WRP_END_MSK));         // clear out start & end bits (but leave others unaffected)
-  //or32(R_FLASH_WRP2AR , data[2] & (FLASH_WRP_START_MSK | FLASH_WRP_END_MSK)); // write new start & end bits (but leave others unaffected)
-  //and32(R_FLASH_WRP2BR , ~(FLASH_WRP_START_MSK | FLASH_WRP_END_MSK));         // clear out start & end bits (but leave others unaffected)
-  //or32(R_FLASH_WRP2BR , data[3] & (FLASH_WRP_START_MSK | FLASH_WRP_END_MSK)); // write new start & end bits (but leave others unaffected)
-  
-  //and32(R_FLASH_WRP1AR, ~(FLASH_WRP1AR_WRP1A_STRT | FLASH_WRP1AR_WRP1A_END));          // clear out start & end bits (but leave others unaffected)
-  //or32(R_FLASH_WRP1AR , data[0] & (FLASH_WRP1AR_WRP1A_STRT | FLASH_WRP1AR_WRP1A_END)); // write new start & end bits (but leave others unaffected)
-  //and32(R_FLASH_WRP1BR , ~(FLASH_WRP1BR_WRP1B_STRT | FLASH_WRP1BR_WRP1B_END));          // clear out start & end bits (but leave others unaffected)
-  //or32(R_FLASH_WRP1BR , data[1] & (FLASH_WRP1BR_WRP1B_STRT | FLASH_WRP1BR_WRP1B_END)); // write new start & end bits (but leave others unaffected)
-  //and32(R_FLASH_WRP2AR , ~(FLASH_WRP2AR_WRP2A_STRT | FLASH_WRP2AR_WRP2A_END));          // clear out start & end bits (but leave others unaffected)
-  //or32(R_FLASH_WRP2AR , data[2] & (FLASH_WRP2AR_WRP2A_STRT | FLASH_WRP2AR_WRP2A_END)); // write new start & end bits (but leave others unaffected)
-  //and32(R_FLASH_WRP2BR , ~(FLASH_WRP2BR_WRP2B_STRT | FLASH_WRP2BR_WRP2B_END));          // clear out start & end bits (but leave others unaffected)
-  //or32(R_FLASH_WRP2BR , data[3] & (FLASH_WRP2BR_WRP2B_STRT | FLASH_WRP2BR_WRP2B_END)); // write new start & end bits (but leave others unaffected)
-  
-  // TRY 16 BIT ACCESS
-  
-  //and16(R_FLASH_WRP1AR_STRT, (uint16_t)~(FLASH_WRP1AR_WRP1A_STRT));                    // clear out start bits (but leave others unaffected)
-  //or16(R_FLASH_WRP1AR_STRT , (uint16_t)(data[0] & (FLASH_WRP1AR_WRP1A_STRT)));         // write new start bits (but leave others unaffected)
-  //and16(R_FLASH_WRP1BR_STRT , (uint16_t)~(FLASH_WRP1BR_WRP1B_STRT ));                  // clear out start bits (but leave others unaffected)
-  //or16(R_FLASH_WRP1BR_STRT , (uint16_t)(data[1] & (FLASH_WRP1BR_WRP1B_STRT)));         // write new start bits (but leave others unaffected)
-  //and16(R_FLASH_WRP2AR_STRT , (uint16_t)~(FLASH_WRP2AR_WRP2A_STRT));                   // clear out start bits (but leave others unaffected)
-  //or16(R_FLASH_WRP2AR_STRT , (uint16_t)(data[2] & (FLASH_WRP2AR_WRP2A_STRT)));         // write new start bits (but leave others unaffected)
-  //and16(R_FLASH_WRP2BR_STRT , (uint16_t)~(FLASH_WRP2BR_WRP2B_STRT));                   // clear out start bits (but leave others unaffected)
-  //or16(R_FLASH_WRP2BR_STRT , (uint16_t)(data[3] & (FLASH_WRP2BR_WRP2B_STRT)));         // write new start bits (but leave others unaffected)
-  
-  // wr16(R_FLASH_WRP1AR_STRT , (uint16_t)(data[0] & (FLASH_WRP1AR_WRP1A_STRT)));         // write new start bits (but leave others unaffected)
-  // wr16(R_FLASH_WRP1BR_STRT , (uint16_t)(data[1] & (FLASH_WRP1BR_WRP1B_STRT)));         // write new start bits (but leave others unaffected)
-  // wr16(R_FLASH_WRP2AR_STRT , (uint16_t)(data[2] & (FLASH_WRP2AR_WRP2A_STRT)));         // write new start bits (but leave others unaffected)
-  // wr16(R_FLASH_WRP2BR_STRT , (uint16_t)(data[3] & (FLASH_WRP2BR_WRP2B_STRT)));         // write new start bits (but leave others unaffected)
-  
-  //FLASH->WRP1AR = 0;  // neither changed
-  // works!
   uint8_t* wrp1ar_strt_ptr = (uint8_t*)0x4002202C;
   uint8_t* wrp1ar_end_ptr  = (uint8_t*)0x4002202E;
   uint8_t* wrp1br_strt_ptr = (uint8_t*)0x40022030;
@@ -938,13 +892,21 @@ void Bootloader_ConfigProtection_Clear(uint32_t *data) {
 
 
 // remove protection from application area
-// protection of area before application is not changed
-// protection of area beyond application not changed
+// 
+// To simplify the logic, wrp1a and wrp1b are treated as one large protection area
+//   the final wrp1a holds the protected area before the application
+//   the final wrp1b holds the protected area after the application
 //
-// always returns success
-uint8_t Bootloader_ConfigProtection_Keep_Boot(void) {  
+// NOTE: this may protect pages not originally protected.  That's not a problem
+//       because the "extra" pages don't get written to and the original
+//       protection is restored later in the program.
+//
+// always sends system through reset
+uint8_t  Bootloader_ConfigProtection_Keep_Boot(void) {  
   
   #define WITHIN(N,L,H)       ((N) >= (L) && (N) <= (H))
+  #define MIN_2(a,b)      ((a)<(b)?(a):(b))
+  #define MAX_2(a,b)      ((a)>(b)?(a):(b))
   uint32_t temp_wrp[4] = {0};
   
   if (app_size) {
@@ -952,133 +914,152 @@ uint8_t Bootloader_ConfigProtection_Keep_Boot(void) {
     uint8_t first_app_page = (APP_ADDRESS - FLASH_BASE)/ FLASH_SECTOR_SIZE;
     uint8_t last_app_page = ((app_size/FLASH_SECTOR_SIZE) + first_app_page);
     if (app_size % FLASH_SECTOR_SIZE) last_app_page++;  // include partial page
-    
-    if (wrp1a_end >= wrp1a_strt) {
-      // CASE A - wrp1a starts in app area
-      if (WITHIN(wrp1a_strt, first_app_page, last_app_page)) {
-        if ( wrp1a_end <= last_app_page) {  
-          // CASE A1 - wrp1a entirely within application area
-          temp_wrp[0] = 0x0000007F;         // disable wrp1a (set last < start)
-        }
-        else {
-          // CASE A2 - wrp1a extends beyond application
-          temp_wrp[0] = (last_app_page | (wrp1a_end << 16));  // application is partially within wrp1a
-        }
-      }  
-      // CASE B - wrp1a starts before application
-      else if (WITHIN(wrp1a_strt, 0, first_app_page -1)) {
-        if (WITHIN(wrp1a_end, 0, first_app_page -1)) {
-          // CASE B1 - wrp1a entirely before application area
-          //temp_wrp[0] = rd32(R_FLASH_WRP1AR);  // no change to wrp1a
-          temp_wrp[0] = (wrp1a_strt | (wrp1a_end << 16));   // no change to wrp1a
-        }
-        else {
-          // CASE B2 - wrp1a starts before application area but extends into application area
-          temp_wrp[0] = wrp1a_strt | ((first_app_page - 1) << 16);  // wrp1a end to end of area before application
-        }
-      }
-      else {
-        // CASE C - wrp1a starts beyond the application so no changes needed
-        //temp_wrp[0] = rd32(R_FLASH_WRP1AR);  // no change to wrp1a
-        temp_wrp[0] = (wrp1a_strt | (wrp1a_end << 16));   // no change to wrp1a
-      }
-    }  // end wrp1a
+ 
+ 
+// WRP1
+ 
+    uint8_t wrp_strt = MIN_2(wrp1a_strt, wrp1b_strt);  // combine wrp1a and wrp1b into one large virtual area
+    uint8_t wrp_end  = MAX_2(wrp1a_end, wrp1b_end);
+    sprintf(msg, "wrp_strt 1: %2X\n", wrp_strt);
+    kprint(msg);
+    sprintf(msg, "wrp_end 1:  %2X\n", wrp_end);
+    kprint(msg);
+      
+      
+    temp_wrp[0] = 0x0000007F;         // set default as disabled (set last < start)
+    temp_wrp[1] = 0x0000007F;         // set default as disabled (set last < start)
+
     
     
-    if (wrp1b_end >= wrp1b_strt) {
-      // CASE A - wrp1b starts in app area
-      if (WITHIN(wrp1b_strt, first_app_page, last_app_page)) {
-        if ( wrp1b_end <= last_app_page) {  
-          // CASE A1 - wrp1b entirely within application area
-          temp_wrp[1] = 0x0000007F;         // disable wrp1b (set last < start)
+    if (first_app_page <= 0x7f) {  // app starts in bank 1)
+      uint8_t last_app_page_wrp1 = last_app_page;
+      if (last_app_page > 0x7f) last_app_page_wrp1 = 0x7f;  //limit last page to bank 1
+      if (wrp_end >= wrp_strt) {
+        // CASE A - wrp1 starts in app area
+        if (WITHIN(wrp_strt, first_app_page, last_app_page_wrp1)) {
+          if ( wrp_end <= last_app_page_wrp1) {  
+            // CASE A1 - wrp1 entirely within application area
+            kprint("CASE: A1\n");
+            //temp_wrp[0] = 0x0000007F;         // disable wrp1 (set last < start)
+            //temp_wrp[1] = 0x0000007F;         // disable wrp1 (set last < start)
+          }
+          else {
+            // CASE A2 - wrp1 extends beyond application
+            kprint("CASE: A2\n");
+            temp_wrp[0] = ((last_app_page_wrp1 + 1) | (wrp_end << 16));  // application is partially within wrp
+            //temp_wrp[1] = 0x0000007F;                         // disable wrp1b (set last < start)
+          }
+        }  
+        // CASE B - wrp1 starts before application
+        else if (WITHIN(wrp_strt, 0, first_app_page -1)) {
+          if (WITHIN(wrp_end, 0, first_app_page -1)) {
+            // CASE B1 - wrp1 entirely before application area 
+            kprint("CASE: B1\n");
+            temp_wrp[0] = (wrp1a_strt | (wrp1a_end << 16));   // no change to wrp
+            temp_wrp[1] = (wrp1b_strt | (wrp1b_end << 16));   // no change to wrp
+          }
+          else if (WITHIN(wrp_end, 0, last_app_page_wrp1)) {
+              // CASE B2 - wrp1 starts before application area but stops within application area
+              kprint("CASE: B2\n");
+              temp_wrp[0] = (wrp_strt | ((first_app_page - 1) << 16));  // wrp1 end to end of area before application
+              //temp_wrp[1] = 0x0000007F;                               // disable wrp1b (set last < start)
+            }
+            else {
+              // CASE B3 - wrp1 starts before application area but extends beyond application area
+              kprint("CASE: B3\n");
+              //           this requires trying to use wrp1b to protect the area beyond the application.
+               temp_wrp[0] = (wrp_strt | ((first_app_page - 1) << 16));  // wrp1a used for area before application
+               temp_wrp[1] = ((last_app_page_wrp1 + 1) | (wrp_end << 16));          // wrp1b used for area after application
+            } 
         }
         else {
-          // CASE A2 - wrp1b extends beyond application
-          temp_wrp[1] = (last_app_page | (wrp1b_end << 16));  // application is partially within wrp1b
+          // CASE C - wrp1 starts beyond the application so no changes needed 
+          kprint("CASE: C\n");
+          temp_wrp[0] = (wrp1a_strt | (wrp1a_end << 16));   // no change to wrp
+          temp_wrp[1] = (wrp1b_strt | (wrp1b_end << 16));   // no change to wrp
         }
-      }  
-      // CASE B - wrp1b starts before application
-      else if (WITHIN(wrp1b_strt, 0, first_app_page -1)) {
-        if (WITHIN(wrp1b_end, 0, first_app_page -1)) {
-          // CASE B1 - wrp1b entirely before application area
-          //temp_wrp[1] = rd32(R_FLASH_WRP1BR);  // no change to wrp1b
-          temp_wrp[1] = (wrp1b_strt | (wrp1b_end << 16));   // no change to wrp1b
-        }
-        else {
-          // CASE B2 - wrp1b starts before application area but extends into application area
-          temp_wrp[1] = wrp1b_strt | ((first_app_page - 1) << 16);  // wrp1b end to end of area before application
-        }
-      }
-      else {
-        // CASE C - wrp1b starts beyond the application so no changes needed
-        //temp_wrp[1] = rd32(R_FLASH_WRP1BR);  // no change to wrp1b
-        temp_wrp[1] = (wrp1b_strt | (wrp1b_end << 16));   // no change to wrp1b
-      }
-    }  // end wrp1b
+      }  // end wrp1
+    }  // end application starts in bank 1
     
+   
+    sprintf(msg, "temp_wrp[0]: %08lX\n", temp_wrp[0]);
+    kprint(msg);
+    sprintf(msg, "temp_wrp[1]: %08lX\n", temp_wrp[1]);
+    kprint(msg);
+ 
+ // wrp2
     
-    if (wrp2a_end >= wrp2a_strt) {
-      // CASE A - wrp2a starts in app area
-      if (WITHIN(wrp2a_strt + 128, first_app_page, last_app_page)) {
-        if ( wrp2a_end + 128 <= last_app_page) {  
-          // CASE A1 - wrp2a entirely within application area
-          temp_wrp[2] = 0x0000007F;         // disable wrp2a (set last < start)
-        }
-        else {
-          // CASE A2 - wrp2a extends beyond application
-          temp_wrp[2] = ((last_app_page - 128) | (wrp2a_end << 16));  // application is partially within wrp2a
-        }
-      }  
-      // CASE B - wrp2a starts before application
-      else if (WITHIN(wrp2a_strt + 128, 0, first_app_page -1)) {
-        if (WITHIN(wrp2a_end + 128, 0, first_app_page -1)) {
-          // CASE B1 - wrp2a entirely before application area
-          //temp_wrp[2] = rd32(R_FLASH_WRP2AR);  // no change to wrp2a
-          temp_wrp[2] = (wrp2a_strt | (wrp2a_end << 16));   // no change to wrp2a
-        }
-        else {
-          // CASE B2 - wrp2a starts before application area but extends into application area
-          temp_wrp[2] = wrp2a_strt | ((first_app_page - 1 - 128) << 16);  // wrp2a end to end of area before application
-        }
-      }
-      else {
-        // CASE C - wrp2a starts beyond the application so no changes needed
-        //temp_wrp[2] = rd32(R_FLASH_WRP2AR);  // no change to wrp2a
-        temp_wrp[2] = (wrp2a_strt | (wrp2a_end << 16));   // no change to wrp2a
-      }
-    }  // end wrp2a 
+    wrp_strt = MIN_2(wrp2a_strt, wrp2b_strt) + 128;  // combine wrp2a and wrp2b into one large virtual area
+    wrp_end  = MAX_2(wrp2a_end, wrp2b_end) + 128;
     
+    sprintf(msg, "wrp_strt 2: %2X\n", wrp_strt);
+    kprint(msg);
+    sprintf(msg, "wrp_end 2:  %2X\n", wrp_end);
+    kprint(msg);
+      
+    temp_wrp[2] = 0x0000007F;         // set default as disabled (set last < start)
+    temp_wrp[3] = 0x0000007F;         // set default as disabled (set last < start)
+
+    uint8_t first_app_page_wrp2 = 0;
+    if (first_app_page > 0x7f) first_app_page_wrp2 = first_app_page - 0x7f;  //limit first page to bank 2
+    uint8_t last_app_page_wrp2 = last_app_page;
+    if (last_app_page > 0x7f) {    // application extends into bank 2
+      last_app_page_wrp2 -= 0x7f;       // limit last page to bank 2
+ 
+      if (wrp_end >= wrp_strt) {
+        // CASE D - wrp2 starts in app area
+        if (WITHIN(wrp_strt, first_app_page_wrp2, last_app_page_wrp2)) {
+          if ( wrp_end <= last_app_page_wrp2) {  
+            // CASE D1 - wrp2 entirely within application area
+            kprint("CASE: D1\n");
+            //temp_wrp[2] = 0x0000007F;         // disable wrp2 (set last < start)
+            //temp_wrp[3] = 0x0000007F;         // disable wrp2 (set last < start)
+          }
+          else {
+            // CASE D2 - wrp2 extends beyond application
+            kprint("CASE: D2\n");
+            temp_wrp[2] = ((last_app_page_wrp2 + 1) | (wrp_end << 16));  // application is partially within wrp
+            //temp_wrp[3] = 0x0000007F;                         // disable wrp2b (set last < start)
+          }
+        }  
+        // CASE E - wrp2 starts before application
+        else if (WITHIN(wrp_strt, 0, first_app_page_wrp2 -1)) {
+          if (WITHIN(wrp_end, 0, first_app_page_wrp2 -1)) {
+            // CASE E1 - wrp2 entirely before application area  (never executes because Bootloader_GetProtectionStatus
+            //                                                  is always call before this routine)
+            kprint("CASE: E1\n");
+            
+            temp_wrp[2] = (wrp2a_strt | (wrp2a_end << 16));   // no change to wrp
+            temp_wrp[3] = (wrp2b_strt | (wrp2b_end << 16));   // no change to wrp
+          }
+          else if (WITHIN(wrp_end, 0, last_app_page_wrp2)) {
+              // CASE E2 - wrp2 starts before application area but stops within application area
+              kprint("CASE: E2\n");
+              temp_wrp[2] = (wrp_strt | ((first_app_page_wrp2 - 1) << 16));  // wrp2 end to end of area before application
+              //temp_wrp[3] = 0x0000007F;                               // disable wrp2b (set last < start)
+            }
+            else {
+              // CASE E3 - wrp2 starts before application area but extends beyond application area
+              kprint("CASE: E3\n");
+              //           this requires trying to use wrp2b to protect the area beyond the application.
+               temp_wrp[2] = (wrp_strt | ((first_app_page_wrp2 - 1) << 16));  // wrp2a used for area before application
+               temp_wrp[3] = ((last_app_page_wrp2 + 1) | (wrp_end << 16));          // wrp2b used for area after application
+            } 
+        }
+        else {
+          // CASE F - wrp2 starts beyond the application so no changes needed  (never executes because Bootloader_GetProtectionStatus
+          //                                                                   is always call before this routine)
+          kprint("CASE: F\n");
+          temp_wrp[2] = (wrp2a_strt | (wrp2a_end << 16));   // no change to wrp
+          temp_wrp[3] = (wrp2b_strt | (wrp2b_end << 16));   // no change to wrp
+        }
+      }  // end wrp2
+    }  // end application extends into bank 2
     
-    if (wrp2b_end >= wrp2b_strt) {
-      // CASE A - wrp2b starts in app area
-      if (WITHIN(wrp2b_strt + 128, first_app_page, last_app_page)) {
-        if ( wrp2b_end + 128 <= last_app_page) {  
-          // CASE A1 - wrp2b entirely within application area
-          temp_wrp[3] = 0x0000007F;         // disable wrp2b (set last < start)
-        }
-        else {
-          // CASE A2 - wrp2b extends beyond application
-          temp_wrp[3] = ((last_app_page - 128) | (wrp2b_end << 16));  // application is partially within wrp2b
-        }
-      }  
-      // CASE B - wrp2b starts before application
-      else if (WITHIN(wrp2b_strt + 128, 0, first_app_page -1)) {
-        if (WITHIN(wrp2b_end + 128, 0, first_app_page -1)) {
-          // CASE B1 - wrp2b entirely before application area
-          //temp_wrp[3] = rd32(R_FLASH_WRP2BR);  // no change to wrp2b
-          temp_wrp[3] = (wrp2b_strt | (wrp2b_end << 16));   // no change to wrp2a
-        }
-        else {
-          // CASE B2 - wrp2b starts before application area but extends into application area
-          temp_wrp[3] = wrp2b_strt | ((first_app_page - 1 - 128) << 16);  // wrp2b end to end of area before application
-        }
-      }
-      else {
-        // CASE C - wrp2b starts beyond the application so no changes needed
-         //temp_wrp[3] = rd32(R_FLASH_WRP2BR);  // no change to wrp2b
-        temp_wrp[3] = (wrp2b_strt | (wrp2b_end << 16));   // no change to wrp2a
-      }
-    }  // end wrp2b 
+    sprintf(msg, "temp_wrp[2]: %08lX\n", temp_wrp[2]);
+    kprint(msg);
+    sprintf(msg, "temp_wrp[3]: %08lX\n", temp_wrp[3]);
+    kprint(msg);
     
     Bootloader_ConfigProtection_Set(temp_wrp);   // update wrp
     
