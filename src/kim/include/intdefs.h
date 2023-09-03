@@ -19,6 +19,6 @@
 #define i8 int8_t
 #define u8 uint8_t
 
-#define uint unsigned int
+//#define uint unsigned int
 
 #endif /* _INTDEFS_H_ */

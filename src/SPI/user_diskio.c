@@ -35,7 +35,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include <string.h>
 #include "integer.h"
-#include <intdefs.h>
+#include "intdefs.h"
 #include <stdint.h>
 #include <stddef.h>
 #include "user_diskio_spi.h"

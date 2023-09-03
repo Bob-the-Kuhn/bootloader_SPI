@@ -62,6 +62,7 @@ void NVIC_System_Reset(void);
  */
 uint8_t Bootloader_Init(void)
 {
+  #if 0
     extern uint32_t _siccmram[];
     // Read and use the `_siccmram` linkerscript variable
     uint32_t siccmram = (uint32_t)_siccmram;
@@ -118,7 +119,7 @@ uint8_t Bootloader_Init(void)
     
     //sprintf(msg, "APP_sector_mask: %08lX\n", APP_sector_mask);
     //print(msg);
-    
+ #endif   
     return BL_OK;
 }
 
@@ -130,6 +131,8 @@ uint8_t Bootloader_Init(void)
  */
 uint8_t Bootloader_Erase(void)
 {
+  
+  #if 0
     HAL_StatusTypeDef status = HAL_OK;
 
     __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_EOP | FLASH_FLAG_OPERR | FLASH_FLAG_WRPERR | FLASH_FLAG_PGAERR | FLASH_FLAG_PGSERR );
@@ -151,6 +154,8 @@ uint8_t Bootloader_Erase(void)
 
     HAL_FLASH_Lock();
     return (status == HAL_OK) ? BL_OK : BL_ERASE_ERROR;
+ #endif
+ return  BL_OK;
 }
 
 /**
@@ -162,14 +167,14 @@ uint8_t Bootloader_Erase(void)
  */
 uint8_t Bootloader_FlashBegin(void)
 {
-    /* Reset flash destination address */
-    flash_ptr = APP_ADDRESS;
-
-    /* Unlock flash */
-    HAL_FLASH_Unlock();
-    __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_EOP | FLASH_FLAG_OPERR | FLASH_FLAG_WRPERR | FLASH_FLAG_PGAERR | FLASH_FLAG_PGSERR );
-
-    return BL_OK;
+//    /* Reset flash destination address */
+//    flash_ptr = APP_ADDRESS;
+//
+//    /* Unlock flash */
+//    HAL_FLASH_Unlock();
+//    __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_EOP | FLASH_FLAG_OPERR | FLASH_FLAG_WRPERR | FLASH_FLAG_PGAERR | FLASH_FLAG_PGSERR );
+//
+//    return BL_OK;
 }
 
 /**
@@ -183,6 +188,7 @@ uint8_t Bootloader_FlashBegin(void)
  */
 uint8_t Bootloader_FlashNext(uint64_t data)
 {
+  #if 0
     char msg[64]; //debug
     uint64_t read_data;
     HAL_StatusTypeDef status = HAL_OK; //debug
@@ -224,7 +230,7 @@ uint8_t Bootloader_FlashNext(uint64_t data)
         HAL_FLASH_Lock();
         return BL_WRITE_ERROR;
     }
-
+#endif
     return BL_OK;
 }
 
@@ -238,7 +244,7 @@ uint8_t Bootloader_FlashNext(uint64_t data)
 uint8_t Bootloader_FlashEnd(void)
 {
     /* Lock flash */
-    HAL_FLASH_Lock();
+//    HAL_FLASH_Lock();
 
     return BL_OK;
 }
@@ -249,22 +255,23 @@ uint8_t Bootloader_FlashEnd(void)
  */
 uint32_t Bootloader_GetProtectionStatus(void)
   {
-    FLASH_OBProgramInitTypeDef OBStruct = {0};
-    uint32_t protection                  = BL_PROTECTION_NONE;
-
-    HAL_FLASH_Unlock();
-
-    HAL_FLASHEx_OBGetConfig(&OBStruct);
-    return OBStruct.WRPSector;
-
-    /* RDP */
-    if(OBStruct.RDPLevel != OB_RDP_LEVEL_0)
-    {
-        protection |= BL_PROTECTION_RDP;
-    }
-
-    HAL_FLASH_Lock();
-    return protection;
+ //   FLASH_OBProgramInitTypeDef OBStruct = {0};
+ //   uint32_t protection                  = BL_PROTECTION_NONE;
+ //
+ //   HAL_FLASH_Unlock();
+ //
+ //   HAL_FLASHEx_OBGetConfig(&OBStruct);
+ //   return OBStruct.WRPSector;
+ //
+ //   /* RDP */
+ //   if(OBStruct.RDPLevel != OB_RDP_LEVEL_0)
+ //   {
+ //       protection |= BL_PROTECTION_RDP;
+ //   }
+ //
+ //   HAL_FLASH_Lock();
+ //   return protection;
+ return 0;
 }
 
 // debug helper routine
@@ -298,7 +305,8 @@ const char *byte_to_binary (uint32_t x)
  *   5) Send the system through reset so that the new settings take effect
  * 
  */
-uint8_t Bootloader_ConfigProtection(uint32_t protection, uint32_t mask, uint8_t save) {  
+uint8_t Bootloader_ConfigProtection(uint32_t protection, uint32_t mask, uint8_t save) { 
+#if 0  
   FLASH_OBProgramInitTypeDef OBStruct = {0};
   HAL_StatusTypeDef status            = HAL_ERROR;
 
@@ -375,6 +383,8 @@ uint8_t Bootloader_ConfigProtection(uint32_t protection, uint32_t mask, uint8_t 
   status |= HAL_FLASH_Lock();
 
   return (status == HAL_OK) ? BL_OK : BL_OBP_ERROR;
+ #endif
+ return BL_OK ;
 }
 
 /**
@@ -386,8 +396,8 @@ uint8_t Bootloader_ConfigProtection(uint32_t protection, uint32_t mask, uint8_t 
  */
 uint8_t Bootloader_CheckSize(uint32_t appsize)
 {
-    return ((FLASH_BASE + FLASH_SIZE - APP_ADDRESS) >= appsize) ? BL_OK
-                                                                : BL_SIZE_ERROR;
+ //   return ((FLASH_BASE + FLASH_SIZE - APP_ADDRESS) >= appsize) ? BL_OK
+   return BL_OK ;
 }
 
 /**
@@ -552,13 +562,13 @@ uint32_t Bootloader_GetVersion(void)
  */
 void NVIC_System_Reset(void)
 {
-  #define SCB_AIRCR_VECTKEY_Pos 16U   /*!< SCB AIRCR: VECTKEY Position */
-  #define SCB_AIRCR_SYSRESETREQ_Pos 2U   /*!< SCB AIRCR: VECTKEY Position */
-  volatile uint32_t* SCB_AIRCR = (uint32_t*)0xE000ED0CUL;  
-
-*SCB_AIRCR = (uint32_t)(((0x5FAUL << SCB_AIRCR_VECTKEY_Pos) | (1 << SCB_AIRCR_SYSRESETREQ_Pos)));
-
-  for(;;)                                                           /* wait until reset */
-  {
-  }
+//  #define SCB_AIRCR_VECTKEY_Pos 16U   /*!< SCB AIRCR: VECTKEY Position */
+//  #define SCB_AIRCR_SYSRESETREQ_Pos 2U   /*!< SCB AIRCR: VECTKEY Position */
+//  volatile uint32_t* SCB_AIRCR = (uint32_t*)0xE000ED0CUL;  
+//
+//*SCB_AIRCR = (uint32_t)(((0x5FAUL << SCB_AIRCR_VECTKEY_Pos) | (1 << SCB_AIRCR_SYSRESETREQ_Pos)));
+//
+//  for(;;)                                                           /* wait until reset */
+//  {
+//  }
 }

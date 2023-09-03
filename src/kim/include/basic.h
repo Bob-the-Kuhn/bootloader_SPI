@@ -9,7 +9,8 @@
 #ifndef _BASIC_H_
 #define _BASIC_H_
 
-#include <intdefs.h>
+#include "intdefs.h"
+#include <stdio.h>
 
 /* Some useful macros */
 #define max(a, b) ((a) > (b) ? (a) : (b))
@@ -21,15 +22,15 @@
 
 #define array_size(x) (sizeof((x)) / sizeof((x)[0]))
 
-#define uint unsigned int
+//#define uint unsigned int
 
-static inline u32 abs(i32 a)
-{
-	if (a >= 0)
-		return a;
-	else
-  return -a;
-}
+//static inline u32 abs(i32 a)
+//{
+//	if (a >= 0)
+//		return a;
+//	else
+//  return -a;
+//}
 
 /* Memory handling functions */
 //void *memcpy(void *dest, const void *src, size_t n);

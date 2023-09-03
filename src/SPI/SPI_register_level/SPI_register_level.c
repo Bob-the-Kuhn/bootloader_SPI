@@ -2,7 +2,8 @@
 
 #include "integer.h" //from FatFs middleware library
 #include "SPI_register_level_defines.h"
-#include "stm32f407x_defines.h"
+#include "LPC1769x_defines.h"
+#include "gpio.h"
 //#include "RccConfig_F446.h"
 
 void SPIConfig (void)
@@ -12,66 +13,74 @@ void SPIConfig (void)
 	2. Configure the Control Register 1
 	3. Configure the CR2
 	************************************************/	
-  //RCC_APB2ENR |= (1<<12);  // Enable SPI1 CLock  (already done in init.c)
-  //SPI1_CR1 |= (1<<0)|(1<<1);   // CPOL=1, CPHA=1 - SD cards are usually 0,0
-  SPI1_CR1 |= (1<<2);  // Master Mode
-  SPI1_CR1 |= (3<<3);  // BR[2:0] = 011: fPCLK/16, PCLK2 = 80MHz, SPI clk = 5MHz
-  SPI1_CR1 &= ~(1<<7);  // LSBFIRST = 0, MSB first
-  SPI1_CR1 |= (1<<8) | (1<<9);  // SSM=1, SSi=1 _ Software Slave Management
-  SPI1_CR1 &= ~(1<<10);  // RXONLY = 0, full-duplex
-  SPI1_CR1 &= ~(1<<11);  // DFF=0, 8 bit data
-  SPI1_CR2 = 0;
+  
+  *SSP1CR0 &= ~(0x0FFFF);     // clear register (SPI mode, CPOL=0, CPHA=0, SCR=0)
+  *SSP1CR0 |= 7;              // send/receive 8 bits
+  *SSP1CR0 |= (1<<SCR);       // divide clock by 2
+  *SSP1CR1 &= ~(0xF);         // clear register (Master mode, disable SSP1)
+  *SSP1CPSR &= ~(0xFF);       // clear register
+  *SSP1CPSR |= 0xC8;          // 300K baud rate (120MHz/200/2/1)
+  *SSP1IMSC &= ~(0xF);        // interrupts disabled
+  *SSP1CR1 |= (1<<SSE);       // enable SSP1
+  
 }
 
 void SPI_GPIOConfig (void)
 {
-  // PA4 SS
-  // PA5 CLK
-  // PA6 MISO
-  // PB5 MOSI
-  // PB11 SD_detect
-	//RCC_AHB1ENR |= (1<<0);  // Enable GPIO Clock (already done in init.c)
-	
-  GPIOA_MODER |= ((1<< 8|2<<10)|(2<<12));  // Output for PA4, Alternate functions for PA5 & PA6
-  GPIOB_MODER |= ((2<<10)|(1<<22));        // Alternate functions for PB5, Output for PB11
-	
-	GPIOA_OSPEEDR |= ((3<<8)|(3<<10)|(3<<12));  // Very HIGH Speed for PA4, PA5, PA6
-  GPIOB_OSPEEDR |= (3<<10);                // Very HIGH Speed for PB5
-	
-	GPIOA_AFRL |= ((5<<20)|(5<<24));         // AF5(SPI1) for PA5, PA6
-  GPIOB_AFRL |= (5<<20);                   // AF5(SPI1) for PB5
-}
+  // SD_SCK1_PIN    P0_07 Function code: 0b10
+  // SD_MISO1_PIN   P0_08 Function code: 0b10
+  // SD_MOSI1_PIN   P0_09 Function code: 0b10
+  // SD_CS_PIN      P0_06 Function code: 0b10
+  // no SD_detect
+	// Enable GPIO Clock (already done in init.c)
+  
+    /*Configure GPIO pins : SD_SCK_PIN */
+  gpio_wr(   IO(PORT0, 7), 0);
+  gpio_func( IO(PORT0, 7), 0b10);
+  gpio_dir(  IO(PORT0, 7), GPIO_OUTPUT);
+  gpio_mode( IO(PORT0, 7), PULL_NO);
+  
+    /*Configure GPIO pins : SD_MISO_PIN */
+  gpio_func( IO(PORT0, 8), 0b10);
+  gpio_dir(  IO(PORT0, 8), GPIO_INPUT);
+  gpio_mode( IO(PORT0, 8), PULL_NO);
+  
+    /*Configure GPIO pins : SD_MOSI_PIN */
+  gpio_wr(   IO(PORT0, 9), 1);
+  gpio_func( IO(PORT0, 9), 0b10);
+  gpio_dir(  IO(PORT0, 9), GPIO_OUTPUT);
+  gpio_mode( IO(PORT0, 9), PULL_NO);
+  
+    /*Configure GPIO pins : SD_CS_PIN (application controlled)*/
+  gpio_wr(   IO(PORT0, 6), 1);
+  gpio_func( IO(PORT0, 6), 0);
+  gpio_dir(  IO(PORT0, 6), GPIO_OUTPUT);
+  gpio_mode( IO(PORT0, 6), PULL_NO);
 
-// void GPIOConfig (void)  // F103
-// {
-// 	RCC_APB2ENR |=  (1<<2);  // Enable GPIOA clock
-// 	
-// 	GPIOA_CRL = 0;
-// 	GPIOA_CRL |= (11U<<20);   // PA5 (SCK) AF output Push Pull
-// 	GPIOA_CRL |= (11U<<28);   // PA7 (MOSI) AF output Push Pull
-// 	GPIOA_CRL |= (1<<26);    // PA6 (MISO) Input mode (floating)
-// 	GPIOA_CRL |= (3<<16);    // PA4 used for CS, GPIO Output 
-// 	
-// }
+}
 
 void SPI_Enable (void)
 {
-	SPI1_CR1 |= (1<<6);   // SPE=1, Peripheral enabled
+  volatile u32 *reg;
+  reg = LPC_SC_PCONP;
+	*reg |=  _BV(PCSSP1); // enable SPI module 
 }
 
 void SPI_Disable (void)
 {
-	SPI1_CR1 &= ~(1<<6);   // SPE=0, Peripheral Disabled
+  volatile u32 *reg;
+  reg = LPC_SC_PCONP;
+	CLEAR_BIT(*reg ,PCSSP1);  // Peripheral Disabled
 }
 
 void CS_Enable (void)
 {
-	GPIOA_BSRR |= (1<<9)<<16;
+  gpio_wr(IO(PORT0, 06), 0);
 }
 
 void CS_Disable (void)
 {
-	GPIOA_BSRR |= (1<<9);
+  gpio_wr(IO(PORT0, 06), 1);
 }
 
 
@@ -88,24 +97,11 @@ void SPI_Transmit (BYTE *data, UINT size)
 	UINT i=0;
 	while (i<size)
 	{
-	   while (!((SPI1_SR)&(1<<1))) {};  // wait for TXE bit to set _ This will indicate that the buffer is empty
-	   SPI1_DR = data[i];  // load the data into the Data Register
+	   
+	   *SSP1DR = data[i];  // load the data into the Data Register
+     while (!((*SSP1SR) & 1)){};          // wait for Transmit FIFO to go empty
 	   i++;
 	}	
-	
-	
-/*During discontinuous communications, there is a 2 APB clock period delay between the
-write operation to the SPI_DR register and BSY bit setting. As a consequence it is
-mandatory to wait first until TXE is set and then until BSY is cleared after writing the last
-data.
-*/
-	while (!((SPI1_SR)&(1<<1))) {};  // wait for TXE bit to set _ This will indicate that the buffer is empty
-	while (((SPI1_SR)&(1<<7))) {};  // wait for BSY bit to Reset _ This will indicate that SPI is not busy in communication	
-	
-	//  Clear the Overrun flag by reading DR and SR
-	BYTE temp = SPI1_DR;
-					temp = SPI1_SR;
-	
 }
 
 
@@ -120,19 +116,18 @@ void SPI_Receive (BYTE *data, UINT size)
 
 	while (size)
 	{
-		while (((SPI1_SR)&(1<<7))) {};  // wait for BSY bit to Reset _ This will indicate that SPI is not busy in communication
-		SPI1_DR = 0;  // send dummy data
-		while (!((SPI1_SR) &(1<<0))){};  // Wait for RXNE to set _ This will indicate that the Rx buffer is not empty
-	  *data++ = (SPI1_DR);
+		*SSP1DR = 0;  // send dummy data
+		while (!((*SSP1SR) &(1<<2))){};   // wait for Receive FIFO to have something in it
+	  *data++ = (*SSP1DR);
 		size--;
 	}	
 }
 
 BYTE SPI_Transfer(BYTE data) {
-  while (!((SPI1_SR)&(1<<1))) {};  // wait for TXE bit to set _ This will indicate that the buffer is empty
-	SPI1_DR = data;  // load the data into the Data Register
-  while (!((SPI1_SR) &(1<<0))){};  // Wait for RXNE to set _ This will indicate that the Rx buffer is not empty
-  return SPI1_DR;
+  *SSP1DR = data;  // load the data into the Data Register
+  while (!((*SSP1SR) & 1)){};          // wait for Transmit FIFO to go empty
+  while (!((*SSP1SR) & (1<<2))){};   // wait for Receive FIFO to have something in it
+  return *SSP1DR;
 }
  
   

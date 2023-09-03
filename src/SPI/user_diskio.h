@@ -35,7 +35,7 @@
 
 
 #include "integer.h"
-#include <intdefs.h>
+#include "intdefs.h"
 #include <stdint.h>
 #include <stddef.h>
 #include "ffconf.h"

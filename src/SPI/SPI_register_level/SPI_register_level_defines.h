@@ -6,8 +6,8 @@
  * as long as you retain this notice.
  */
 
-#ifndef _STM32F407X_DEFINES_
-#define _STM32F407X_DEFINES_
+#ifndef _LPC1769_DEFINES_
+#define _LPC1769_DEFINES_
 
 #include <inttypes.h>
 
@@ -29,16 +29,6 @@ volatile uint32_t* GPIOB_BASE = (uint32_t*)0x40020400UL;
 #define GPIOB_OSPEEDR  *(GPIOB_BASE + 0x02)  // 8 -> 2
 
 
-/* SPI1 registers */
-
-volatile uint16_t* SPI1_BASE = (uint16_t*)0x40013000UL;
-
-#define SPI1_CR1       *(SPI1_BASE + 0x00)
-#define SPI1_CR2       *(SPI1_BASE + 0x02) // 4 -> 2
-#define SPI1_DR        *(SPI1_BASE + 0x06) // 0x0C -> 6
-#define SPI1_SR        *(SPI1_BASE + 0x04) // 8 -> 4
 
 
-
-
-#endif /* _STM32F411X_DEFINES_ */
+#endif /* _LPC1769_DEFINES_ */

@@ -7,8 +7,8 @@
  */
 
 #include <stdarg.h>
-#include <endiannes.h>
-#include <basic.h>
+#include "endiannes.h"
+#include "basic.h"
 
 extern int putchar(int c);
 

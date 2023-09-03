@@ -26,11 +26,9 @@
 
 #include <string.h>
 #include <stdio.h>
-#include "bootloader.h"
 #include "ffconf.h"
 #include <ctype.h>
 #include "gpio.h"
-
 
 /* USER CODE END Includes */
 
@@ -124,7 +122,7 @@ int main(void)
   LED_G1_OFF();
   LED_G2_OFF();             
 
-  //print("debug test\n");  
+  print("debug test\n");  
 
   LED_G1_ON();
   LED_G2_OFF();  
@@ -137,8 +135,17 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   
+ // uint16_t counter = 0;
   while (1)
   {
+//    counter++;
+//    putchar(counter % 255);
+//    if(counter == 1024) {
+//      LED_G1_TG();
+//      LED_G2_TG();
+//      counter = 0;
+//      }
+    
     /* USER CODE END WHILE */
     
     /* USER CODE BEGIN 3 */
@@ -161,17 +168,19 @@ void GPIO_Init(void)
   /*Configure GPIO pin Output Level */
  
   
-   /*Configure GPIO pins : LED_D2_Pin */
- // gpio_wr(  IO(PORTA, 6), 0);
- // gpio_func(IO(PORTA, 6), 0);
- // gpio_dir( IO(PORTA, 6), GPIO_OUTPUT);
- // gpio_mode(IO(PORTA, 6), PULL_NO);
+ 
+  /*Configure GPIO pins : LED_G1 */
+  gpio_wr(  IO(LED_G1_Port, LED_G1_Pin), 0);
+  gpio_func(IO(LED_G1_Port, LED_G1_Pin), 0);
+  gpio_dir( IO(LED_G1_Port, LED_G1_Pin), GPIO_OUTPUT);
+  gpio_mode(IO(LED_G1_Port, LED_G1_Pin), PULL_NO);
   
-  /*Configure GPIO pins : LED_D3_Pin */
-  gpio_wr(  IO(PORTA, 7), 0);
-  gpio_func(IO(PORTA, 7), 0);
-  gpio_dir( IO(PORTA, 7), GPIO_OUTPUT);
-  gpio_mode(IO(PORTA, 7), PULL_NO);
+    /*Configure GPIO pins : LED_G2 */
+  gpio_wr(  IO(LED_G2_Port, LED_G2_Pin), 0);
+  gpio_func(IO(LED_G2_Port, LED_G2_Pin), 0);
+  gpio_dir( IO(LED_G2_Port, LED_G2_Pin), GPIO_OUTPUT);
+  gpio_mode(IO(LED_G2_Port, LED_G2_Pin), PULL_NO);
+
   
 
   /*Configure GPIO pins : B5 */
@@ -201,18 +210,19 @@ void GPIO_Init(void)
   * @retval None
   *
 */
+
 static void main_boot(void)
 {
   
   print("\nPower up, Boot started.\n");
   
   /* Check system reset flags */
-  if(__HAL_RCC_GET_FLAG(RCC_FLAG_PORRST))
+  if(*LPC_SC_RSID & _BV(0))
   {
     //print("POR/PDR reset flag is active.\n");
     #if(CLEAR_RESET_FLAGS)
       /* Clear system reset flags */
-      __HAL_RCC_CLEAR_RESET_FLAGS();
+      *LPC_SC_RSID = 0;
       //print("Reset flags cleared.\n");
     #endif
   }

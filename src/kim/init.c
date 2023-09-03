@@ -4,19 +4,17 @@
  * https://github.com/colosimo/kim-os
  */
 
-#include <linker.h>
-#include <basic.h>
-#include <log.h>
-#include <gpio.h>
-#include <stm32f407x_defines.h>
+#include "linker.h"
+#include "basic.h"
+#include "log.h"
+#include "gpio.h"
+//#include "LPC1769x_defines.h"
 #include <string.h>
 #include <string.h>
 
-#define STACK_TOP ((void*)(0x20004000))
+#define STACK_TOP ((void*)(0x10007FFF))
 
-#define CPU_FREQ      168000000
-#define AHB_PRESCALER         4
-#define HCLCK (CPU_FREQ / AHB_PRESCALER)
+#define CPU_FREQ      120000000
 #define SYSTICKS_FREQ      1000
 
 #define kprint(...) /* FIXME dummy */
@@ -80,124 +78,78 @@ void attr_weak isr_systick(void)
   ticks++;
 }
 
-// STM405/407 vector table
+// LPC1769 exception table
 static const void *attr_sect("isrv_sys") _isrv_sys[] = {
-  /* Cortex-M0 system interrupts */
-  STACK_TOP,    /* Stack top */
-  isr_reset,    /* Reset_Handler */
-  isr_nmi,      /* NMI_Handler */
-  isr_hf,       /* HardFault_Handler */
-  isr_none,     /* MemManage_Handler */
-  isr_none,     /* BusFault_Handler */
-  isr_none,     /* UsageFault_Handler */
-  0,            /* Reserved */
-  0,            /* Reserved */
-  0,            /* Reserved */
-  0,            /* Reserved */
-  isr_none,     /* SVC_Handler */
-  isr_none,     /* DebugMon_Handler */
-  0,            /* Reserved */
-  isr_none,     /* PendSV_Handler */
-  isr_systick,  /* SysTick_Handler */
-};
+  /* Cortex-M0 system interrupts             */
+  STACK_TOP,    /* Stack top            00     */
+  isr_reset,    /* Reset_Handler        04     */
+  isr_nmi,      /* NMI_Handler          08     */
+  isr_hf,       /* HardFault_Handler    0C     */
+  isr_none,     /* MemManage_Handler    10     */
+  isr_none,     /* BusFault_Handler     14     */
+  isr_none,     /* UsageFault_Handler   18     */
+  0,            /* Reserved             1C     */
+  0,            /* Reserved             20     */
+  0,            /* Reserved             24     */
+  0,            /* Reserved             28     */
+  isr_none,     /* SVC_Handler          2C     */
+  isr_none,     /* DebugMon_Handler     30     */
+  0,            /* Reserved             34     */
+  isr_none,     /* PendSV_Handler       38     */
+  isr_systick,  /* SysTick_Handler      3C     */
+};                                      
 
-// STM405/407 vector table
+// LPC1769 vector table
 static const void *attr_sect("isrv_irq") _isrv_irq[] = {
   /* Peripheral interrupts */
-  isr_none, /* Window WatchDog              */             
-  isr_none, /* PVD through EXTI Line detection */          
-  isr_none, /* Tamper and TimeStamps through the EXTI line */ 
-  isr_none, /* RTC Wakeup through the EXTI line */         
-  isr_none, /* FLASH                        */             
-  isr_none, /* RCC                          */             
-  isr_none, /* EXTI Line0                   */             
-  isr_none, /* EXTI Line1                   */             
-  isr_none, /* EXTI Line2                   */             
-  isr_none, /* EXTI Line3                   */             
-  isr_none, /* EXTI Line4                   */             
-  isr_none, /* DMA1 Stream 0                */             
-  isr_none, /* DMA1 Stream 1                */             
-  isr_none, /* DMA1 Stream 2                */             
-  isr_none, /* DMA1 Stream 3                */             
-  isr_none, /* DMA1 Stream 4                */             
-  isr_none, /* DMA1 Stream 5                */             
-  isr_none, /* DMA1 Stream 6                */             
-  isr_none, /* ADC1, ADC2 and ADC3s         */             
-  isr_none, /* CAN1 TX                      */             
-  isr_none, /* CAN1 RX0                     */             
-  isr_none, /* CAN1 RX1                     */             
-  isr_none, /* CAN1 SCE                     */             
-  isr_none, /* External Line[9:5]s          */             
-  isr_none, /* TIM1 Break and TIM9          */         
-  isr_none, /* TIM1 Update and TIM10        */         
-  isr_none, /* TIM1 Trigger and Commutation and TIM11 */
-  isr_none, /* TIM1 Capture Compare         */             
-  isr_none, /* TIM2                         */             
-  isr_none, /* TIM3                         */             
-  isr_none, /* TIM4                         */             
-  isr_none, /* I2C1 Event                   */             
-  isr_none, /* I2C1 Error                   */             
-  isr_none, /* I2C2 Event                   */             
-  isr_none, /* I2C2 Error                   */             
-  isr_none, /* SPI1                         */             
-  isr_none, /* SPI2                         */             
-  isr_none, /* USART1                       */             
-  isr_none, /* USART2                       */             
-  isr_none, /* USART3                       */             
-  isr_none, /* External Line[15:10]s        */             
-  isr_none, /* RTC Alarm (A and B) through EXTI Line */    
-  isr_none, /* USB OTG FS Wakeup through EXTI line */      
-  isr_none, /* TIM8 Break and TIM12         */         
-  isr_none, /* TIM8 Update and TIM13        */         
-  isr_none, /* TIM8 Trigger and Commutation and TIM14 */
-  isr_none, /* TIM8 Capture Compare         */             
-  isr_none, /* DMA1 Stream7                 */             
-  isr_none, /* FSMC                         */             
-  isr_none, /* SDIO                         */             
-  isr_none, /* TIM5                         */             
-  isr_none, /* SPI3                         */             
-  isr_none, /* UART4                        */             
-  isr_none, /* UART5                        */             
-  isr_none, /* TIM6 and DAC1&2 underrun errors */          
-  isr_none, /* TIM7                         */
-  isr_none, /* DMA2 Stream 0                */             
-  isr_none, /* DMA2 Stream 1                */             
-  isr_none, /* DMA2 Stream 2                */             
-  isr_none, /* DMA2 Stream 3                */             
-  isr_none, /* DMA2 Stream 4                */             
-  isr_none, /* Ethernet                     */             
-  isr_none, /* Ethernet Wakeup through EXTI line */        
-  isr_none, /* CAN2 TX                      */             
-  isr_none, /* CAN2 RX0                     */             
-  isr_none, /* CAN2 RX1                     */             
-  isr_none, /* CAN2 SCE                     */             
-  isr_none, /* USB OTG FS                   */             
-  isr_none, /* DMA2 Stream 5                */             
-  isr_none, /* DMA2 Stream 6                */             
-  isr_none, /* DMA2 Stream 7                */             
-  isr_none, /* USART6                       */             
-  isr_none, /* I2C3 event                   */             
-  isr_none, /* I2C3 error                   */             
-  isr_none, /* USB OTG HS End Point 1 Out   */             
-  isr_none, /* USB OTG HS End Point 1 In    */             
-  isr_none, /* USB OTG HS Wakeup through EXTI */           
-  isr_none, /* USB OTG HS                   */             
-  isr_none, /* DCMI                         */             
-  isr_none, /* CRYP crypto                  */             
-  isr_none, /* Hash and Rng                 */
-  isr_none, /* FPU                          */
-};
-
-uint32_t systicks_freq(void)
-{
-  return SYSTICKS_FREQ;
-}
-
-u32 systicks(void)
-{
-  return ticks;
-}
-
+  isr_none, /* WDT                          40  */             
+  isr_none, /* Timer 0                      44  */          
+  isr_none, /* Timer 1                      48  */ 
+  isr_none, /* Timer 2                      4C  */         
+  isr_none, /* Timer 3                      50  */             
+  isr_none, /* UART0                        54  */             
+  isr_none, /* UART1                        58  */             
+  isr_none, /* UART 2                       5C  */             
+  isr_none, /* UART 3                       60  */             
+  isr_none, /* PWM1                         64  */             
+  isr_none, /* I2C0                         68  */             
+  isr_none, /* I2C1                         6C  */             
+  isr_none, /* I2C2                         70  */             
+  isr_none, /* SPI                          74  */             
+  isr_none, /* SSP0                         78  */             
+  isr_none, /* SSP 1                        7C  */             
+  isr_none, /* PLL0 (Main PLL)              80  */             
+  isr_none, /* RTC                          84  */             
+  isr_none, /* External Interrupt 0 (EINT0) 88  */             
+  isr_none, /* External Interrupt 1 (EINT1) 8C  */             
+  isr_none, /* External Interrupt 2 (EINT2) 90  */             
+  isr_none, /* External Interrupt 3 (EINT3) 94  */             
+  isr_none, /* ADC                          98  */             
+  isr_none, /* BOD                          9C  */             
+  isr_none, /* USB                          A0  */         
+  isr_none, /* CAN                          A4  */         
+  isr_none, /* GPDMAand TIM11               A8  */
+  isr_none, /* I2S                          AC  */             
+  isr_none, /* Ethernet                     B0  */             
+  isr_none, /* Repetitive Interrupt         B4  */             
+  isr_none, /* Timer                        B8  */             
+  isr_none, /* Motor Control PWM            BC  */             
+  isr_none, /* Quadrature Encoder           C0  */             
+  isr_none, /* PLL1 (USB PLL)               C4  */             
+  isr_none, /* USB Activity Interrupt       C8  */             
+  isr_none, /* CAN Activity Interrupt       CC  */ 
+};                                         
+                                           
+uint32_t systicks_freq(void)               
+{                                          
+  return SYSTICKS_FREQ;                    
+}                                          
+                                           
+u32 systicks(void)                         
+{                                          
+  return ticks;                            
+}                                          
+                                           
 inline void sleep()
 {
   asm("wfi");
@@ -206,90 +158,136 @@ inline void sleep()
 u32 k_ticks() attr_weak attr_alias("systicks");
 u32 k_ticks_freq(void) attr_alias("systicks_freq");
 
+
+#define PLL0feed do{ *LPC_SC_PLL0FEED = 0xAA; *LPC_SC_PLL0FEED = 0x55;}while(0)
+#define PLL1feed do{ *LPC_SC_PLL1FEED = 0xAA; *LPC_SC_PLL1FEED = 0x55;}while(0)
+
 void init_clock(void)
 {
-  /* Enable HSE (8MHz external oscillator) */
-  or32(RCC_CR, BIT16);
-  while (!(rd32(RCC_CR) & BIT17));
-
-  /* PLLM=8 PLLN=336, PLLP=00 (2), PLLQ=7; f_PLL=168MHz, f_USB=48MHz */
-  // STMcubeIDE says this is impossible, SYSCLK reports 525MHz
-  and32(RCC_PLLCFGR, ~0x0f037fff);
-  or32(RCC_PLLCFGR, BIT22 | (7 << 24) | (336 << 6) | 8);
-  or32(RCC_CR, BIT24);
-  while (!(rd32(RCC_CR) & BIT25));
+  /* 120 MHz LPC1769 */
+  /* Enable External Oscillator (12MHz external oscillator) */
   
-  ///* PLLM=4 PLLN=96, PLLP=00 (2), PLLQ=4; f_PLL=96MHz, AHB=2, f_USB=48MHz */
-  //and32(RCC_PLLCFGR, ~0x0f037fff);
-  //or32(RCC_PLLCFGR, BIT22 | (4 << 24) | (96 << 6) | 4);
-  ////or32(RCC_PLLCFGR, (4 << 24) | (96 << 6) | 4); // use HSI clock - dead CPU
-  //or32(RCC_CR, BIT24);
-  //while (!(rd32(RCC_CR) & BIT25));
-
-  /* Configure flash */
-  wr32(R_FLASH_ACR, BIT10 | BIT9 | BIT8 | 1);
-
-  /* Use PLL as system clock, with AHB prescaler set to 4 */
-  wr32(RCC_CFGR, (0x9 << 4) | 0x2); // APB1 & APB2 set to 1
+  *LPC_SC_SCS = 0x020;  // enable low range external crystal oscillator
+  while(!(*LPC_SC_SCS & _BV(OSCSTAT)));  // wait for external crystal oscillator to be functional
   
-  /* Use PLL as system clock, with AHB prescaler set to 2 */
-  //wr32(RCC_CFGR, (0x8 << 4) | 4 << 10 | 0x2);   // APB1 set to 2, APB2 to 1
-  //while (((rd32(RCC_CFGR) >> 2) & 0x3) != 0x2);
+  
+  
+  // 1. Disconnect PLL0 with one feed sequence if PLL0 is already connected.
+  PLL0feed;  // force contents of R_PLL0STAT to be valid
+  if (*LPC_SC_PLL0STAT & _BV(PLLC0_STAT)) {
+    CLEAR_BIT(*LPC_SC_PLL0CON, PLLC0); // disconnect PLL0
+    PLL0feed;  // activate above action
+  }
+  // 2. Disable PLL0 with one feed sequence.
+  CLEAR_BIT(*LPC_SC_PLL0CON, PLLE0); // disable PLL0
+  PLL0feed;  // activate above action
+  // 3. Change the CPU Clock Divider setting to speed up operation without PLL0, if desired.
+  // 4. Write to the Clock Source Selection Control register to change the clock source if
+  //    needed.
+  *LPC_SC_CLKSRCSEL = 1; // use main oscillator (external crystal) to drive PLL0
+  // 5. Write to the PLL0CFG and make it effective with one feed sequence. The PLL0CFG
+  //    can only be updated when PLL0 is disabled.
+  *LPC_SC_PLL0CFG = 0x0E; // PLLCLK = 360MHz (N = 1, M =15 (N must be less than 120 (12MHz/100KHz)))
+  /* Periphral clock must be selected before PLL0 enabling and connecting
+   * - according errata.lpc1768-16.March.2010 -
+   */
+  *LPC_SC_PCLKSEL0 = (_BV(PCLK_TIMER0) | _BV(PCLK_TIMER1) | _BV(PCLK_UART0) | _BV(PCLK_UART1) | _BV(PCLK_SSP1) ); // set to divide by 1 
+  *LPC_SC_PCLKSEL1 = (_BV(PCLK_GPIOINT) | _BV(PCLK_PCB) | _BV(PCLK_TIMER2) | _BV(PCLK_TIMER3) | _BV(PCLK_TIMER2) | _BV(PCLK_TIMER2) | _BV(PCLK_TIMER3) | _BV(PCLK_UART2) | _BV(PCLK_UART3) | _BV(PCLK_SYSCON));
 
-  /* Enable clock on AHB and APB peripherals */
-  wr32(RCC_AHB1ENR, BIT7 | BIT4 | BIT3 | BIT2 | BIT1 | BIT0); /* GPIO A,B,C,D,E,H*/
-  wr32(RCC_APB1ENR, BIT1 | BIT2 | BIT17| BIT18); /* TIM3, TIM4, USART2 and USART3 */
-  wr32(RCC_APB2ENR, BIT0 | BIT4 | BIT8 | BIT12| BIT18); /* TIM1/11, ADC1, SPI1, USART1 */
+  // 6. Enable PLL0 with one feed sequence.
+  *LPC_SC_PLL0CON = _BV(PLLE0);
+  PLL0feed;  // activate above action
+  // 7. Change the CPU Clock Divider setting for the operation with PLL0. It is critical to do
+  //    this before connecting PLL0.
+  *LPC_SC_CCLKCFG = 2; // divide PLL0CLK by 3
+  // 8. Wait for PLL0 to achieve lock by monitoring the PLOCK0 bit in the PLL0STAT register,
+  //    or using the PLOCK0 interrupt, or wait for a fixed time when the input clock to PLL0 is
+  //    slow (i.e. 32 kHz). The value of PLOCK0 may not be stable when the PLL reference
+  //    frequency (FREF, the frequency of REFCLK, which is equal to the PLL input
+  //    frequency divided by the pre-divider value) is less than 100 kHz or greater than
+  //    20 MHz. In these cases, the PLL may be assumed to be stable after a start-up time
+  //    has passed. This time is 500 μs when FREF is greater than 400 kHz and 200 / FREF
+  //    seconds when FREF is less than 400 kHz.
+  while (!(*LPC_SC_PLL0STAT & _BV(PLOCK0)));// wait for PLL0 to lock
+  // 9. Connect PLL0 with one feed sequence.
+  SET_BIT(*LPC_SC_PLL0CON, PLLC0); // connect PLL0
+  PLL0feed;  // activate above action
+  while (!(*LPC_SC_PLL0STAT & (_BV(PLLE0_STAT) | _BV(PLLC0_STAT))));/* Wait for PLLC0_STAT & PLLE0_STAT */
+                                
+  
+  // setup PLL1 for 48MHz USB
+  // M = 4, P= 2
+    // 1. Disconnect PLL1 with one feed sequence if PLL1 is already connected.
+  PLL1feed;  // force contents of R_PLL1STAT to be valid
+  if (*LPC_SC_PLL1STAT & _BV(PLLC1_STAT)) {
+    CLEAR_BIT(*LPC_SC_PLL1CON, PLLC1); // disconnect PLL1
+    PLL1feed;  // activate above action
+  }
+  // 2. Disable PLL1 with one feed sequence.
+  CLEAR_BIT(*LPC_SC_PLL1CON, PLLE1); // disable PLL1
+  PLL0feed;  // activate above action
+  // 3. Change the CPU Clock Divider setting to speed up operation without PLL1, if desired.
+  // N/A
+  // 4. Write to the Clock Source Selection Control register to change the clock source if
+  //    needed.
+  // N/A
+  // 5. Write to the PLL1CFG and make it effective with one feed sequence. The PLL1CFG
+  //    can only be updated when PLL1 is disabled.
+  *LPC_SC_PLL1CFG = 0x023; // PLLCLK = 48MHz (M = 4, P = 2) 
+  // 6. Enable PLL1 with one feed sequence.
+  SET_BIT(*LPC_SC_PLL1CON, PLLE1); 
+  PLL1feed;  // activate above action
+  // 7. Change the CPU Clock Divider setting for the operation with PLL1. It is critical to do
+  //    this before connecting PLL1.
+  // N/A
+  // 8. Wait for PLL1 to achieve lock by monitoring the PLOCK1 bit in the PLL1STAT register
+  while (!(*LPC_SC_PLL1STAT & _BV(PLOCK1)));  // wait for PLL1 to lock
+  // 9. Connect PLL1 with one feed sequence.
+  SET_BIT(*LPC_SC_PLL1CON, PLLC1); // connect PLL1
+  PLL1feed;  // activate above action
+  while (!(*LPC_SC_PLL1STAT & (_BV(PLLE1_STAT) | _BV(PLLC1_STAT))));/* Wait for PLLC1_STAT & PLLE1_STAT */
+  
+  *LPC_SC_PCONP |= (_BV(PCTIM0) | _BV(PCTIM1) | _BV(PCUART0) | _BV(PCSSP1) | _BV(PCGPIO) | _BV(PCRIT) | _BV(PCTIM2) | _BV(PCTIM3)); // enable modules
+  
+  
 }
 
 void init_systick(void)
 {
   ticks = 0;
-  wr32(R_SYST_RVR, HCLCK / SYSTICKS_FREQ);
-  wr32(R_SYST_CVR, 0);
-  wr32(R_SYST_CSR, BIT0 | BIT1 | BIT2);
+  *SysTick_STRELOAD = 0x01D46F;  // 1mS (120MHz/1000 -1)
+  *SysTick_STCURR = 0;
+  *SysTick_STCTRL = 7;  // enable, enable interrupt, use CPU clock
 }
 
 int putchar(int c)
 {
   if (c == '\n')
     putchar('\r');
-  wr32(R_USART1_DR, c);
-  wr32(R_USART3_DR, c);  // echo out USART 3
-  while (!(rd32(R_USART1_SR) & BIT6));
-  while (!(rd32(R_USART3_SR) & BIT6));
+  *LPC_UART0_U0THR = c;
+  while (!(*LPC_UART0_U0LSR & _BV(THRE)));  // wait for transmit buffer to empty 
   return c;
 }
 
 void init_uart(void)
 {
-  /* USART3 on PD8/PD9 */                       
-  /* USART2 on PD5/PD6 */
-  /* USART1 on PA9/PA10 */
-  gpio_func(IO(PORTD, 8), 7);
-  gpio_func(IO(PORTD, 9), 7);
-  gpio_mode(IO(PORTD, 8), PULL_NO);
-  gpio_mode(IO(PORTD, 9), PULL_NO);
-  /* fPCLK=42MHz, br=115.2KBps, USARTDIV=22.8125, see table 80 pag. 519 */
-  wr32(R_USART3_BRR, (22 << 4) | 13);
-  or32(R_USART3_CR1, BIT13 | BIT5 | BIT3 | BIT2);
-  or32(R_NVIC_ISER(1), BIT7); /* USART3 is irq 39 */
-  //or32(R_NVIC_ISER(1), BIT6); /* USART2 is irq 38 */
-  //or32(R_NVIC_ISER(1), BIT5); /* USART1 is irq 37 */
+  /* UART0 on P0_2/P0_3 */
   
-  /* USART3 on PD8/PD9 */
-  /* USART2 on PD5/PD6 */
-  /* USART1 on PA9/PA10 */
-  gpio_func(IO(PORTA, 9), 7);
-  gpio_func(IO(PORTA, 10), 7);
-  gpio_mode(IO(PORTA, 9), PULL_NO);
-  gpio_mode(IO(PORTA, 10), PULL_NO);
-  /* fPCLK=42MHz, br=115.2KBps, USARTDIV=22.8125, see table 80 pag. 519 */
-  wr32(R_USART1_BRR, (22 << 4) | 13);
-  or32(R_USART1_CR1, BIT13 | BIT5 | BIT3 | BIT2);
-  //or32(R_NVIC_ISER(1), BIT7); /* USART3 is irq 39 */                                                    
-  //or32(R_NVIC_ISER(1), BIT6); /* USART2 is irq 38 */
-  or32(R_NVIC_ISER(1), BIT5); /* USART1 is irq 37 */
+  *GPIO_PINSEL0 &= ~0x000000F0;
+  *GPIO_PINSEL0 |= 0x00000050;            // Enable TxD0 P0.2 and RxD0 p0.3 
+
+  *LPC_UART0_U0FCR = (1<<SBIT_FIFO) | (1<<SBIT_RxFIFO) | (1<<SBIT_TxFIFO); // Enable FIFO and reset Rx/Tx FIFO buffers    
+  *LPC_UART0_U0LCR = (0x03<<SBIT_WordLenght) | (1<<SBIT_DLAB); // 8bit data, 1Stop bit, No parity, enable DLL & DLM registers
+  //DivAddVal - 5
+  //MulVal - 13
+  //DLest - 47 - 0x02F
+  //DLM = DLest [15:8] = 0
+  //DLL = DLest [7:0] = 0x2F
+  // calculated baud rate 115,248.23 (PCLK = 120MHz)
+  *LPC_UART0_U0FDR = 5 + (13<<MULVAL);
+  *LPC_UART0_U0DLL =  0x2F; 
+  *LPC_UART0_U0DLM =  0; 
+  CLEAR_BIT(*LPC_UART0_U0LCR, SBIT_DLAB);  // disable DLL & DLM registers
 }
 
 void init(void)

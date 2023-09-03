@@ -27,7 +27,7 @@
 //#include "stm32f3xx_hal.h" /* Provide the low-level HAL functions */
 //#include "main_boot.h"
 #include "integer.h"
-#include <intdefs.h>
+#include "intdefs.h"
 #include <stdint.h>
 #include "user_diskio.h"
 #include "SPI_defines.h"

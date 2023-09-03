@@ -74,10 +74,10 @@
   ******************************************************************************
   */       
            
- 
   .syntax unified
-  .cpu cortex-m4
-  .fpu softvfp
+  .arch armv7-m
+/*   .cpu cortex-m3
+  .fpu softvfp       */
   .thumb
                     
 
@@ -103,6 +103,8 @@ defined in linker script */
  * @retval : None
 */
 
+  .thumb_func
+  .align 2
   .section .text.isr_reset
   .global isr_reset
   .type isr_reset, %function
@@ -174,7 +176,7 @@ LoopFillZerobss:
 /*     bl __libc_init_array */
 /* Call the application's entry point.*/
 /*  bx  init */
-      LDR R0, =0x08000000   // point at bootloader vector table
+      LDR R0, =0x00000000   // point at bootloader vector table
       LDR SP, [R0, #0]      // set SP from bootloader vector table
       DSB                   // Ensure the SP operation is complete
       LDR R0, = init        // point this boot at bootloader

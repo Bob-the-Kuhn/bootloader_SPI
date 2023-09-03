@@ -15,7 +15,8 @@
 
 #ifndef __BOOTLOADER_H
 #define __BOOTLOADER_H
-#include "ff.h"                           
+#include "ff.h" 
+#include <stdint.h>                          
 
 /** Bootloader Configuration
  * @defgroup Bootloader_Configuration Bootloader Configuration
@@ -52,7 +53,7 @@
 #define CLEAR_RESET_FLAGS 1
 
 /** Start address of application space in flash */
-#define APP_ADDRESS (uint32_t)0x08008000
+#define APP_ADDRESS (uint32_t)0x8000
 //#define APP_ADDRESS (uint32_t)0x08020000  // first available for EXFAT
 /** End address of application space (address of last byte) */
 #define END_ADDRESS (uint32_t)0x080FFFFB
@@ -67,11 +68,11 @@
 
 /* Includes ------------------------------------------------------------------*/
 /* Include the appropriate header file */
-#if defined(STM32F4)
-  #include "stm32f4xx.h"
-#else
-  #error "Target MCU header file is not defined or unsupported."
-#endif
+//#if defined(LPC1769)
+//  #include "LPC17xx.h"
+//#else
+//  #error "Target MCU header file is not defined or unsupported."
+//#endif
 
 /* Defines -------------------------------------------------------------------*/
 /** Size of application in DWORD (32bits or 4bytes) */
@@ -92,14 +93,14 @@ extern uint32_t APP_sector_mask;   // mask used to determine if any application 
 #define FLASH_SECTOR_SIZE       ((uint32_t)0x4000)  // 16K bytes
 //#define FLASH_BASE            ((uint32_t)0x08000000) // FLASH(up to 1 MB) base address in the alias region
 //#define SRAM1_BASE            ((uint32_t)0x20000000) // SRAM1(112 KB) base address in the alias region
-#define SRAM1_SIZE_MAX        ((uint32_t)0x1BFFF)
+#define SRAM1_BASE            ((uint32_t)0x10000000) // LPC1769 SRAM1(32 KB) base address in the alias region
+#define SRAM1_SIZE_MAX        ((uint32_t)0x7FFF)  // LPC1769 32 KB
+//#define SRAM1_SIZE_MAX        ((uint32_t)0x1BFFF)
 //#define SRAM2_BASE            ((uint32_t)0x2001C000) // SRAM2(16 KB) base address in the alias region  
-#define SRAM2_SIZE_MAX        ((uint32_t)0x03FFF)
+//#define SRAM2_SIZE_MAX        ((uint32_t)0x03FFF)
 //#define PERIPH_BASE           ((uint32_t)0x40000000) // Peripheral base address in the alias region    
 
-#define FLASH_FLAG_ALL_ERRORS     (FLASH_FLAG_OPERR   | FLASH_FLAG_WRPERR | \
-                                   FLASH_FLAG_PGAERR  | FLASH_FLAG_PGSERR | \
-                                   FLASH_FLAG_PGPERR )
+#define FLASH_FLAG_ALL_ERRORS     
 
 /* MCU RAM information (to check whether flash contains valid application) */
 #define RAM_BASE SRAM1_BASE     /*!< Start address of RAM */
