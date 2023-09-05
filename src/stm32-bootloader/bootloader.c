@@ -294,30 +294,7 @@ uint8_t Bootloader_FlashEnd(void)
     return BL_OK;
 }
 
-/**
- * @brief  This function returns the protection status of flash.
- * @return Flash protection status ::eFlashProtectionTypes
- */
-uint32_t Bootloader_GetProtectionStatus(void)
-  {
- //   FLASH_OBProgramInitTypeDef OBStruct = {0};
- //   uint32_t protection                  = BL_PROTECTION_NONE;
- //
- //   HAL_FLASH_Unlock();
- //
- //   HAL_FLASHEx_OBGetConfig(&OBStruct);
- //   return OBStruct.WRPSector;
- //
- //   /* RDP */
- //   if(OBStruct.RDPLevel != OB_RDP_LEVEL_0)
- //   {
- //       protection |= BL_PROTECTION_RDP;
- //   }
- //
- //   HAL_FLASH_Lock();
- //   return protection;
- return 0;
-}
+
 
 // debug helper routine
 const char *byte_to_binary (uint32_t x)
@@ -335,102 +312,6 @@ const char *byte_to_binary (uint32_t x)
 }
 
 
-/**
- * @brief  This function configures the write protection of flash.
- * @param  protection: protection type ::eFlashProtectionTypes
- * @return Bootloader error code ::eBootloaderErrorCodes
- * @retval BL_OK: upon success
- * @retval BL_OBP_ERROR: upon failure
- *
- * Setting the protection is a five step process
- *   1) Determine final proection
- *   2) Disable protection on desired sectors
- *   3) Enable protection on all other sectors
- *   4) Invoke HAL_FLASH_OB_Launch()
- *   5) Send the system through reset so that the new settings take effect
- * 
- */
-uint8_t Bootloader_ConfigProtection(uint32_t protection, uint32_t mask, uint8_t save) { 
-#if 0  
-  FLASH_OBProgramInitTypeDef OBStruct = {0};
-  HAL_StatusTypeDef status            = HAL_ERROR;
-
-  status = HAL_FLASH_Unlock();
-  status |= HAL_FLASH_OB_Unlock();
-  
-  HAL_FLASHEx_OBGetConfig(&OBStruct);  // get current FLASH config
-  
-  uint32_t WRPSector_save = OBStruct.WRPSector;
-  if (save) Write_Prot_Old = WRPSector_save;   // save current FLASH protect incase we do a restore later
-    
-    uint32_t final_protection = (protection & mask) | (WRPSector_save & ~mask); // keep protection of bootloader area
-    
-    //sprintf(msg,"\nsave flag: %0u\n", save);
-    //print(msg);
-    //sprintf(msg,"requested protection:  %08lX\n", protection);
-    //print(msg);
-    //
-    //sprintf(msg,"mask:                  %08lX\n", mask);
-    //print(msg);
-    //
-    //sprintf(msg,"final protection:      %08lX\n", final_protection);
-    //print(msg);
-    //
-    //sprintf(msg,"reported protection:   %08lX\n", WRPSector_save);
-    //print(msg);
-    
-    
-    if (save) {  // only removing write protection
-    
-    OBStruct.WRPState = OB_WRPSTATE_DISABLE;    //  disable write protection
-    OBStruct.WRPSector = final_protection;            // select affected sectors
-    status = HAL_FLASHEx_OBProgram(&OBStruct);  // write 
-    
-    //HAL_FLASHEx_OBGetConfig(&OBStruct);  // get current FLASH config
-    //sprintf(msg,"after disable:         %08lX\n", OBStruct.WRPSector);
-    //print(msg);
-    
-  }
-  else {
-
-    OBStruct.WRPState = OB_WRPSTATE_ENABLE;      //  enable write protection
-    OBStruct.WRPSector = ~final_protection;       // select affected sectors
-    status |= HAL_FLASHEx_OBProgram(&OBStruct);  // write 
-    
-    //HAL_FLASHEx_OBGetConfig(&OBStruct);  // get current FLASH config
-    //sprintf(msg,"after enable:          %08lX\n", OBStruct.WRPSector);
-    //print(msg);
-    
-  }
-  if(status == HAL_OK)
-  {
-    if (save) {
-      print("write protection removed\n");
-      WRITE_Prot_Old_Flag = WRITE_Prot_Original_flag;  // flag that protection was removed so can 
-    }  
-    else {
-      print("write protection restored\n");
-      WRITE_Prot_Old_Flag = WRITE_Prot_Old_Flag_Restored_flag;  // flag that protection was restored so won't 
-                                                                // try to save write protection after next reset)
-    }                                       
-      /* Loading Flash Option Bytes - this generates a system reset. */    // apparently not on a STM32F407
-      status |= HAL_FLASH_OB_Launch();        //  this is needed plus still need to go through reset  
-      
-      //HAL_FLASHEx_OBGetConfig(&OBStruct);  // get current FLASH config
-      //sprintf(msg,"after OB_Launch:       %08lX\n", OBStruct.WRPSector);
-      //print(msg);
-      
-      
-      NVIC_System_Reset();                  // send the system through reset so Flash Option Bytes get loaded
-  }
-
-  status |= HAL_FLASH_OB_Lock();
-  status |= HAL_FLASH_Lock();
-
-  return (status == HAL_OK) ? BL_OK : BL_OBP_ERROR;
- #endif
- return BL_OK ;
-}
 
 /**
  * @brief  This function checks whether the new application fits into flash.
@@ -546,59 +427,6 @@ void Bootloader_JumpToApplication(void)
 //    Jump();
 }
 
-/**
- * @brief  This function performs the jump to the MCU System Memory (ST
- *         Bootloader).
- * @details The function carries out the following operations:
- *  - De-initialize the clock and peripheral configuration
- *  - Stop the systick
- *  - Remap the system flash memory
- *  - Perform the jump
- */
-void Bootloader_JumpToSysMem(void)
-{
-  Magic_Location = Magic_Application;  // flag that we should load application 
-                                       // after the next reset
-  NVIC_System_Reset();                  // send the system through reset
-
-  
-  
-  //uint32_t JumpAddress = *(__IO uint32_t*)(SYSMEM_ADDRESS + 4);
-  //pFunction Jump       = (pFunction)JumpAddress;
-  //
-  //HAL_RCC_DeInit();
-  //HAL_DeInit();
-  //
-  //SysTick->CTRL = 0;
-  //SysTick->LOAD = 0;
-  //SysTick->VAL  = 0;
-  //
-  //__HAL_RCC_SYSCFG_CLK_ENABLE();
-  //__HAL_SYSCFG_REMAPMEMORY_SYSTEMFLASH();
-  //
-  //__set_MSP(*(__IO uint32_t*)SYSMEM_ADDRESS);
-  //Jump();
-
-  //while(1)
-  //    ;
-}
-
-/**
- * @brief  This function returns the version number of the bootloader library.
- *         Semantic versioning is used for numbering.
- * @see    Semantic versioning: https://semver.org
- * @return Bootloader version number combined into an uint32_t:
- *          - [31:24] Major version
- *          - [23:16] Minor version
- *          - [15:8]  Patch version
- *          - [7:0]   Release candidate version
- */
-uint32_t Bootloader_GetVersion(void)
-{
-    return ((BOOTLOADER_VERSION_MAJOR << 24) |
-            (BOOTLOADER_VERSION_MINOR << 16) | (BOOTLOADER_VERSION_PATCH << 8) |
-            (BOOTLOADER_VERSION_RC));
-}
 
 
 /**
