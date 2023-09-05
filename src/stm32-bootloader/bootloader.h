@@ -54,7 +54,7 @@
 #define CLEAR_RESET_FLAGS 1
 
 /** Start address of application space in flash */
-#define APP_ADDRESS (uint32_t)0x6000
+#define APP_ADDRESS (uint32_t)0x4000
 //#define APP_ADDRESS (uint32_t)0x08020000  // first available for EXFAT
 /** End address of application space (address of last byte) */
 #define END_ADDRESS (uint32_t)0x080FFFFB

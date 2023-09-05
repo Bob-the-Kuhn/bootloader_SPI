@@ -117,17 +117,17 @@ uint8_t Bootloader_Init(void)
       }
     }
 
-    sprintf(msg, "\nBOOT_LOADER_END %08lX\n", BOOT_LOADER_END);
-    print(msg);
-    sprintf(msg, "Lowest possible APP_ADDRESS is %08lX\n", APP_first_addr);
-    print(msg);
+    //sprintf(msg, "\nBOOT_LOADER_END %08lX\n", BOOT_LOADER_END);
+    //print(msg);
+    //sprintf(msg, "Lowest possible APP_ADDRESS is %08lX\n", APP_first_addr);
+    //print(msg);
     /* check APP_ADDRESS */
     if (APP_ADDRESS & 0x1ff) {
-      print("ERROR - application address not on 512 byte boundary\n");
+      //print("ERROR - application address not on 512 byte boundary\n");
       Error_Handler();
     }
     if (APP_ADDRESS < APP_first_addr) {
-      print("ERROR - application address within same sector as boot loader\n");
+      //print("ERROR - application address within same sector as boot loader\n");
       Error_Handler();
     } 
     
@@ -138,34 +138,34 @@ uint8_t Bootloader_Init(void)
 }
 
 
-void print_IAP_error_code(uint16_t error_code) {
-  
-  kprint("FLASH ERROR CODE: ");
-  switch(error_code) {
-    case 0  : kprint("0  - CMD_SUCCESS Command is executed successfully.\n"); break;
-    case 1  : kprint("1  - INVALID_COMMAND Invalid command.\n"); break;
-    case 2  : kprint("2  - SRC_ADDR_ERROR Source address is not on word boundary.\n"); break;
-    case 3  : kprint("3  - DST_ADDR_ERROR Destination address is not on a correct boundary.\n"); break;
-    case 4  : kprint("4  - SRC_ADDR_NOT_MAPPED Source address is not mapped in the memory map.\n"); break;
-    case 5  : kprint("5  - DST_ADDR_NOT_MAPPED Destination address is not mapped in the memory map.\n"); break;
-    case 6  : kprint("6  - COUNT_ERROR Byte count is not multiple of 4 or is not a permitted value.\n"); break;
-    case 7  : kprint("7  - INVALID_SECTOR Sector number is invalid or end sector number is greater than start sector number.\n"); break;
-    case 8  : kprint("8  - SECTOR_NOT_BLANK Sector is not blank.\n"); break;
-    case 9  : kprint("9  - SECTOR_NOT_PREPARED_FOR_WRITE_OPERATION.\n"); break;
-    case 10 : kprint("10 - COMPARE_ERROR Source and destination data not equal.\n"); break;
-    case 11 : kprint("11 - BUSY Flash programming hardware interface is busy.\n"); break;
-    case 12 : kprint("12 - PARAM_ERROR Insufficient number of parameters or invalid parameter.\n"); break;
-    case 13 : kprint("13 - ADDR_ERROR Address is not on word boundary.\n"); break;
-    case 14 : kprint("14 - ADDR_NOT_MAPPED Address is not mapped in the memory map.\n"); break;
-    case 15 : kprint("15 - CMD_LOCKED Command is locked.\n"); break;
-    case 16 : kprint("16 - INVALID_CODE Unlock code is invalid.\n"); break;
-    case 17 : kprint("17 - INVALID_BAUD_RATE Invalid baud rate setting.\n"); break;
-    case 18 : kprint("18 - INVALID_STOP_BIT Invalid stop bit setting.\n"); break;
-    case 19 : kprint("19 - CODE_READ_PROTECTION_ENABLED.\n"); break;
-    default : kprint("%2d - UNKNOWN ERROR CODE.\n", error_code); break;
-  }
-   
-}
+//void print_IAP_error_code(uint16_t error_code) {
+//  
+//  kprint("FLASH ERROR CODE: ");
+//  switch(error_code) {
+//    case 0  : kprint("0  - CMD_SUCCESS Command is executed successfully.\n"); break;
+//    case 1  : kprint("1  - INVALID_COMMAND Invalid command.\n"); break;
+//    case 2  : kprint("2  - SRC_ADDR_ERROR Source address is not on word boundary.\n"); break;
+//    case 3  : kprint("3  - DST_ADDR_ERROR Destination address is not on a correct boundary.\n"); break;
+//    case 4  : kprint("4  - SRC_ADDR_NOT_MAPPED Source address is not mapped in the memory map.\n"); break;
+//    case 5  : kprint("5  - DST_ADDR_NOT_MAPPED Destination address is not mapped in the memory map.\n"); break;
+//    case 6  : kprint("6  - COUNT_ERROR Byte count is not multiple of 4 or is not a permitted value.\n"); break;
+//    case 7  : kprint("7  - INVALID_SECTOR Sector number is invalid or end sector number is greater than start sector number.\n"); break;
+//    case 8  : kprint("8  - SECTOR_NOT_BLANK Sector is not blank.\n"); break;
+//    case 9  : kprint("9  - SECTOR_NOT_PREPARED_FOR_WRITE_OPERATION.\n"); break;
+//    case 10 : kprint("10 - COMPARE_ERROR Source and destination data not equal.\n"); break;
+//    case 11 : kprint("11 - BUSY Flash programming hardware interface is busy.\n"); break;
+//    case 12 : kprint("12 - PARAM_ERROR Insufficient number of parameters or invalid parameter.\n"); break;
+//    case 13 : kprint("13 - ADDR_ERROR Address is not on word boundary.\n"); break;
+//    case 14 : kprint("14 - ADDR_NOT_MAPPED Address is not mapped in the memory map.\n"); break;
+//    case 15 : kprint("15 - CMD_LOCKED Command is locked.\n"); break;
+//    case 16 : kprint("16 - INVALID_CODE Unlock code is invalid.\n"); break;
+//    case 17 : kprint("17 - INVALID_BAUD_RATE Invalid baud rate setting.\n"); break;
+//    case 18 : kprint("18 - INVALID_STOP_BIT Invalid stop bit setting.\n"); break;
+//    case 19 : kprint("19 - CODE_READ_PROTECTION_ENABLED.\n"); break;
+//    default : kprint("%2d - UNKNOWN ERROR CODE.\n", error_code); break;
+//  }
+//   
+//}
   
 
 void FLASH_UNLOCK(void) {
@@ -178,7 +178,7 @@ void FLASH_UNLOCK(void) {
 	command[2]= LAST_SECTOR;
 	iap_entry(command,result);
   __enable_irq();
-  if(result[0]) print_IAP_error_code(result[0]);
+ // if(result[0]) print_IAP_error_code(result[0]);
   
   
 }
@@ -204,7 +204,7 @@ uint8_t Bootloader_Erase(void)
   
   iap_entry(command, result);  // execute IAP FLASH command
   __enable_irq();
-  if(result[0]) print_IAP_error_code(result[0]);
+//  if(result[0]) print_IAP_error_code(result[0]);
 
   return (result[0] ? BL_OK : BL_ERASE_ERROR);
 }
@@ -256,7 +256,7 @@ uint8_t Bootloader_FlashNext(uint8_t *data, uint16_t length)
   
   __enable_irq(); 
   if(result[0]) {
-    print_IAP_error_code(result[0]);;
+//    print_IAP_error_code(result[0]);;
     return BL_WRITE_ERROR;
   }
 

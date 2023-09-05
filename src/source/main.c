@@ -124,7 +124,7 @@ int main(void)
   LED_G1_OFF();
   LED_G2_OFF();             
 
-  print("debug test\n");  
+  //print("debug test\n");  
 
   LED_G1_ON();
   LED_G2_OFF();  
@@ -229,7 +229,7 @@ static void main_boot(void)
     #endif
   }
   
-  print("Entering Bootloader...\n");
+  //print("Entering Bootloader...\n");
   Bootloader_Init();
   uint8_t temp_stat = Enter_Bootloader();
   if((temp_stat == ERR_FLASH) || (temp_stat == ERR_VERIFY)) Error_Handler();
@@ -250,7 +250,7 @@ static void main_boot(void)
       }
     #endif
     
-    print("Launching Application.\n");
+    //("Launching Application.\n");
     LED_G1_ON();
     LED_G2_ON();
     
@@ -268,7 +268,7 @@ static void main_boot(void)
   }
   
   /* No application found */
-  print("No application in flash.\n");
+  //print("No application in flash.\n");
   while(1)
   {
     Error_Handler();
@@ -302,7 +302,7 @@ uint8_t Enter_Bootloader(void)
   if(fr != FR_OK)
   {
     /* f_mount failed */
-    print("SD card cannot be mounted.\n");
+    //print("SD card cannot be mounted.\n");
     //        kprint("FatFs error code: %u\n", fr);
     //      //print(msg);
     return ERR_SD_MOUNT;
@@ -314,27 +314,27 @@ uint8_t Enter_Bootloader(void)
   if(fr != FR_OK)
   {
     /* f_open failed */
-    print("File cannot be opened.\n");
+    //print("File cannot be opened.\n");
     //        kprint("FatFs error code: %u\n", fr);
     //      //print(msg);
     
     SD_Eject();
-    print("SD ejected.\n");
+    //print("SD ejected.\n");
     return ERR_SD_FILE;
   }
-  print("Software found on SD.\n");
+  //print("Software found on SD.\n");
   
   /* Check size of application found on SD card */
   if(Bootloader_CheckSize(f_size(&SDFile)) != BL_OK)
   {
-    print("Error: app on SD card is too large.\n");
+   // print("Error: app on SD card is too large.\n");
     
     f_close(&SDFile);
     SD_Eject();
-    print("SD ejected.\n");
+    //print("SD ejected.\n");
     return ERR_APP_LARGE;
   }
-  print("App size OK.\n");
+  //print("App size OK.\n");
   
   /* Step 1: Init Bootloader and Flash */
   
@@ -345,7 +345,7 @@ uint8_t Enter_Bootloader(void)
   LED_G2_ON();
   Bootloader_Erase();
   LED_G2_OFF();
-  print("Flash erase finished.\n");
+  //print("Flash erase finished.\n");
   
   /* If BTN is pressed, then skip programming */
   //   if(IS_BTN_PRESSED())
@@ -374,14 +374,13 @@ uint8_t Enter_Bootloader(void)
       }
       else
       {
-        //                kprint("Programming error at: %lu byte\n", (cntr * 8));
-        char cmd[64];
-        sprintf(cmd, "  offset in file (byte):   %08lX\n", (cntr * data_length));
-        kprint(cmd);
+        // kprint("Programming error at: %lu byte\n", (cntr * 8));
+        //sprintf(msg, "  offset in file (byte):   %08lX\n", (cntr * data_length));
+        //kprint(msg);
         
         f_close(&SDFile);
         SD_Eject();
-        print("SD ejected.\n");
+        //print("SD ejected.\n");
         
         LED_ALL_OFF();
         return ERR_FLASH;
@@ -399,8 +398,8 @@ uint8_t Enter_Bootloader(void)
   f_close(&SDFile);
   LED_ALL_OFF();
   print("Programming finished.\n");
-  sprintf(msg, "Flashed: %ld bytes.\n", (cntr));
-  print(msg);
+  //sprintf(msg, "Flashed: %ld bytes.\n", (cntr));
+  //print(msg);
   
     
                  
@@ -423,8 +422,8 @@ uint8_t Enter_Bootloader(void)
                                                                        if (fr != FR_OK)  
       {
         /* f_open failed */
-        print("File cannot be renamed.\n");
-        kprint("FatFs error code: %u\n", fr);
+        //print("File cannot be renamed.\n");
+        //kprint("FatFs error code: %u\n", fr);
         //print(msg);
         
         //SD_Eject();               // allow loading application even if can't rename
@@ -435,7 +434,7 @@ uint8_t Enter_Bootloader(void)
     else {
     /* f_open failed */
       print("removing .CUR failed.\n");
-      kprint("FatFs error code: %u\n", fr);
+      //kprint("FatFs error code: %u\n", fr);
 
       // allow loading application even if can't rename
       Magic_Location = Magic_Application;  // flag that we should load application
@@ -445,7 +444,7 @@ uint8_t Enter_Bootloader(void)
  
   /* Eject SD card */
   SD_Eject();
-  print("SD ejected.\n");
+  //print("SD ejected.\n");
   
 
   
