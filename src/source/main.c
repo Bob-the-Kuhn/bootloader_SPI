@@ -72,6 +72,8 @@ void SPI_Enable(void);
 
 void SPI_Transmit (BYTE *data, UINT size);
 
+void SystemCoreClockUpdate (void);
+
 //#include <lpc17xx_clkpwr.h>
 //void SystemCoreClockUpdate (void); 
 //uint32_t CLKPWR_GetPCLK (uint32_t ClkType);
@@ -117,15 +119,6 @@ int main(void)
   SPI_GPIOConfig();
   SPIConfig();
   SPI_Enable();
-  
-  SystemCoreClockUpdate();  // get core clock
-  sprintf(msg, "\nSystemCoreClock: %08lu\n", SystemCoreClock);
-  print(msg);
-  sprintf(msg, "\nSPI clock:       %08lu\n", CLKPWR_GetPCLK (CLKPWR_PCLKSEL_SSP1));
-  print(msg);
-  sprintf(msg, "\nUART0 clock:     %08lu\n", CLKPWR_GetPCLK (CLKPWR_PCLKSEL_UART0));
-  print(msg);
-
 
   
   LED_G1_OFF();
