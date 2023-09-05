@@ -16,7 +16,8 @@
 #ifndef __BOOTLOADER_H
 #define __BOOTLOADER_H
 #include "ff.h" 
-#include <stdint.h>                          
+#include <stdint.h>    
+#include "LPC1769x_defines.h"
 
 /** Bootloader Configuration
  * @defgroup Bootloader_Configuration Bootloader Configuration
@@ -53,7 +54,7 @@
 #define CLEAR_RESET_FLAGS 1
 
 /** Start address of application space in flash */
-#define APP_ADDRESS (uint32_t)0x8000
+#define APP_ADDRESS (uint32_t)0x6000
 //#define APP_ADDRESS (uint32_t)0x08020000  // first available for EXFAT
 /** End address of application space (address of last byte) */
 #define END_ADDRESS (uint32_t)0x080FFFFB
@@ -75,8 +76,14 @@
 //#endif
 
 /* Defines -------------------------------------------------------------------*/
+#define __enable_irq() asm volatile ("CPSIE i\n")
+#define __disable_irq() asm volatile ("CPSID i\n")
+
 /** Size of application in DWORD (32bits or 4bytes) */
 #define APP_SIZE (uint32_t)(((END_ADDRESS - APP_ADDRESS) + 3) / 4)
+
+#define data_length 512  // length of buffer to write to FLASH.  Must be either 256 or 512.  Max length of SD card read is 512.  
+                         // FLASH writes must be 256, 512, 1024 or 4096
 
 /** Number of sectors per bank in flash */
 extern uint32_t APP_first_sector;  // first FLASH sector an application can be loaded into
@@ -84,23 +91,26 @@ extern uint32_t APP_first_addr;    // beginning address of first FLASH sector an
 extern uint32_t APP_sector_mask;   // mask used to determine if any application sectors are write protected
 #define APP_OFFSET (APP_ADDRESS - FLASH_BASE)  // how far from start of FLASH the APP starts
 //#define FLASH_SIZE            ((uint32_t)0x100000)  // 1024K bytes
-#define FLASH_SIZE            ((uint32_t)0x100000)  // 1024K bytes
-//#define FLASH_SIZE            ((uint32_t)0x80000)  // 512K bytes
+//#define FLASH_SIZE            ((uint32_t)0x100000)  // 1024K bytes
+#define FLASH_SIZE            ((uint32_t)0x80000)  // 512K bytes
 //#define FLASH_SIZE            ((uint32_t)0x40000)  // 256K bytes
-#define LAST_SECTOR           11  // 1024K bytes STM32F407 has FLASH sectors 0-11
+#define LAST_SECTOR           29  // 512K bytes LLPC1769 has FLASH sectors 0-29 (4K each)
+//#define LAST_SECTOR           11  // 1024K bytes STM32F407 has FLASH sectors 0-11
 //#define LAST_SECTOR            7  // 512K bytes STM32F407VE has FLASH sectors 0-7
 #define FLASH_SECTOR_NBPERBANK  (1)
-#define FLASH_SECTOR_SIZE       ((uint32_t)0x4000)  // 16K bytes
+#define FLASH_SECTOR_SIZE       ((uint32_t)0x1000)  // 4K bytes
+//#define FLASH_SECTOR_SIZE       ((uint32_t)0x4000)  // 16K bytes
+#define FLASH_BASE            0                       // LPC1769 FLASH starts at 0
 //#define FLASH_BASE            ((uint32_t)0x08000000) // FLASH(up to 1 MB) base address in the alias region
 //#define SRAM1_BASE            ((uint32_t)0x20000000) // SRAM1(112 KB) base address in the alias region
 #define SRAM1_BASE            ((uint32_t)0x10000000) // LPC1769 SRAM1(32 KB) base address in the alias region
-#define SRAM1_SIZE_MAX        ((uint32_t)0x7FFF)  // LPC1769 32 KB
+#define SRAM1_SIZE_MAX        ((uint32_t)0x7FFF -32)  // LPC1769 32 KB - 32 bytes for FLASH IAP programming
 //#define SRAM1_SIZE_MAX        ((uint32_t)0x1BFFF)
 //#define SRAM2_BASE            ((uint32_t)0x2001C000) // SRAM2(16 KB) base address in the alias region  
 //#define SRAM2_SIZE_MAX        ((uint32_t)0x03FFF)
 //#define PERIPH_BASE           ((uint32_t)0x40000000) // Peripheral base address in the alias region    
 
-#define FLASH_FLAG_ALL_ERRORS     
+//#define FLASH_FLAG_ALL_ERRORS     
 
 /* MCU RAM information (to check whether flash contains valid application) */
 #define RAM_BASE SRAM1_BASE     /*!< Start address of RAM */
@@ -137,7 +147,7 @@ uint8_t Bootloader_Init(void);
 uint8_t Bootloader_Erase(void);
 
 uint8_t Bootloader_FlashBegin(void);
-uint8_t Bootloader_FlashNext(uint64_t data);
+uint8_t Bootloader_FlashNext(uint8_t *data, uint16_t length);
 uint8_t Bootloader_FlashEnd(void);
 
 uint32_t Bootloader_GetProtectionStatus(void);

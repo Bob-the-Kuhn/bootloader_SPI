@@ -55,6 +55,17 @@ uint32_t APP_ADDR = APP_ADDRESS;
 char msg[64];             
 
 void NVIC_System_Reset(void);
+
+/**
+ * IAP FLASH command/interface setup
+ *
+ * All FLASH commands take the form of:
+ *   iap_entry (command, output);
+*/
+#define IAP_LOCATION 0x1FFF1FF1
+typedef void (*IAP)(unsigned int [],unsigned int[]);
+IAP iap_entry;
+
 /**
  * @brief  This function initializes bootloader and flash.
  * @return Bootloader error code ::eBootloaderErrorCodes
@@ -62,38 +73,50 @@ void NVIC_System_Reset(void);
  */
 uint8_t Bootloader_Init(void)
 {
-  #if 0
-    extern uint32_t _siccmram[];
-    // Read and use the `_siccmram` linkerscript variable
-    uint32_t siccmram = (uint32_t)_siccmram;
-    #define BOOT_LOADER_END siccmram
-
+  
+    // Use linkerscript variables to find end of boot image
+    extern uint32_t _sidata[];
+    uint32_t sidata = (uint32_t)_sidata;
+    extern uint32_t _edata[];
+    uint32_t edata = (uint32_t)_edata;
+    extern uint32_t _sdata[];
+    uint32_t sdata = (uint32_t)_sdata;
+    //extern uint32_t _ebss[];
+    //uint32_t ebss = (uint32_t)_ebss;
+    //extern uint32_t _sbss[];
+    //uint32_t sbss = (uint32_t)_sbss;
+  
+    #define BOOT_LOADER_END (sidata + (edata - sdata) + 8)
+    
+    //sprintf(msg, "\nsidata %08lX\n", sidata);
+    //print(msg);
+    //sprintf(msg, "\nedata  %08lX\n", edata);
+    //print(msg);
+    //sprintf(msg, "\nsdata  %08lX\n", sdata);
+    //print(msg);
+    //sprintf(msg, "\nebss   %08lX\n", ebss);
+    //print(msg);
+    //sprintf(msg, "\nsbss   %08lX\n", ebss);
+    //print(msg);
+    
     /* Clear flash flags */
-    HAL_FLASH_Unlock();
-    __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_ALL_ERRORS);
-    HAL_FLASH_Lock();
+ //   HAL_FLASH_Unlock();
+ //   __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_ALL_ERRORS);
+ //   HAL_FLASH_Lock();
 
     APP_first_sector = 0;
     APP_first_addr = 0;
    
-    // STM32F407 has different length FLASH sectors.
-    //   Sector 0 to Sector 3 being 16 KB each
-    //   Sector 4 is 64 KB
-    //   Sector 5–11 are 128 KB each
+    // LPC1769 4K length FLASH sectors 0-29
     
-    if (BOOT_LOADER_END <= 0xE0000 + FLASH_BASE) {APP_first_sector = FLASH_SECTOR_11;  APP_first_addr = 0xE0000 + FLASH_BASE;}
-    if (BOOT_LOADER_END <= 0xC0000 + FLASH_BASE) {APP_first_sector = FLASH_SECTOR_10;  APP_first_addr = 0xC0000 + FLASH_BASE;}
-    if (BOOT_LOADER_END <= 0xA0000 + FLASH_BASE) {APP_first_sector = FLASH_SECTOR_9;   APP_first_addr = 0xA0000 + FLASH_BASE;}
-    if (BOOT_LOADER_END <= 0x80000 + FLASH_BASE) {APP_first_sector = FLASH_SECTOR_8;   APP_first_addr = 0x80000 + FLASH_BASE;}
-    if (BOOT_LOADER_END <= 0x60000 + FLASH_BASE) {APP_first_sector = FLASH_SECTOR_7;   APP_first_addr = 0x60000 + FLASH_BASE;}
-    if (BOOT_LOADER_END <= 0x40000 + FLASH_BASE) {APP_first_sector = FLASH_SECTOR_6;   APP_first_addr = 0x40000 + FLASH_BASE;}
-    if (BOOT_LOADER_END <= 0x20000 + FLASH_BASE) {APP_first_sector = FLASH_SECTOR_5;   APP_first_addr = 0x20000 + FLASH_BASE;}
-    if (BOOT_LOADER_END <= 0x10000 + FLASH_BASE) {APP_first_sector = FLASH_SECTOR_4;   APP_first_addr = 0x10000 + FLASH_BASE;}
-    if (BOOT_LOADER_END <= 0x0C000 + FLASH_BASE) {APP_first_sector = FLASH_SECTOR_3;   APP_first_addr = 0x0C000 + FLASH_BASE;}
-    if (BOOT_LOADER_END <= 0x08000 + FLASH_BASE) {APP_first_sector = FLASH_SECTOR_2;   APP_first_addr = 0x08000 + FLASH_BASE;}
-    if (BOOT_LOADER_END <= 0x04000 + FLASH_BASE) {APP_first_sector = FLASH_SECTOR_1;   APP_first_addr = 0x04000 + FLASH_BASE;}
-    
-    
+    for (uint16_t counter = 0; counter <= LAST_SECTOR; counter++) {   
+      APP_first_addr = ((counter * FLASH_SECTOR_SIZE) + FLASH_BASE);
+      if (BOOT_LOADER_END <= APP_first_addr) {
+        APP_first_sector = counter; 
+        break;
+      }
+    }
+
     sprintf(msg, "\nBOOT_LOADER_END %08lX\n", BOOT_LOADER_END);
     print(msg);
     sprintf(msg, "Lowest possible APP_ADDRESS is %08lX\n", APP_first_addr);
@@ -110,17 +133,54 @@ uint8_t Bootloader_Init(void)
     
     if (APP_OFFSET == 0) return BL_ERASE_ERROR;   // start of boot program
     if (APP_first_sector == 0) return BL_ERASE_ERROR;   // application is within same sector as bootloader
-
-
-    APP_sector_mask = 0;
-    for (uint8_t i = APP_first_sector; i <= LAST_SECTOR; i++) {  // generate mask of sectors we do NOT want write protected
-      APP_sector_mask |= 1 << i;
-    }
-    
-    //sprintf(msg, "APP_sector_mask: %08lX\n", APP_sector_mask);
-    //print(msg);
- #endif   
+     
     return BL_OK;
+}
+
+
+void print_IAP_error_code(uint16_t error_code) {
+  
+  kprint("FLASH ERROR CODE: ");
+  switch(error_code) {
+    case 0  : kprint("0  - CMD_SUCCESS Command is executed successfully.\n"); break;
+    case 1  : kprint("1  - INVALID_COMMAND Invalid command.\n"); break;
+    case 2  : kprint("2  - SRC_ADDR_ERROR Source address is not on word boundary.\n"); break;
+    case 3  : kprint("3  - DST_ADDR_ERROR Destination address is not on a correct boundary.\n"); break;
+    case 4  : kprint("4  - SRC_ADDR_NOT_MAPPED Source address is not mapped in the memory map.\n"); break;
+    case 5  : kprint("5  - DST_ADDR_NOT_MAPPED Destination address is not mapped in the memory map.\n"); break;
+    case 6  : kprint("6  - COUNT_ERROR Byte count is not multiple of 4 or is not a permitted value.\n"); break;
+    case 7  : kprint("7  - INVALID_SECTOR Sector number is invalid or end sector number is greater than start sector number.\n"); break;
+    case 8  : kprint("8  - SECTOR_NOT_BLANK Sector is not blank.\n"); break;
+    case 9  : kprint("9  - SECTOR_NOT_PREPARED_FOR_WRITE_OPERATION.\n"); break;
+    case 10 : kprint("10 - COMPARE_ERROR Source and destination data not equal.\n"); break;
+    case 11 : kprint("11 - BUSY Flash programming hardware interface is busy.\n"); break;
+    case 12 : kprint("12 - PARAM_ERROR Insufficient number of parameters or invalid parameter.\n"); break;
+    case 13 : kprint("13 - ADDR_ERROR Address is not on word boundary.\n"); break;
+    case 14 : kprint("14 - ADDR_NOT_MAPPED Address is not mapped in the memory map.\n"); break;
+    case 15 : kprint("15 - CMD_LOCKED Command is locked.\n"); break;
+    case 16 : kprint("16 - INVALID_CODE Unlock code is invalid.\n"); break;
+    case 17 : kprint("17 - INVALID_BAUD_RATE Invalid baud rate setting.\n"); break;
+    case 18 : kprint("18 - INVALID_STOP_BIT Invalid stop bit setting.\n"); break;
+    case 19 : kprint("19 - CODE_READ_PROTECTION_ENABLED.\n"); break;
+    default : kprint("%2d - UNKNOWN ERROR CODE.\n", error_code); break;
+  }
+   
+}
+  
+
+void FLASH_UNLOCK(void) {
+  __disable_irq();
+  iap_entry=(IAP)IAP_LOCATION;
+	unsigned int command[5]={0,0,0,0,0};
+	unsigned int result[5]={0,0,0,0,0};
+	command[0]= 50;
+	command[1]= APP_first_sector;
+	command[2]= LAST_SECTOR;
+	iap_entry(command,result);
+  __enable_irq();
+  if(result[0]) print_IAP_error_code(result[0]);
+  
+  
 }
 
 /**
@@ -131,107 +191,95 @@ uint8_t Bootloader_Init(void)
  */
 uint8_t Bootloader_Erase(void)
 {
+  FLASH_UNLOCK();
+  __disable_irq();
+  iap_entry=(IAP)IAP_LOCATION;
+  unsigned int command[5]={0,0,0,0,0};
+	unsigned int result[5]={0,0,0,0,0};
+  command[0] = 52; // command: Erase sector(s)
+  command[1] = APP_first_sector; 
+  command[2] = LAST_SECTOR;
+  command[3] = 120000; // CPU Clock Frequency (CCLK) in kHz.
+  command[4] = 0;
   
-  #if 0
-    HAL_StatusTypeDef status = HAL_OK;
+  iap_entry(command, result);  // execute IAP FLASH command
+  __enable_irq();
+  if(result[0]) print_IAP_error_code(result[0]);
 
-    __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_EOP | FLASH_FLAG_OPERR | FLASH_FLAG_WRPERR | FLASH_FLAG_PGAERR | FLASH_FLAG_PGSERR );
-    HAL_FLASH_Unlock();  
-    for (uint32_t i =  APP_first_sector; i <= LAST_SECTOR; i++) {
-      kprint(" Erasing sector: %d\n",(uint16_t)i);
-//      __disable_irq();
-      FLASH_Erase_Sector(i, VOLTAGE_RANGE_3);
-      while(FLASH->SR & FLASH_FLAG_BSY){};   // wait for completion
- //     __enable_irq();
-      if (FLASH->SR) {
-        kprint(" FLASH status register: : %08lX\n",FLASH->SR);
-        __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_EOP | FLASH_FLAG_OPERR | FLASH_FLAG_WRPERR | FLASH_FLAG_PGAERR | FLASH_FLAG_PGSERR );
-      }
-//      k_delay(100);
-      /* Toggle green LED during erasing */
-      LED_G1_TG();
-    }
-
-    HAL_FLASH_Lock();
-    return (status == HAL_OK) ? BL_OK : BL_ERASE_ERROR;
- #endif
- return  BL_OK;
+  return (result[0] ? BL_OK : BL_ERASE_ERROR);
 }
 
 /**
- * @brief  Begin flash programming: this function unlocks the flash and sets
+ * @brief  this function erases the flash and sets
  *         the data pointer to the start of application flash area.
- * @see    README for futher information
  * @return Bootloader error code ::eBootloaderErrorCodes
- * @retval BL_OK is returned in every case
- */
+*/
 uint8_t Bootloader_FlashBegin(void)
 {
-//    /* Reset flash destination address */
-//    flash_ptr = APP_ADDRESS;
-//
-//    /* Unlock flash */
-//    HAL_FLASH_Unlock();
-//    __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_EOP | FLASH_FLAG_OPERR | FLASH_FLAG_WRPERR | FLASH_FLAG_PGAERR | FLASH_FLAG_PGSERR );
-//
-//    return BL_OK;
+  /* Reset flash destination address */
+  flash_ptr = APP_ADDRESS;
+  return Bootloader_Erase();
 }
 
 /**
- * @brief  Program 64bit data into flash: this function writes an 8byte (64bit)
+ * @brief  Program a max 4096 byte chunck to flash: This function writes a 
  *         data chunk into the flash and increments the data pointer.
  * @see    README for futher information
- * @param  data: 64bit data chunk to be written into flash
+ * @param  data: max 4096 byte data chunk to be written into flash
+ * @param  flash_ptr: pointer to start of FLASH programming area.  512 byte aligned earlier
+ *         so don't need to worry about 256 byte alignment requirement
  * @return Bootloader error code ::eBootloaderErrorCodes
  * @retval BL_OK: upon success
  * @retval BL_WRITE_ERROR: upon failure
  */
-uint8_t Bootloader_FlashNext(uint64_t data)
+uint8_t Bootloader_FlashNext(uint8_t *data, uint16_t length)
 {
-  #if 0
-    char msg[64]; //debug
-    uint64_t read_data;
-    HAL_StatusTypeDef status = HAL_OK; //debug
-    if(!(flash_ptr <= (FLASH_BASE + FLASH_SIZE - 8)) ||
-       (flash_ptr < APP_ADDRESS))
-    {
-        HAL_FLASH_Lock();
-        return BL_WRITE_ERROR;
-    }
+  
+  uint16_t padding = length % data_length;  //  need to padd buffer if ran out of data on SD card
+  if (padding) for (uint16_t i = padding; i < data_length; i++) data[i] = 0xFF;
+  
+  
+  FLASH_UNLOCK();
 
-    status = HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, flash_ptr, data);
-    if(status == HAL_OK)
+  
+  __disable_irq();
+  iap_entry=(IAP)IAP_LOCATION;
+	unsigned int command[5]={0,0,0,0,0};
+	unsigned int result[5]={0,0,0,0,0};
+  command[0] = 51; // command:Copy RAM to Flash
+  command[1] = flash_ptr;   // destination pointer
+  command[2] = (uint32_t)data;  // source pointer
+  command[3] = data_length; // # bytes to program
+  command[4] = 120000;      // CPU Clock Frequency (CCLK) in kHz.
+  
+  iap_entry(command, result);  // execute IAP FLASH command
+  
+  __enable_irq(); 
+  if(result[0]) {
+    print_IAP_error_code(result[0]);;
+    return BL_WRITE_ERROR;
+  }
+
+  /* Check the written values */
+  for (uint16_t i = 0; i <data_length; i++) {
+
+    uint8_t read_data = *(uint8_t*)(flash_ptr + i); 
+    if(read_data != data[i])
     {
-        /* Check the written value */
-        read_data = *(uint64_t*)flash_ptr; 
-        if(read_data != data)
-        {
-            /* Flash content doesn't match source content */
-            HAL_FLASH_Lock();
-            kprint("Programming error\n");
-            sprintf(msg, "  expected data (64 bit): %08lX %08lX\n", (uint32_t) (data >> 32) ,(uint32_t) data);
-            kprint(msg);
-            sprintf(msg, "  actual data (64 bit)  : %08lX %08lX\n", (uint32_t) (read_data >> 32) ,(uint32_t) read_data);
-            kprint(msg);
-            sprintf(msg, "  absolute address (byte): %08lX\n", flash_ptr);
-            kprint(msg);
-                     
-            
-            
-            return BL_WRITE_ERROR;
-        }
-        /* Increment Flash destination address */
-//        flash_ptr += 8;
-        flash_ptr += 4;
-    }
-    else
-    {
-        /* Error occurred while writing data into Flash */ 
-        HAL_FLASH_Lock();
+        /* Flash content doesn't match source content */
+        kprint("Programming error\n");
+        sprintf(msg, "  expected data (8 bit): %02X\n", data[i]);
+        kprint(msg);
+        sprintf(msg, "  actual data (8 bit)  : %02X\n", read_data);
+        kprint(msg);
+        sprintf(msg, "  absolute address (byte): %08lX\n", (flash_ptr + i));
+        kprint(msg);
+                 
         return BL_WRITE_ERROR;
     }
-#endif
-    return BL_OK;
+  }
+  flash_ptr += data_length;
+  return BL_OK;
 }
 
 /**
@@ -243,9 +291,6 @@ uint8_t Bootloader_FlashNext(uint64_t data)
  */
 uint8_t Bootloader_FlashEnd(void)
 {
-    /* Lock flash */
-//    HAL_FLASH_Lock();
-
     return BL_OK;
 }
 
@@ -562,13 +607,10 @@ uint32_t Bootloader_GetVersion(void)
  */
 void NVIC_System_Reset(void)
 {
-//  #define SCB_AIRCR_VECTKEY_Pos 16U   /*!< SCB AIRCR: VECTKEY Position */
-//  #define SCB_AIRCR_SYSRESETREQ_Pos 2U   /*!< SCB AIRCR: VECTKEY Position */
-//  volatile uint32_t* SCB_AIRCR = (uint32_t*)0xE000ED0CUL;  
-//
-//*SCB_AIRCR = (uint32_t)(((0x5FAUL << SCB_AIRCR_VECTKEY_Pos) | (1 << SCB_AIRCR_SYSRESETREQ_Pos)));
-//
-//  for(;;)                                                           /* wait until reset */
-//  {
-//  }
+    
+  *SCB_AIRCR = (uint32_t)(((SCB_AIRCR_VECTKEY << SCB_AIRCR_VECTKEY_Pos) | (1 << SCB_AIRCR_SYSRESETREQ_Pos)));
+  
+  for(;;)                                                           /* wait until reset */
+  {
+  }
 }

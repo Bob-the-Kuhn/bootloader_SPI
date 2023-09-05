@@ -37,6 +37,8 @@ volatile uint32_t* LPC_SC_PCONP        = (uint32_t*)0x400FC0C4; // Power Control
 
 volatile uint32_t* LPC_SC_CLKOUTCFG    = (uint32_t*)0x400FC1C8; // Clock Output Configuration Register R/W 0
 
+volatile uint32_t* FLASHCFG            = (uint32_t*)0x400FC000; // Flash Accelerator Configuration register
+
 #define _BV(bit)     (1<<(bit))
 #define SET_BIT(x, pos) (x |= (1U << pos))
 #define CLEAR_BIT(x, pos) (x &= (~(1U<< pos)))
@@ -165,7 +167,15 @@ volatile uint32_t* SysTick_STRELOAD     = (uint32_t*)0xE000E014; // System Timer
 volatile uint32_t* SysTick_STCURR       = (uint32_t*)0xE000E018; // System Timer Current value register
 volatile uint32_t* SysTick_STCALIB      = (uint32_t*)0xE000E01C; // System Timer Calibration value register
 
+// misc
+
 #define VTOR         = (uint32_t*)0xE000ED08)  // Vector Table Offset Register
+volatile uint32_t* SCB_AIRCR            = (uint32_t*)0xE000ED0CUL;
+#define SCB_AIRCR_VECTKEY_Pos 16U      // SCB AIRCR: VECTKEY Position
+#define SCB_AIRCR_VECTKEY 0x5FAUL      // SCB AIRCR: VECTKEY value
+#define SCB_AIRCR_SYSRESETREQ_Pos 2U   // SCB AIRCR: system reset Position 
+
+  
 
 
 // GPIO

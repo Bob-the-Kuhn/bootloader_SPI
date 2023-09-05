@@ -72,6 +72,10 @@ void SPI_Enable(void);
 
 void SPI_Transmit (BYTE *data, UINT size);
 
+//#include <lpc17xx_clkpwr.h>
+//void SystemCoreClockUpdate (void); 
+//uint32_t CLKPWR_GetPCLK (uint32_t ClkType);
+
 #define PGM_READ_WORD(x) *(x)
 
  char msg[64];            
@@ -114,10 +118,15 @@ int main(void)
   SPIConfig();
   SPI_Enable();
   
-  //sprintf(msg, "\nSYSCLK_Frequency %08lu\n", HAL_RCC_GetSysClockFreq());
-  //print(msg);
-  //sprintf(msg, "HCLK_Frequency   %08lu\n", HAL_RCC_GetHCLKFreq());
-  //print(msg);
+ // SystemCoreClockUpdate();  // get core clock
+ // sprintf(msg, "\nSystemCoreClock: %08lu\n", SystemCoreClock);
+ // print(msg);
+ // sprintf(msg, "\nSPI clock:       %08lu\n", CLKPWR_GetPCLK (CLKPWR_PCLKSEL_SSP1));
+ // print(msg);
+ // sprintf(msg, "\nUART0 clock:     %08lu\n", CLKPWR_GetPCLK (CLKPWR_PCLKSEL_UART0));
+ // print(msg);
+
+
   
   LED_G1_OFF();
   LED_G2_OFF();             
@@ -290,7 +299,7 @@ uint8_t Enter_Bootloader(void)
   UINT num;
   //    uint8_t i;
   uint8_t status;
-  uint64_t data;
+  uint8_t data[data_length];
   uint32_t cntr;
   //uint32_t addr;
   char SDPath[4] = {0x00};   /* SD logical drive path */
@@ -408,23 +417,20 @@ uint8_t Enter_Bootloader(void)
   LED_G2_ON();
   cntr = 0;
   Bootloader_FlashBegin();
-  do
-  {
-    data = 0xFFFFFFFFFFFFFFFF;
-    //      fr   = f_read(&SDFile, &data, 8, &num);
-    fr   = f_read(&SDFile, &data, 4, &num);
+  do {
+    fr   = f_read(&SDFile, &data, data_length, &num);
     if(num)
-    {
-      status = Bootloader_FlashNext(data);
+    { 
+      status = Bootloader_FlashNext(data, num);
       if(status == BL_OK)
       {
-        cntr++;
+        cntr += data_length;
       }
       else
       {
         //                kprint("Programming error at: %lu byte\n", (cntr * 8));
         char cmd[64];
-        sprintf(cmd, "  offset in file (byte):   %08lX\n", (cntr * 4));
+        sprintf(cmd, "  offset in file (byte):   %08lX\n", (cntr * data_length));
         kprint(cmd);
         
         f_close(&SDFile);
@@ -435,7 +441,7 @@ uint8_t Enter_Bootloader(void)
         return ERR_FLASH;
       }
     }
-    if(cntr % 256 == 0)
+    if(cntr % (data_length * 4) == 0)
     {
       /* Toggle green LED during programming */
       LED_G1_TG();
@@ -447,7 +453,7 @@ uint8_t Enter_Bootloader(void)
   f_close(&SDFile);
   LED_ALL_OFF();
   print("Programming finished.\n");
-  sprintf(msg, "Flashed: %ld bytes.\n", (cntr * 4));
+  sprintf(msg, "Flashed: %ld bytes.\n", (cntr));
   print(msg);
   
   
@@ -504,7 +510,7 @@ uint8_t Enter_Bootloader(void)
   print("Verification passed.\n");
   f_close(&SDFile);
 #endif          
-                   
+ #if 0                  
   LED_G1_OFF();
   
   #if defined(FILE_EXT_CHANGE) && (_LFN_UNICODE == 0)   // rename file if using ANSI/OEM strings
@@ -543,7 +549,7 @@ uint8_t Enter_Bootloader(void)
                                            // after the next reset
     }
   #endif
-  
+#endif  
   /* Eject SD card */
   SD_Eject();
   print("SD ejected.\n");

@@ -38,6 +38,9 @@ volatile uint32_t* LPC_SC_PCONP    ; // Power Control for Peripherals Register R
 
 volatile uint32_t* LPC_SC_CLKOUTCFG; // Clock Output Configuration Register R/W 0
 
+volatile uint32_t* FLASHCFG        ; // Flash Accelerator Configuration register
+#define FLASHTIM      12  // Flash access time bit offset
+
 #define _BV(bit)     (1<<(bit))
 #define SET_BIT(x, pos) (x |= (1U << pos))
 #define CLEAR_BIT(x, pos) (x &= (~(1U<< pos)))
@@ -166,8 +169,13 @@ volatile uint32_t* SysTick_STRELOAD; // System Timer Reload value register
 volatile uint32_t* SysTick_STCURR  ; // System Timer Current value register
 volatile uint32_t* SysTick_STCALIB ; // System Timer Calibration value register
 
-#define VTOR         = (uint32_t*)0xE000ED08)  // Vector Table Offset Register
 
+// misc
+#define VTOR         = (uint32_t*)0xE000ED08)  // Vector Table Offset Register
+volatile uint32_t* SCB_AIRCR;          // SCB AIRCR
+#define SCB_AIRCR_VECTKEY_Pos 16U      // SCB AIRCR: VECTKEY Position
+#define SCB_AIRCR_VECTKEY 0x5FAUL      // SCB AIRCR: VECTKEY value
+#define SCB_AIRCR_SYSRESETREQ_Pos 2U   // SCB AIRCR: system reset Position 
 
 // GPIO
 

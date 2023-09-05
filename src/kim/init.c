@@ -170,7 +170,8 @@ void init_clock(void)
   *LPC_SC_SCS = 0x020;  // enable low range external crystal oscillator
   while(!(*LPC_SC_SCS & _BV(OSCSTAT)));  // wait for external crystal oscillator to be functional
   
-  
+  *FLASHCFG &= ~(0xF << FLASHTIM); // Flash Accelerator Configuration register - set delay before increasing clock frequency
+  *FLASHCFG |=   0x4 << FLASHTIM ; // Set FLASH delay to 5 clocks
   
   // 1. Disconnect PLL0 with one feed sequence if PLL0 is already connected.
   PLL0feed;  // force contents of R_PLL0STAT to be valid
